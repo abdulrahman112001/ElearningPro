@@ -1,40 +1,49 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import toast from "react-hot-toast";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { signIn } from "next-auth/react";
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import toast from "react-hot-toast"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { signIn } from "next-auth/react"
 
-const registerSchema = z.object({
-  name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
-  email: z.string().email("البريد الإلكتروني غير صالح"),
-  password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "كلمات المرور غير متطابقة",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
+    email: z.string().email("البريد الإلكتروني غير صالح"),
+    password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "كلمات المرور غير متطابقة",
+    path: ["confirmPassword"],
+  })
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
-  const t = useTranslations("auth");
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [userType, setUserType] = useState<"student" | "instructor">("student");
+  const t = useTranslations("auth")
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [userType, setUserType] = useState<"student" | "instructor">("student")
 
   const {
     register,
@@ -42,10 +51,10 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-  });
+  })
 
   const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -54,57 +63,60 @@ export default function RegisterPage() {
           ...data,
           role: userType === "instructor" ? "INSTRUCTOR" : "STUDENT",
         }),
-      });
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || "حدث خطأ ما");
+        throw new Error(result.error || "حدث خطأ ما")
       }
 
-      toast.success("تم إنشاء الحساب بنجاح");
-      
+      toast.success("تم إنشاء الحساب بنجاح")
+
       // Auto login after registration
       await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
-      });
-      
-      router.push("/");
-      router.refresh();
+      })
+
+      router.push("/")
+      router.refresh()
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSocialLogin = async (provider: "google" | "github") => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      await signIn(provider, { callbackUrl: "/" });
+      await signIn(provider, { callbackUrl: "/" })
     } catch (error) {
-      toast.error("حدث خطأ ما");
+      toast.error("حدث خطأ ما")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Card className="border-0 shadow-none lg:border lg:shadow-sm">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">{t("register")}</CardTitle>
-        <CardDescription>
-          أنشئ حساباً جديداً للبدء في التعلم
-        </CardDescription>
+        <CardDescription>أنشئ حساباً جديداً للبدء في التعلم</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* User Type Selection */}
-        <Tabs value={userType} onValueChange={(v) => setUserType(v as "student" | "instructor")}>
+        <Tabs
+          value={userType}
+          onValueChange={(v) => setUserType(v as "student" | "instructor")}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="student">{t("registerAsStudent")}</TabsTrigger>
-            <TabsTrigger value="instructor">{t("registerAsInstructor")}</TabsTrigger>
+            <TabsTrigger value="instructor">
+              {t("registerAsInstructor")}
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -202,7 +214,7 @@ export default function RegisterPage() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute start-0 top-0 h-10 w-10"
+                className="absolute end-0 top-0 h-10 w-10"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -246,11 +258,14 @@ export default function RegisterPage() {
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
           {t("alreadyHaveAccount")}{" "}
-          <Link href="/login" className="text-primary hover:underline font-medium">
+          <Link
+            href="/login"
+            className="text-primary hover:underline font-medium"
+          >
             {t("login")}
           </Link>
         </p>
       </CardFooter>
     </Card>
-  );
+  )
 }

@@ -1,33 +1,40 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { signIn } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import toast from "react-hot-toast";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { signIn } from "next-auth/react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import toast from "react-hot-toast"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 const loginSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صالح"),
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
-});
+})
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-  const t = useTranslations("auth");
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const t = useTranslations("auth")
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -35,49 +42,47 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-  });
+  })
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
-      });
+      })
 
       if (result?.error) {
-        toast.error("بيانات الدخول غير صحيحة");
+        toast.error("بيانات الدخول غير صحيحة")
       } else {
-        toast.success("تم تسجيل الدخول بنجاح");
-        router.push("/");
-        router.refresh();
+        toast.success("تم تسجيل الدخول بنجاح")
+        router.push("/")
+        router.refresh()
       }
     } catch (error) {
-      toast.error("حدث خطأ ما");
+      toast.error("حدث خطأ ما")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSocialLogin = async (provider: "google" | "github") => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      await signIn(provider, { callbackUrl: "/" });
+      await signIn(provider, { callbackUrl: "/" })
     } catch (error) {
-      toast.error("حدث خطأ ما");
+      toast.error("حدث خطأ ما")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Card className="border-0 shadow-none lg:border lg:shadow-sm">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">{t("login")}</CardTitle>
-        <CardDescription>
-          أدخل بياناتك للوصول إلى حسابك
-        </CardDescription>
+        <CardDescription>أدخل بياناتك للوصول إلى حسابك</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Social Login */}
@@ -170,7 +175,7 @@ export default function LoginPage() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute start-0 top-0 h-10 w-10"
+                className="absolute end-0 top-0 h-10 w-10"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -191,11 +196,14 @@ export default function LoginPage() {
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
           {t("dontHaveAccount")}{" "}
-          <Link href="/register" className="text-primary hover:underline font-medium">
+          <Link
+            href="/register"
+            className="text-primary hover:underline font-medium"
+          >
             {t("register")}
           </Link>
         </p>
       </CardFooter>
     </Card>
-  );
+  )
 }

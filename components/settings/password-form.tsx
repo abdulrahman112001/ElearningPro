@@ -94,7 +94,7 @@ export function PasswordForm() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute start-0 top-0 h-full px-3"
+                    className="absolute end-0 top-0 h-full px-3"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
                     {showCurrentPassword ? (
@@ -127,7 +127,7 @@ export function PasswordForm() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute start-0 top-0 h-full px-3"
+                    className="absolute end-0 top-0 h-full px-3"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                   >
                     {showNewPassword ? (
@@ -160,7 +160,7 @@ export function PasswordForm() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute start-0 top-0 h-full px-3"
+                    className="absolute end-0 top-0 h-full px-3"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (

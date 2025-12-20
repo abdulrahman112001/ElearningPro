@@ -193,7 +193,7 @@ export default function ResetPasswordPage() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute start-0 top-0 h-10 w-10"
+                className="absolute end-0 top-0 h-10 w-10"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
