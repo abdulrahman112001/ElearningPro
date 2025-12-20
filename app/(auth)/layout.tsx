@@ -1,10 +1,10 @@
-import { GraduationCap } from "lucide-react";
-import Link from "next/link";
+import { GraduationCap } from "lucide-react"
+import Link from "next/link"
 
 export default function AuthLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
@@ -16,11 +16,10 @@ export default function AuthLayout({
         </Link>
 
         <div className="space-y-6">
-          <h1 className="text-4xl font-bold">
-            ابدأ رحلة التعلم اليوم
-          </h1>
+          <h1 className="text-4xl font-bold">ابدأ رحلة التعلم اليوم</h1>
           <p className="text-lg text-white/80 max-w-md">
-            انضم لآلاف الطلاب الذين يتعلمون مهارات جديدة من أفضل المدربين في العالم العربي
+            انضم لآلاف الطلاب الذين يتعلمون مهارات جديدة من أفضل المدربين في
+            العالم العربي
           </p>
           <div className="flex gap-8 pt-4">
             <div>
@@ -44,9 +43,9 @@ export default function AuthLayout({
       </div>
 
       {/* Right Side - Auth Form */}
-      <div className="flex items-center justify-center p-6 lg:p-12">
+      <div className="flex items-center justify-center p-6 lg:p-12 bg-background">
         <div className="w-full max-w-md">{children}</div>
       </div>
     </div>
-  );
+  )
 }

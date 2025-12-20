@@ -79,10 +79,12 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="border-0 shadow-none lg:border lg:shadow-sm">
+    <Card className="border-0 shadow-none lg:border lg:shadow-sm bg-card">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">{t("login")}</CardTitle>
-        <CardDescription>أدخل بياناتك للوصول إلى حسابك</CardDescription>
+        <CardTitle className="text-2xl text-foreground">{t("login")}</CardTitle>
+        <CardDescription className="text-muted-foreground">
+          أدخل بياناتك للوصول إلى حسابك
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Social Login */}

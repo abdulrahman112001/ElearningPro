@@ -101,10 +101,14 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card className="border-0 shadow-none lg:border lg:shadow-sm">
+    <Card className="border-0 shadow-none lg:border lg:shadow-sm bg-card">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">{t("register")}</CardTitle>
-        <CardDescription>أنشئ حساباً جديداً للبدء في التعلم</CardDescription>
+        <CardTitle className="text-2xl text-foreground">
+          {t("register")}
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          أنشئ حساباً جديداً للبدء في التعلم
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* User Type Selection */}
