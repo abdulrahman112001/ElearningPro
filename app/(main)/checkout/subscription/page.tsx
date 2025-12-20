@@ -5,7 +5,14 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Check, Crown, Zap, Shield, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
 const plans = {
@@ -18,7 +25,7 @@ const plans = {
     discount: 33,
   },
   yearly: {
-    id: "yearly", 
+    id: "yearly",
     price: 799,
     originalPrice: 1188,
     period: "سنوياً",
@@ -69,9 +76,7 @@ export default function SubscriptionPage() {
             <Crown className="h-3 w-3 ml-1" />
             اشتراك بريميوم
           </Badge>
-          <h1 className="text-4xl font-bold mb-4">
-            احصل على وصول غير محدود
-          </h1>
+          <h1 className="text-4xl font-bold mb-4">احصل على وصول غير محدود</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             اشترك الآن واحصل على وصول لجميع الكورسات والميزات الحصرية
           </p>
@@ -99,7 +104,10 @@ export default function SubscriptionPage() {
               }`}
             >
               سنوي
-              <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-700 text-xs"
+              >
                 وفر 33%
               </Badge>
             </button>
@@ -112,10 +120,12 @@ export default function SubscriptionPage() {
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center mb-4">
               <Zap className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-2xl">اشتراك {selectedPlan === "monthly" ? "شهري" : "سنوي"}</CardTitle>
+            <CardTitle className="text-2xl">
+              اشتراك {selectedPlan === "monthly" ? "شهري" : "سنوي"}
+            </CardTitle>
             <CardDescription>وصول كامل لجميع الميزات</CardDescription>
           </CardHeader>
-          
+
           <CardContent className="text-center">
             {/* Price */}
             <div className="mb-6">
@@ -123,11 +133,15 @@ export default function SubscriptionPage() {
                 <span className="text-5xl font-bold">{currentPlan.price}</span>
                 <div className="text-right">
                   <div className="text-lg font-medium">ج.م</div>
-                  <div className="text-sm text-muted-foreground">/{currentPlan.period}</div>
+                  <div className="text-sm text-muted-foreground">
+                    /{currentPlan.period}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <span className="line-through">{currentPlan.originalPrice} ج.م</span>
+                <span className="line-through">
+                  {currentPlan.originalPrice} ج.م
+                </span>
                 <Badge variant="destructive" className="text-xs">
                   خصم {currentPlan.discount}%
                 </Badge>
@@ -153,8 +167,8 @@ export default function SubscriptionPage() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
-            <Button 
-              className="w-full h-12 text-lg gap-2" 
+            <Button
+              className="w-full h-12 text-lg gap-2"
               size="lg"
               onClick={handleSubscribe}
               disabled={isLoading}
@@ -168,7 +182,7 @@ export default function SubscriptionPage() {
                 </>
               )}
             </Button>
-            
+
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4" />
               <span>ضمان استرداد الأموال خلال 7 أيام</span>
@@ -178,7 +192,9 @@ export default function SubscriptionPage() {
 
         {/* FAQ or Trust Badges */}
         <div className="mt-12 text-center">
-          <p className="text-muted-foreground mb-4">يثق بنا أكثر من 10,000+ طالب</p>
+          <p className="text-muted-foreground mb-4">
+            يثق بنا أكثر من 10,000+ طالب
+          </p>
           <div className="flex justify-center gap-8 text-muted-foreground">
             <div className="text-center">
               <div className="text-2xl font-bold text-foreground">100+</div>
