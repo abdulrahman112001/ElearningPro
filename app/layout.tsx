@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast"
 import { QueryProvider } from "@/components/providers/query-provider"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { SocketProvider } from "@/providers/socket-provider"
+import NextTopLoader from "nextjs-toploader"
 import "./globals.css"
 
 const inter = Inter({
@@ -81,6 +82,16 @@ export default async function RootLayout({
           isRTL ? "font-arabic" : "font-sans"
         } antialiased`}
       >
+        <NextTopLoader
+          color="#2563eb"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+        />
         <AuthProvider>
           <QueryProvider>
             <NextIntlClientProvider messages={messages}>
