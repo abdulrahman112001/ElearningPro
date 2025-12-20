@@ -102,13 +102,13 @@ export default async function AdminInstructorsPage({
       </div>
 
       <InstructorsTable
-        instructors={instructors}
+        instructors={instructors as any}
         pendingCount={pendingCount}
         pagination={{
           page,
           limit,
           total,
-          pages: Math.ceil(total / limit),
+          totalPages: Math.ceil(total / limit),
         }}
       />
     </div>

@@ -1,40 +1,56 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import toast from "react-hot-toast";
-import { ArrowLeft, CheckCircle, Eye, EyeOff, Loader2, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import toast from "react-hot-toast"
+import {
+  ArrowLeft,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Loader2,
+  XCircle,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
-const resetPasswordSchema = z.object({
-  password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "كلمات المرور غير متطابقة",
-  path: ["confirmPassword"],
-});
+const resetPasswordSchema = z
+  .object({
+    password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "كلمات المرور غير متطابقة",
+    path: ["confirmPassword"],
+  })
 
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
 export default function ResetPasswordPage() {
-  const t = useTranslations("auth");
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [isValidating, setIsValidating] = useState(true);
-  const [isValidToken, setIsValidToken] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const t = useTranslations("auth")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const token = searchParams?.get("token")
+
+  const [isLoading, setIsLoading] = useState(false)
+  const [isValidating, setIsValidating] = useState(true)
+  const [isValidToken, setIsValidToken] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -42,30 +58,32 @@ export default function ResetPasswordPage() {
     formState: { errors },
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
-  });
+  })
 
   useEffect(() => {
     const validateToken = async () => {
       if (!token) {
-        setIsValidating(false);
-        return;
+        setIsValidating(false)
+        return
       }
 
       try {
-        const response = await fetch(`/api/auth/validate-reset-token?token=${token}`);
-        setIsValidToken(response.ok);
+        const response = await fetch(
+          `/api/auth/validate-reset-token?token=${token}`
+        )
+        setIsValidToken(response.ok)
       } catch (error) {
-        setIsValidToken(false);
+        setIsValidToken(false)
       } finally {
-        setIsValidating(false);
+        setIsValidating(false)
       }
-    };
+    }
 
-    validateToken();
-  }, [token]);
+    validateToken()
+  }, [token])
 
   const onSubmit = async (data: ResetPasswordFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
@@ -74,20 +92,20 @@ export default function ResetPasswordPage() {
           token,
           password: data.password,
         }),
-      });
+      })
 
       if (!response.ok) {
-        throw new Error("حدث خطأ ما");
+        throw new Error("حدث خطأ ما")
       }
 
-      setIsSubmitted(true);
-      toast.success("تم تغيير كلمة المرور بنجاح");
+      setIsSubmitted(true)
+      toast.success("تم تغيير كلمة المرور بنجاح")
     } catch (error) {
-      toast.error("حدث خطأ ما. حاول مرة أخرى");
+      toast.error("حدث خطأ ما. حاول مرة أخرى")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   if (isValidating) {
     return (
@@ -96,7 +114,7 @@ export default function ResetPasswordPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (!token || !isValidToken) {
@@ -108,8 +126,8 @@ export default function ResetPasswordPage() {
           </div>
           <CardTitle className="text-2xl">رابط غير صالح</CardTitle>
           <CardDescription className="pt-2">
-            رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية.
-            يرجى طلب رابط جديد.
+            رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية. يرجى طلب
+            رابط جديد.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -127,7 +145,7 @@ export default function ResetPasswordPage() {
           </Link>
         </CardFooter>
       </Card>
-    );
+    )
   }
 
   if (isSubmitted) {
@@ -139,7 +157,8 @@ export default function ResetPasswordPage() {
           </div>
           <CardTitle className="text-2xl">تم تغيير كلمة المرور</CardTitle>
           <CardDescription className="pt-2">
-            تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.
+            تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور
+            الجديدة.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -148,16 +167,14 @@ export default function ResetPasswordPage() {
           </Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
     <Card className="border-0 shadow-none lg:border lg:shadow-sm">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">{t("resetPassword")}</CardTitle>
-        <CardDescription>
-          أدخل كلمة المرور الجديدة
-        </CardDescription>
+        <CardDescription>أدخل كلمة المرور الجديدة</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -216,5 +233,5 @@ export default function ResetPasswordPage() {
         </Link>
       </CardFooter>
     </Card>
-  );
+  )
 }

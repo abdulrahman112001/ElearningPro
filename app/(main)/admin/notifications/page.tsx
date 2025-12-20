@@ -90,7 +90,7 @@ export default async function AdminNotificationsPage({
       </div>
 
       <NotificationsManager
-        notifications={notifications}
+        notifications={notifications as any}
         stats={stats}
         userCounts={{
           total: totalUsers,

@@ -81,7 +81,7 @@ export default async function AdminCouponsPage({
       </div>
 
       <CouponsTable
-        coupons={coupons}
+        coupons={coupons as any}
         pagination={{
           page,
           limit,
