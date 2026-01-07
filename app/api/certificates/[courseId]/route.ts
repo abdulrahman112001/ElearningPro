@@ -112,12 +112,13 @@ export async function POST(
     })
 
     // Send notification
+    const courseTitle = enrollment.course.titleEn || enrollment.course.titleAr
     await db.notification.create({
       data: {
         userId: session.user.id,
         type: "CERTIFICATE_ISSUED",
         title: "Certificate Earned!",
-        message: `Congratulations! You've earned a certificate for completing "${enrollment.course.title}"`,
+        message: `Congratulations! You've earned a certificate for completing "${courseTitle}"`,
         link: `/certificates/${certificate.id}`,
       },
     })

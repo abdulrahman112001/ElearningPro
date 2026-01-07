@@ -131,6 +131,8 @@ async function updateCourseProgress(userId: string, courseId: string) {
     },
     data: {
       progress: progressPercentage,
+      isCompleted: progressPercentage === 100,
+      completedAt: progressPercentage === 100 ? new Date() : null,
     },
   })
 }

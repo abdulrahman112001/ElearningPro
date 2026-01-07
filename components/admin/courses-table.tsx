@@ -301,7 +301,7 @@ export function CoursesTable({ courses, pagination }: CoursesTableProps) {
                       </span>
                       <span className="flex items-center gap-1">
                         <Star className="h-4 w-4" />
-                        {course.avgRating.toFixed(1)}
+                        {course?.avgRating?.toFixed(1)}
                       </span>
                     </div>
                   </TableCell>

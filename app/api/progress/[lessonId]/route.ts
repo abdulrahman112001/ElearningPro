@@ -23,10 +23,15 @@ export async function PATCH(
     }
 
     // Verify enrollment belongs to user
-    const enrollment = await db.enrollment.findUnique({
+    const enrollment = await db.enrollment.findFirst({
       where: {
         id: enrollmentId,
         userId: session.user.id,
+      },
+      select: {
+        id: true,
+        userId: true,
+        courseId: true,
       },
     })
 
@@ -45,35 +50,37 @@ export async function PATCH(
           courseId: enrollment.courseId,
         },
       },
+      select: {
+        id: true,
+      },
     })
 
     if (!lesson) {
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
     }
 
-    // Upsert progress
     const progress = await db.progress.upsert({
       where: {
-        lessonId_enrollmentId: {
+        userId_lessonId: {
+          userId: session.user.id,
           lessonId: params.lessonId,
-          enrollmentId,
         },
       },
       update: {
-        ...(watchedSeconds !== undefined && { watchedSeconds }),
+        ...(watchedSeconds !== undefined && { watchedTime: watchedSeconds }),
         ...(isCompleted !== undefined && { isCompleted }),
         ...(isCompleted === true && { completedAt: new Date() }),
       },
       create: {
+        userId: session.user.id,
         lessonId: params.lessonId,
-        enrollmentId,
-        watchedSeconds: watchedSeconds || 0,
+        watchedTime: watchedSeconds || 0,
         isCompleted: isCompleted || false,
         completedAt: isCompleted ? new Date() : null,
       },
     })
 
-    // Update enrollment progress
+    // Update enrollment progress based on published lessons
     const totalLessons = await db.lesson.count({
       where: {
         chapter: {
@@ -86,8 +93,15 @@ export async function PATCH(
 
     const completedLessons = await db.progress.count({
       where: {
-        enrollmentId,
+        userId: session.user.id,
         isCompleted: true,
+        lesson: {
+          chapter: {
+            courseId: enrollment.courseId,
+            isPublished: true,
+          },
+          isPublished: true,
+        },
       },
     })
 
@@ -98,41 +112,14 @@ export async function PATCH(
       where: { id: enrollmentId },
       data: {
         progress: progressPercentage,
-        status: progressPercentage === 100 ? "COMPLETED" : "ACTIVE",
+        isCompleted: progressPercentage === 100,
         completedAt: progressPercentage === 100 ? new Date() : null,
       },
     })
 
-    // Check if course completed and issue certificate
-    if (progressPercentage === 100) {
-      // Check if certificate already exists
-      const existingCertificate = await db.certificate.findFirst({
-        where: {
-          userId: session.user.id,
-          courseId: enrollment.courseId,
-        },
-      })
-
-      if (!existingCertificate) {
-        // Generate certificate
-        const certificateNumber = `CERT-${Date.now()}-${Math.random()
-          .toString(36)
-          .substr(2, 9)
-          .toUpperCase()}`
-
-        await db.certificate.create({
-          data: {
-            userId: session.user.id,
-            courseId: enrollment.courseId,
-            certificateNumber,
-            issueDate: new Date(),
-          },
-        })
-      }
-    }
-
     return NextResponse.json({
-      progress,
+      watchedSeconds: progress.watchedTime,
+      isCompleted: progress.isCompleted,
       overallProgress: progressPercentage,
     })
   } catch (error) {
@@ -155,28 +142,23 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const enrollmentId = searchParams.get("enrollmentId")
-
-    if (!enrollmentId) {
-      return NextResponse.json(
-        { error: "Enrollment ID is required" },
-        { status: 400 }
-      )
-    }
-
     const progress = await db.progress.findUnique({
       where: {
-        lessonId_enrollmentId: {
+        userId_lessonId: {
+          userId: session.user.id,
           lessonId: params.lessonId,
-          enrollmentId,
         },
+      },
+      select: {
+        watchedTime: true,
+        isCompleted: true,
       },
     })
 
-    return NextResponse.json(
-      progress || { watchedSeconds: 0, isCompleted: false }
-    )
+    return NextResponse.json({
+      watchedSeconds: progress?.watchedTime || 0,
+      isCompleted: progress?.isCompleted || false,
+    })
   } catch (error) {
     console.error("Progress fetch error:", error)
     return NextResponse.json(

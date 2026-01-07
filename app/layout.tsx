@@ -73,7 +73,7 @@ export default async function RootLayout({
   const locale = await getLocale()
   const messages = await getMessages()
 
-  const isRTL = locale === "ar"
+  const isRTL = locale?.toLowerCase().startsWith("ar")
 
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
@@ -94,7 +94,7 @@ export default async function RootLayout({
         />
         <AuthProvider>
           <QueryProvider>
-            <NextIntlClientProvider messages={messages}>
+            <NextIntlClientProvider locale={locale} messages={messages}>
               <ThemeProvider
                 attribute="class"
                 defaultTheme="system"

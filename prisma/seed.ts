@@ -448,15 +448,29 @@ async function main() {
   ])
 
   // Create enrollments
-  await prisma.enrollment.create({
-    data: {
+  await prisma.enrollment.upsert({
+    where: {
+      userId_courseId: {
+        userId: student.id,
+        courseId: course1.id,
+      },
+    },
+    update: {},
+    create: {
       userId: student.id,
       courseId: course1.id,
     },
   })
 
-  await prisma.enrollment.create({
-    data: {
+  await prisma.enrollment.upsert({
+    where: {
+      userId_courseId: {
+        userId: student.id,
+        courseId: course4.id,
+      },
+    },
+    update: {},
+    create: {
       userId: student.id,
       courseId: course4.id,
     },
@@ -464,8 +478,15 @@ async function main() {
   console.log("✅ Enrollments created")
 
   // Create reviews
-  await prisma.review.create({
-    data: {
+  await prisma.review.upsert({
+    where: {
+      userId_courseId: {
+        userId: student.id,
+        courseId: course1.id,
+      },
+    },
+    update: {},
+    create: {
       rating: 5,
       comment:
         "كورس ممتاز! شرح واضح ومفصل. أنصح به بشدة لكل من يريد تعلم React",

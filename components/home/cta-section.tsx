@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link"
+import { useTranslations } from "next-intl"
+import { motion } from "framer-motion"
+import { ArrowLeft, Sparkles } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function CTASection() {
-  const t = useTranslations();
+  const t = useTranslations()
 
   return (
     <section className="py-16 md:py-24">
@@ -17,7 +17,7 @@ export function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 p-8 md:p-16 text-center text-white"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 dark:from-primary-foreground dark:to-primary-foreground/90 p-8 md:p-16 text-center text-white"
         >
           {/* Background decoration */}
           <div className="absolute inset-0 -z-0">
@@ -59,5 +59,5 @@ export function CTASection() {
         </motion.div>
       </div>
     </section>
-  );
+  )
 }

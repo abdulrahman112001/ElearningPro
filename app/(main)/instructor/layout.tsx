@@ -1,10 +1,11 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
+import { useEffect } from "react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -86,6 +87,20 @@ export default function InstructorLayout({
   const { data: session, status } = useSession()
   const t = useTranslations("instructor")
   const pathname = usePathname()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === "loading") return
+
+    if (!session?.user) {
+      router.replace("/login?callbackUrl=/instructor")
+      return
+    }
+
+    if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
+      router.replace("/")
+    }
+  }, [router, session?.user, status])
 
   if (status === "loading") {
     return (
@@ -96,11 +111,11 @@ export default function InstructorLayout({
   }
 
   if (!session?.user) {
-    redirect("/login?callbackUrl=/instructor")
+    return null
   }
 
   if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
-    redirect("/")
+    return null
   }
 
   const isActive = (href: string) => {

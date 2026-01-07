@@ -8,8 +8,13 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-primary to-primary/80 text-white p-12">
+      {/* Left Side - Auth Form */}
+      <div className="flex items-center justify-center p-6 lg:p-12 bg-background order-1 lg:order-none">
+        <div className="w-full max-w-md">{children}</div>
+      </div>
+
+      {/* Right Side - Branding */}
+      <div className="hidden lg:flex flex-col justify-between bg-zinc-900 dark:bg-zinc-800 text-white p-12">
         <Link href="/" className="flex items-center gap-2">
           <GraduationCap className="h-10 w-10" />
           <span className="text-2xl font-bold">E-Learn</span>
@@ -40,11 +45,6 @@ export default function AuthLayout({
         <p className="text-sm text-white/60">
           © {new Date().getFullYear()} E-Learn. جميع الحقوق محفوظة
         </p>
-      </div>
-
-      {/* Right Side - Auth Form */}
-      <div className="flex items-center justify-center p-6 lg:p-12 bg-background">
-        <div className="w-full max-w-md">{children}</div>
       </div>
     </div>
   )

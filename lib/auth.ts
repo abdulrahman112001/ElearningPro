@@ -66,6 +66,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Allow redirects to the same origin or to our production URL
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      if (url.startsWith(baseUrl)) return url
+      if (url.startsWith("https://elearning-pro-pearl.vercel.app")) return url
+      return baseUrl
+    },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id

@@ -71,8 +71,12 @@ export default async function StudentLayout({
     redirect("/login?callbackUrl=/student")
   }
 
+  if (session.user.role !== "STUDENT" && session.user.role !== "ADMIN") {
+    redirect("/")
+  }
+
   return (
-    <div className="min-h-screen bg-muted/30" dir="rtl">
+    <div className="min-h-screen bg-muted/30">
       <div className="flex">
         {/* Sidebar */}
         <aside className="hidden lg:flex flex-col w-64 border-e bg-background min-h-[calc(100vh-4rem)] sticky top-16">

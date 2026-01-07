@@ -683,23 +683,15 @@
     "notifications": "الإشعارات",
     "thisMonth": "هذا الشهر",
     "pendingActions": "إجراءات معلقة",
-    "actions": {
-      "approve": "موافقة",
-      "reject": "رفض",
-      "block": "حظر",
-      "unblock": "إلغاء الحظر",
-      "delete": "حذف",
-      "edit": "تعديل",
-      "view": "عرض"
-    },
-    "stats": {
-      "totalUsers": "إجمالي المستخدمين",
-      "totalCourses": "إجمالي الكورسات",
-      "totalRevenue": "إجمالي الإيرادات",
-      "totalEnrollments": "إجمالي التسجيلات",
-      "newUsersThisMonth": "مستخدمين جدد هذا الشهر",
-      "revenueThisMonth": "الإيرادات هذا الشهر"
-    },
+    "actions": "الإجراءات",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "block": "حظر",
+    "unblock": "إلغاء الحظر",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "stats": "إحصائيات",
     "dashboardDescription": "نظرة عامة على إحصائيات وإدارة المنصة",
     "totalUsers": "إجمالي المستخدمين",
     "totalCourses": "إجمالي الكورسات",
@@ -996,10 +988,25 @@
     "verifyAt": "تحقق من الشهادة على",
     "download": "تحميل الشهادة",
     "share": "مشاركة",
-    "verify": "التحقق من الشهادة",
     "certificateId": "رقم الشهادة",
     "valid": "شهادة صالحة",
-    "invalid": "شهادة غير صالحة"
+    "certificate": "شهادة",
+    "certificateOfCompletion": "شهادة إتمام",
+    "thisIs": "هذا يشهد بأن",
+    "hasCompleted": "قد أتم بنجاح",
+    "issuedOn": "صدرت في",
+    "certificateNo": "رقم الشهادة",
+    "downloadCertificate": "تحميل الشهادة",
+    "shareCertificate": "مشاركة الشهادة",
+    "verifyCertificate": "التحقق من الشهادة",
+    "verificationPage": "التحقق من الشهادة",
+    "verified": "شهادة موثقة",
+    "invalid": "شهادة غير صالحة",
+    "enterCertificateNo": "أدخل رقم الشهادة",
+    "verify": "تحقق",
+    "certificateValid": "هذه الشهادة صالحة",
+    "congratulations": "تهانينا!",
+    "completedCourse": "لقد أكملت كورس"
   },
   "common": {
     "search": "بحث",
@@ -1123,22 +1130,6 @@
     "retakeQuiz": "إعادة الاختبار",
     "backToCourse": "العودة للكورس",
     "viewCertificates": "عرض الشهادات"
-  },
-  "certificate": {
-    "certificate": "شهادة",
-    "certificateOfCompletion": "شهادة إتمام",
-    "thisIs": "هذا يشهد بأن",
-    "hasCompleted": "قد أتم بنجاح",
-    "issuedOn": "صدرت في",
-    "certificateNo": "رقم الشهادة",
-    "downloadCertificate": "تحميل الشهادة",
-    "shareCertificate": "مشاركة الشهادة",
-    "verifyCertificate": "التحقق من الشهادة",
-    "verificationPage": "التحقق من الشهادة",
-    "verified": "شهادة موثقة",
-    "invalid": "شهادة غير صالحة",
-    "enterCertificateNo": "أدخل رقم الشهادة",
-    "verify": "تحقق"
   },
   "live": {
     "liveClasses": "البث المباشر",
@@ -1327,15 +1318,5 @@
     "dangerZone": "منطقة الخطر",
     "deleteAccountWarning": "حذف حسابك سيؤدي لحذف جميع بياناتك وكورساتك بشكل نهائي",
     "deleteAccount": "حذف الحساب"
-  },
-  "certificate": {
-    "certificateOfCompletion": "شهادة إتمام",
-    "issuedOn": "تاريخ الإصدار",
-    "certificateNo": "رقم الشهادة",
-    "downloadCertificate": "تحميل الشهادة",
-    "verifyCertificate": "التحقق من الشهادة",
-    "certificateValid": "هذه الشهادة صالحة",
-    "congratulations": "تهانينا!",
-    "completedCourse": "لقد أكملت كورس"
   }
 }

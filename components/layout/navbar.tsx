@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
 import { useSession, signOut } from "next-auth/react"
 import { useState } from "react"
@@ -37,6 +37,8 @@ import { cn, getInitials } from "@/lib/utils"
 
 export function Navbar() {
   const t = useTranslations()
+  const locale = useLocale()
+  const isRTL = locale?.toLowerCase().startsWith("ar")
   const { theme, setTheme } = useTheme()
   const { data: session } = useSession()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -51,8 +53,7 @@ export function Navbar() {
   ]
 
   const toggleLanguage = () => {
-    const currentLocale = document.cookie.includes("locale=ar") ? "ar" : "en"
-    const newLocale = currentLocale === "ar" ? "en" : "ar"
+    const newLocale = isRTL ? "en" : "ar"
     document.cookie = `locale=${newLocale};path=/;max-age=31536000`
     window.location.reload()
   }
@@ -151,7 +152,12 @@ export function Navbar() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="start" forceMount>
+              <DropdownMenuContent
+                className="w-56"
+                align={isRTL ? "end" : "start"}
+                forceMount
+              >
+                <div dir={isRTL ? "rtl" : "ltr"}>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
@@ -164,37 +170,42 @@ export function Navbar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={getDashboardLink()}>
+                  <Link href={getDashboardLink()} className="cursor-pointer">
                     <LayoutDashboard className="me-2 h-4 w-4" />
                     {t("student.dashboard")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/student/courses">
+                  <Link href="/student/courses" className="cursor-pointer">
                     <BookOpen className="me-2 h-4 w-4" />
                     {t("student.myCourses")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/student/wishlist">
+                  <Link href="/student/wishlist" className="cursor-pointer">
                     <Heart className="me-2 h-4 w-4" />
                     {t("student.wishlist")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/student/settings">
+                  <Link href="/student/settings" className="cursor-pointer">
                     <Settings className="me-2 h-4 w-4" />
                     {t("student.settings")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => signOut()}
-                  className="text-destructive"
+                  onClick={() =>
+                    signOut({
+                      callbackUrl: "https://elearning-pro-pearl.vercel.app/",
+                    })
+                  }
+                  className="text-destructive cursor-pointer"
                 >
                   <LogOut className="me-2 h-4 w-4" />
                   {t("auth.logout")}
                 </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
