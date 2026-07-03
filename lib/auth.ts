@@ -11,6 +11,10 @@ import { UserRole } from "@prisma/client"
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db) as Adapter,
   session: { strategy: "jwt" },
+  // v5 expects AUTH_SECRET; fall back to legacy NEXTAUTH_SECRET so both work
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  // Required on Vercel / proxied hosts so v5 can build absolute callback URLs
+  trustHost: true,
   pages: {
     signIn: "/login",
     error: "/login",

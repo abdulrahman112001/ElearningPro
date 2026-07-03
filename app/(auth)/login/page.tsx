@@ -34,7 +34,7 @@ export default function LoginPage() {
   const t = useTranslations("auth")
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const callbackUrl = searchParams?.get("callbackUrl") || "/"
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
