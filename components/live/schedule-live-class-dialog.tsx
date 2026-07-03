@@ -126,7 +126,7 @@ export function ScheduleLiveClassDialog({
     }
   }
 
-  const timeSlots = []
+  const timeSlots: string[] = []
   for (let hour = 0; hour < 24; hour++) {
     for (let minute of [0, 30]) {
       const h = hour.toString().padStart(2, "0")

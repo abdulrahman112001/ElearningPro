@@ -301,7 +301,7 @@ export function CoursesTable({ courses, pagination }: CoursesTableProps) {
                       </span>
                       <span className="flex items-center gap-1">
                         <Star className="h-4 w-4" />
-                        {course?.avgRating?.toFixed(1)}
+                        {course.averageRating?.toFixed(1)}
                       </span>
                     </div>
                   </TableCell>
@@ -388,7 +388,7 @@ export function CoursesTable({ courses, pagination }: CoursesTableProps) {
           <DialogHeader>
             <DialogTitle>{t("rejectCourse")}</DialogTitle>
             <DialogDescription>
-              {t("rejectCourseDescription", { title: rejectDialog?.title })}
+              {t("rejectCourseDescription", { title: rejectDialog?.titleEn })}
             </DialogDescription>
           </DialogHeader>
 

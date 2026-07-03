@@ -33,7 +33,7 @@ const courseSchema = z.object({
 type CourseFormData = z.infer<typeof courseSchema>;
 
 interface CreateCoursePageProps {
-  categories: { id: string; name: string; nameAr?: string }[];
+  categories: { id: string; nameEn: string; nameAr?: string | null }[];
 }
 
 export function CreateCourseForm({ categories }: CreateCoursePageProps) {
@@ -130,7 +130,7 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
                 <SelectContent>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.nameAr || category.name}
+                      {category.nameAr || category.nameEn}
                     </SelectItem>
                   ))}
                 </SelectContent>

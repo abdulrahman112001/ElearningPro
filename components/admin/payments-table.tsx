@@ -71,7 +71,7 @@ interface Payment {
   discountAmount: number
   instructorShare: number
   platformShare: number
-  createdAt: string
+  createdAt: Date | string
   user: PaymentUser
   course: PaymentCourse
   coupon: PaymentCoupon | null
@@ -143,7 +143,7 @@ export function PaymentsTable({
     router.push(`/admin/payments?${params.toString()}`)
   }
 
-  const formatDate = (value: string) => {
+  const formatDate = (value: Date | string) => {
     try {
       return format(new Date(value), "PPpp", { locale: dateLocale })
     } catch (error) {

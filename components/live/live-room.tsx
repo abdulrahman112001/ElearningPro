@@ -35,7 +35,6 @@ export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showChat, setShowChat] = useState(true)
-  const [participantCount, setParticipantCount] = useState(0)
 
   useEffect(() => {
     joinRoom()
@@ -137,11 +136,6 @@ export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>{participantCount}</span>
-          </div>
-
           <Button
             variant="ghost"
             size="icon"
@@ -166,9 +160,6 @@ export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
         video={isHost}
         audio={isHost}
         onDisconnected={handleDisconnected}
-        onParticipantsChanged={(participants) => {
-          setParticipantCount(participants.length)
-        }}
         className="flex-1 flex"
         data-lk-theme="default"
       >

@@ -16,7 +16,7 @@ import { Star } from "lucide-react";
 
 interface Category {
   id: string;
-  name: string;
+  nameEn: string;
   nameAr: string;
   children: Category[];
   _count: {
@@ -79,7 +79,7 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
                     }`}
                     onClick={() => updateSearchParams("category", category.id)}
                   >
-                    <span className="text-sm">{category.nameAr || category.name}</span>
+                    <span className="text-sm">{category.nameAr || category.nameEn}</span>
                     <span className="text-xs text-muted-foreground">
                       {category._count.courses}
                     </span>
@@ -94,7 +94,7 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
                           }`}
                           onClick={() => updateSearchParams("category", child.id)}
                         >
-                          <span>{child.nameAr || child.name}</span>
+                          <span>{child.nameAr || child.nameEn}</span>
                         </div>
                       ))}
                     </div>

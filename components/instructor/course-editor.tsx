@@ -80,7 +80,7 @@ type CourseFormData = z.infer<typeof courseSchema>
 interface Chapter {
   id: string
   titleEn: string
-  titleAr?: string
+  titleAr?: string | null
   position: number
   isPublished: boolean
   lessons: Lesson[]
@@ -89,33 +89,33 @@ interface Chapter {
 interface Lesson {
   id: string
   titleEn: string
-  titleAr?: string
-  descriptionEn?: string
-  descriptionAr?: string
-  type: string
-  videoUrl?: string
-  videoProvider?: string
+  titleAr?: string | null
+  descriptionEn?: string | null
+  descriptionAr?: string | null
+  videoUrl?: string | null
+  videoProvider?: string | null
   position: number
   videoDuration?: number
   isPublished: boolean
   isFree: boolean
   isPreview?: boolean
+  quiz?: { id: string } | null
 }
 
 interface CourseEditorProps {
   course: {
     id: string
     titleEn: string
-    titleAr?: string
+    titleAr?: string | null
     slug: string
-    descriptionEn?: string
-    descriptionAr?: string
-    shortDescEn?: string
-    shortDescAr?: string
+    descriptionEn?: string | null
+    descriptionAr?: string | null
+    shortDescEn?: string | null
+    shortDescAr?: string | null
     price: number
-    discountPrice?: number
-    thumbnail?: string
-    previewVideo?: string
+    discountPrice?: number | null
+    thumbnail?: string | null
+    previewVideo?: string | null
     categoryId?: string
     level: string
     language: string
@@ -127,8 +127,8 @@ interface CourseEditorProps {
   }
   categories: Array<{
     id: string
-    name: string
-    nameAr?: string
+    nameEn: string
+    nameAr?: string | null
   }>
 }
 
@@ -655,7 +655,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                       <SelectContent>
                         {categories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
-                            {cat.nameAr || cat.name}
+                            {cat.nameAr || cat.nameEn}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -834,7 +834,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                               <GripVertical className="h-4 w-4 text-muted-foreground cursor-move me-4" />
 
                               <div className="flex items-center gap-2 flex-1">
-                                {getLessonIcon(lesson.type || "VIDEO")}
+                                {getLessonIcon("VIDEO")}
                                 <span className="text-sm">
                                   {chapterIndex + 1}.{lessonIndex + 1}{" "}
                                   {lesson.titleAr || lesson.titleEn}
@@ -882,7 +882,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                                     <Edit className="me-2 h-4 w-4" />
                                     {t("edit")}
                                   </DropdownMenuItem>
-                                  {lesson.type === "QUIZ" && (
+                                  {lesson.quiz && (
                                     <DropdownMenuItem
                                       onClick={() =>
                                         setEditingQuiz({

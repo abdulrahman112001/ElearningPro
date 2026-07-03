@@ -209,7 +209,7 @@ export function CourseContent({
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="text-sm text-muted-foreground">
-                            {formatDuration(lesson.videoDuration)}
+                            {formatDuration(lesson.videoDuration ?? undefined)}
                           </span>
                           {!canAccess && (
                             <Lock className="h-4 w-4 text-muted-foreground" />

@@ -20,9 +20,9 @@ interface CourseHeaderProps {
   course: {
     id: string
     titleEn: string
-    titleAr?: string
-    descriptionEn?: string
-    descriptionAr?: string
+    titleAr?: string | null
+    descriptionEn?: string | null
+    descriptionAr?: string | null
     thumbnail?: string | null
     price: number
     level: string
@@ -36,7 +36,7 @@ interface CourseHeaderProps {
     category: {
       id: string
       nameEn: string
-      nameAr?: string
+      nameAr?: string | null
     } | null
     _count: {
       enrollments: number

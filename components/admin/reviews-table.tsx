@@ -62,7 +62,7 @@ interface Review {
   id: string
   rating: number
   comment: string
-  createdAt: string
+  createdAt: Date | string
   user: ReviewUser
   course: ReviewCourse
 }
@@ -161,7 +161,7 @@ export function ReviewsTable({
     )
   }
 
-  const formatDate = (value: string) => {
+  const formatDate = (value: Date | string) => {
     try {
       return format(new Date(value), "PPpp", { locale: dateLocale })
     } catch (error) {

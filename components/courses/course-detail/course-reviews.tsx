@@ -216,7 +216,7 @@ export function CourseReviews({
             <div key={review.id} className="flex gap-4">
               <Avatar className="h-10 w-10">
                 <AvatarImage src={review.user.image || ""} />
-                <AvatarFallback>{review.user.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{(review.user.name || "?").charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-start justify-between">

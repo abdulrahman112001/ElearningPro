@@ -26,14 +26,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 interface Course {
   id: string
   titleEn: string
-  titleAr?: string
+  titleAr?: string | null
   slug: string
-  thumbnail?: string
+  thumbnail?: string | null
   price: number
-  discountPrice?: number
+  discountPrice?: number | null
   instructor: {
-    name: string
-    image?: string
+    name: string | null
+    image?: string | null
   }
 }
 
@@ -299,7 +299,7 @@ export function CheckoutForm({ course, finalPrice }: CheckoutFormProps) {
                 <span>{course.price} ج.م</span>
               </div>
 
-              {course.discountPrice !== null &&
+              {course.discountPrice != null &&
                 course.discountPrice < course.price && (
                   <div className="flex justify-between text-green-600">
                     <span>{t("discount")}</span>

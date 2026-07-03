@@ -21,26 +21,27 @@ import { Button } from "@/components/ui/button"
 
 interface Course {
   id: string
-  title: string
-  titleAr?: string
+  titleEn: string
+  titleAr?: string | null
   slug: string
-  description?: string
-  thumbnail?: string
+  descriptionEn?: string | null
+  descriptionAr?: string | null
+  thumbnail?: string | null
   price: number
-  discountPrice?: number
+  discountPrice?: number | null
   level: string
   language: string
-  duration?: number
+  totalDuration?: number
   averageRating: number
   instructor: {
     id: string
-    name: string
-    image?: string
+    name: string | null
+    image?: string | null
   }
   category: {
     id: string
-    name: string
-    nameAr?: string
+    nameEn: string
+    nameAr?: string | null
   }
   chapters: {
     lessons: { id: string }[]
@@ -195,10 +196,10 @@ export function CoursesGrid({
                         {getTotalLessons(course.chapters)} {t("lessons")}
                       </span>
                     </div>
-                    {course.duration && (
+                    {course.totalDuration && (
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        <span>{formatDuration(course.duration)}</span>
+                        <span>{formatDuration(course.totalDuration)}</span>
                       </div>
                     )}
                   </div>
@@ -227,7 +228,7 @@ export function CoursesGrid({
                     <Avatar className="h-7 w-7">
                       <AvatarImage src={course.instructor.image || ""} />
                       <AvatarFallback className="text-xs">
-                        {course.instructor.name.charAt(0)}
+                        {(course.instructor.name || "").charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm text-muted-foreground truncate max-w-[120px]">

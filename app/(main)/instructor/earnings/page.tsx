@@ -85,7 +85,7 @@ export default async function InstructorEarningsPage() {
     const instructorEarnings = totalRevenue * (1 - profile.commissionRate / 100)
     return {
       id: course.id,
-      title: course.titleEn,
+      titleEn: course.titleEn,
       titleAr: course.titleAr,
       students: course._count.enrollments,
       revenue: totalRevenue,

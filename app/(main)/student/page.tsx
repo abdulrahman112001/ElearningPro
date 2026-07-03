@@ -230,7 +230,7 @@ export default async function StudentDashboard() {
                         src={enrollment.course.instructor.image || ""}
                       />
                       <AvatarFallback className="text-xs">
-                        {enrollment.course.instructor.name.charAt(0)}
+                        {(enrollment.course.instructor.name || "?").charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <span>{enrollment.course.instructor.name}</span>

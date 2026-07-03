@@ -77,7 +77,7 @@ export default async function InstructorAnalyticsPage() {
   // Monthly enrollments for the last 6 months
   const now = new Date()
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
-  const monthlyData = []
+  const monthlyData: { month: string; count: number }[] = []
   for (let i = 5; i >= 0; i--) {
     const month = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)

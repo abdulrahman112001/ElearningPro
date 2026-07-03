@@ -21,14 +21,11 @@ interface LessonEditorProps {
   lesson?: {
     id: string
     titleEn: string
-    titleAr?: string
-    descriptionEn?: string
-    descriptionAr?: string
-    type: string
-    videoUrl?: string
-    videoProvider?: string
-    content?: string
-    contentAr?: string
+    titleAr?: string | null
+    descriptionEn?: string | null
+    descriptionAr?: string | null
+    videoUrl?: string | null
+    videoProvider?: string | null
     videoDuration?: number
     isPublished: boolean
     isFree: boolean
@@ -47,11 +44,11 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
     titleAr: lesson?.titleAr || "",
     description: lesson?.descriptionEn || "",
     descriptionAr: lesson?.descriptionAr || "",
-    type: lesson?.type || "VIDEO",
+    type: "VIDEO",
     videoUrl: lesson?.videoUrl || "",
     videoProvider: lesson?.videoProvider || "YOUTUBE",
-    content: lesson?.content || "",
-    contentAr: lesson?.contentAr || "",
+    content: "",
+    contentAr: "",
     duration: lesson?.videoDuration || 0,
     isPublished: lesson?.isPublished || false,
     isFree: lesson?.isFree || false,

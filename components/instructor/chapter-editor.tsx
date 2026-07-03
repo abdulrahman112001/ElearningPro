@@ -12,7 +12,7 @@ interface ChapterEditorProps {
   chapter?: {
     id: string
     titleEn: string
-    titleAr?: string
+    titleAr?: string | null
     isPublished: boolean
   }
   onSave: (data: {

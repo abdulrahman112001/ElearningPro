@@ -49,7 +49,7 @@ interface LiveClassCardProps {
     duration: number
     status: string
     course: {
-      title: string
+      titleEn: string
       titleAr: string | null
       slug: string
     } | null
@@ -70,7 +70,7 @@ export function LiveClassCard({
   const dateLocale = locale === "ar" ? ar : enUS
 
   const title =
-    locale === "ar" && liveClass.titleAr ? liveClass.titleAr : liveClass.titleEn
+    locale === "ar" && liveClass.titleAr ? liveClass.titleAr : liveClass.title
   const courseTitle =
     liveClass.course &&
     (locale === "ar" && liveClass.course.titleAr

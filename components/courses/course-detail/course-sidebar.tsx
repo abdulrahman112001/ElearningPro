@@ -29,7 +29,7 @@ interface CourseSidebarProps {
     id: string
     slug: string
     titleEn: string
-    titleAr?: string
+    titleAr?: string | null
     thumbnail?: string | null
     price: number
     discountPrice?: number | null
@@ -38,7 +38,7 @@ interface CourseSidebarProps {
   }
   enrollment: {
     id: string
-    createdAt: Date
+    enrolledAt: Date
   } | null
   progressPercentage: number
   totalLessons: number
@@ -128,7 +128,7 @@ export function CourseSidebar({
             fill
             className="object-cover rounded-t-lg"
           />
-          {course.previewVideo && (
+          {course.promoVideo && (
             <button className="absolute inset-0 flex items-center justify-center bg-black/30 group">
               <div className="bg-white rounded-full p-4 group-hover:scale-110 transition-transform">
                 <PlayCircle className="h-8 w-8 text-primary" />
