@@ -18,7 +18,7 @@ interface Category {
   id: string;
   nameEn: string;
   nameAr: string;
-  children: Category[];
+  children: { id: string; nameEn: string; nameAr: string }[];
   _count: {
     courses: number;
   };

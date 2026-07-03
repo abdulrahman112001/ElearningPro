@@ -104,7 +104,7 @@ export function CourseSidebar({
   const handleShare = async () => {
     try {
       await navigator.share({
-        title: course.titleEn || course.titleAr,
+        title: course.titleEn || course.titleAr || "",
         url: window.location.href,
       })
     } catch {

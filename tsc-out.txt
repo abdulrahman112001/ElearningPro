@@ -1,7 +1,0 @@
-app/(main)/courses/page.tsx(160,29): error TS2322: Type '({ children: { image: string | null; id: string; icon: string | null; position: number; nameAr: string; slug: string; createdAt: Date; updatedAt: Date; nameEn: string; description: string | null; parentId: string | null; isActive: boolean; }[]; _count: { ...; }; } & { ...; })[]' is not assignable to type 'Category[]'.
-  Type '{ children: { image: string | null; id: string; icon: string | null; position: number; nameAr: string; slug: string; createdAt: Date; updatedAt: Date; nameEn: string; description: string | null; parentId: string | null; isActive: boolean; }[]; _count: { ...; }; } & { ...; }' is not assignable to type 'Category'.
-    Types of property 'children' are incompatible.
-      Type '{ image: string | null; id: string; icon: string | null; position: number; nameAr: string; slug: string; createdAt: Date; updatedAt: Date; nameEn: string; description: string | null; parentId: string | null; isActive: boolean; }[]' is not assignable to type 'Category[]'.
-        Type '{ image: string | null; id: string; icon: string | null; position: number; nameAr: string; slug: string; createdAt: Date; updatedAt: Date; nameEn: string; description: string | null; parentId: string | null; isActive: boolean; }' is missing the following properties from type 'Category': children, _count
-components/courses/course-detail/course-sidebar.tsx(107,9): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | undefined'.
-  Type 'null' is not assignable to type 'string | undefined'.
