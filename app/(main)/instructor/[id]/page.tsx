@@ -104,9 +104,9 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
                   </Badge>
                 </div>
                 
-                {instructor.instructorProfile?.headline && (
+                {instructor.headline && (
                   <p className="text-lg text-muted-foreground mb-4">
-                    {instructor.instructorProfile.headline}
+                    {instructor.headline}
                   </p>
                 )}
 
@@ -136,7 +136,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
         </Card>
 
         {/* Bio Section */}
-        {instructor.instructorProfile?.bio && (
+        {instructor.bio && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
-                {instructor.instructorProfile.bio}
+                {instructor.bio}
               </p>
             </CardContent>
           </Card>
@@ -213,7 +213,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
                             <BookOpen className="h-16 w-16 text-primary/30" />
                           </div>
                         )}
-                        {course.isFree && (
+                        {course.price === 0 && (
                           <Badge className="absolute top-3 end-3 bg-green-500 shadow-lg">
                             {tCourses("free")}
                           </Badge>
@@ -257,7 +257,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
 
                         {/* Price & CTA */}
                         <div className="flex items-center justify-between pt-4 border-t">
-                          {course.isFree ? (
+                          {course.price === 0 ? (
                             <span className="text-green-600 font-bold text-lg">
                               {tCourses("free")}
                             </span>

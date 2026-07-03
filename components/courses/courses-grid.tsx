@@ -159,7 +159,7 @@ export function CoursesGrid({
                   )}
 
                   {/* Badges */}
-                  <div className="absolute top-3 left-3 right-3 flex justify-between">
+                  <div className="absolute top-3 start-3 end-3 flex justify-between">
                     <Badge className={getLevelBadge(course.level)}>
                       {getLevelText(course.level)}
                     </Badge>
@@ -236,7 +236,7 @@ export function CoursesGrid({
                   </div>
 
                   {/* Price */}
-                  <div className="text-left">
+                  <div className="text-start">
                     {course.price === 0 ? (
                       <span className="text-lg font-bold text-green-600">
                         {t("free")}

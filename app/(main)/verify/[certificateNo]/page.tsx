@@ -31,7 +31,7 @@ export default async function VerifyCertificatePage({
     include: {
       course: {
         select: {
-          title: true,
+          titleEn: true,
           titleAr: true,
           slug: true,
           instructor: {

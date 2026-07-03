@@ -61,7 +61,7 @@ export function CoursesFilter({ totalCourses }: CoursesFilterProps) {
                 onClick={clearFilters}
                 className="text-muted-foreground"
               >
-                <X className="h-4 w-4 ml-1" />
+                <X className="h-4 w-4 ms-1" />
                 {t("clearFilters")}
               </Button>
             )}

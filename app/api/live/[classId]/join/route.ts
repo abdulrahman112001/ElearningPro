@@ -79,7 +79,7 @@ export async function POST(
 
     // Generate token for student (not host)
     const isHost = liveClass.instructorId === session.user.id
-    const token = generateToken(
+    const token = await generateToken(
       liveClass.roomName,
       session.user.name || "Student",
       session.user.id,

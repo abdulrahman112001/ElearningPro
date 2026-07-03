@@ -112,7 +112,9 @@ export default async function InstructorDashboard() {
     (c) => c.status === "PUBLISHED"
   ).length
   const draftCourses = courses.filter((c) => c.status === "DRAFT").length
-  const pendingCourses = courses.filter((c) => c.status === "PENDING").length
+  const pendingCourses = courses.filter(
+    (c) => c.status === "PENDING_REVIEW"
+  ).length
 
   const averageRating =
     courses.length > 0
@@ -258,7 +260,7 @@ export default async function InstructorDashboard() {
                       variant={
                         course.status === "PUBLISHED"
                           ? "default"
-                          : course.status === "PENDING"
+                          : course.status === "PENDING_REVIEW"
                           ? "warning"
                           : "secondary"
                       }
@@ -307,7 +309,7 @@ export default async function InstructorDashboard() {
                       </p>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {new Date(enrollment.createdAt).toLocaleDateString(
+                      {new Date(enrollment.enrolledAt).toLocaleDateString(
                         "ar-EG"
                       )}
                     </span>

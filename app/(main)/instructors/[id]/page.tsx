@@ -110,9 +110,9 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-2">{instructor.name}</h1>
 
-                {instructor.instructorProfile?.headline && (
+                {instructor.headline && (
                   <p className="text-lg text-muted-foreground mb-4">
-                    {instructor.instructorProfile.headline}
+                    {instructor.headline}
                   </p>
                 )}
 
@@ -146,11 +146,11 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
                 </div>
 
                 {/* Bio */}
-                {instructor.instructorProfile?.bio && (
+                {instructor.bio && (
                   <div>
                     <h3 className="font-semibold mb-2">{t("bio")}</h3>
                     <p className="text-muted-foreground whitespace-pre-line">
-                      {instructor.instructorProfile.bio}
+                      {instructor.bio}
                     </p>
                   </div>
                 )}
@@ -212,7 +212,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
                             <BookOpen className="h-12 w-12 text-muted-foreground" />
                           </div>
                         )}
-                        {course.isFree && (
+                        {course.price === 0 && (
                           <Badge className="absolute top-2 end-2 bg-green-500">
                             {tCourses("free")}
                           </Badge>
@@ -251,7 +251,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
 
                         {/* Price */}
                         <div className="flex items-center justify-between">
-                          {course.isFree ? (
+                          {course.price === 0 ? (
                             <span className="text-green-600 font-semibold">
                               {tCourses("free")}
                             </span>

@@ -72,7 +72,7 @@ export default async function LivePage({ params }: LivePageProps) {
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold mb-4">
-            {liveClass.titleAr || liveClass.titleEn}
+            {liveClass.titleAr || liveClass.title}
           </h1>
           <p className="text-muted-foreground mb-6">
             The class hasn't started yet. Please wait for the instructor.
@@ -91,7 +91,7 @@ export default async function LivePage({ params }: LivePageProps) {
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold mb-4">
-            {liveClass.titleAr || liveClass.titleEn}
+            {liveClass.titleAr || liveClass.title}
           </h1>
           <p className="text-muted-foreground">This class has ended.</p>
         </div>
@@ -102,7 +102,7 @@ export default async function LivePage({ params }: LivePageProps) {
   return (
     <LiveRoom
       classId={params.classId}
-      classTitle={liveClass.titleAr || liveClass.titleEn}
+      classTitle={liveClass.titleAr || liveClass.title}
       isHost={isHost}
     />
   )

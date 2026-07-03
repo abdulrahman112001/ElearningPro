@@ -197,7 +197,7 @@ export function CourseSidebar({
               onClick={handleEnroll}
               disabled={isLoading}
             >
-              {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              {isLoading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
               {course.price === 0 ? t("enrollFree") : t("enrollNow")}
             </Button>
             <Button
@@ -221,7 +221,7 @@ export function CourseSidebar({
             {t("wishlist")}
           </Button>
           <Button variant="outline" className="flex-1" onClick={handleShare}>
-            <Share2 className="h-4 w-4 ml-2" />
+            <Share2 className="h-4 w-4 ms-2" />
             {t("share")}
           </Button>
         </div>

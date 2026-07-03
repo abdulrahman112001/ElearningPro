@@ -73,7 +73,7 @@ export default function SubscriptionPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <Badge className="mb-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
-            <Crown className="h-3 w-3 ml-1" />
+            <Crown className="h-3 w-3 ms-1" />
             اشتراك بريميوم
           </Badge>
           <h1 className="text-4xl font-bold mb-4">احصل على وصول غير محدود</h1>
@@ -131,7 +131,7 @@ export default function SubscriptionPage() {
             <div className="mb-6">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <span className="text-5xl font-bold">{currentPlan.price}</span>
-                <div className="text-right">
+                <div className="text-end">
                   <div className="text-lg font-medium">ج.م</div>
                   <div className="text-sm text-muted-foreground">
                     /{currentPlan.period}
@@ -154,7 +154,7 @@ export default function SubscriptionPage() {
             </div>
 
             {/* Features */}
-            <div className="text-right space-y-3 mb-6">
+            <div className="text-end space-y-3 mb-6">
               {features.map((feature, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">

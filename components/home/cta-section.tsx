@@ -21,8 +21,8 @@ export function CTASection() {
         >
           {/* Background decoration */}
           <div className="absolute inset-0 -z-0">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute top-0 start-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 end-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
           </div>
 
           <div className="relative z-10">
@@ -43,7 +43,7 @@ export function CTASection() {
               <Button size="xl" variant="secondary" asChild>
                 <Link href="/register">
                   {t("auth.register")}
-                  <ArrowLeft className="mr-2 h-5 w-5 rtl:rotate-180" />
+                  <ArrowLeft className="me-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button

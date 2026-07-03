@@ -312,7 +312,7 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
           {t("cancel")}
         </Button>
         <Button type="submit" disabled={isLoading || !formData.title.trim()}>
-          {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+          {isLoading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
           {lesson ? t("update") : t("add")}
         </Button>
       </div>

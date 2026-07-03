@@ -130,7 +130,7 @@ export function CourseReviews({
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
               </div>
               <Progress value={percentage} className="flex-1 h-2" />
-              <span className="text-sm text-muted-foreground w-12 text-left">
+              <span className="text-sm text-muted-foreground w-12 text-start">
                 {count}
               </span>
             </div>
@@ -184,7 +184,7 @@ export function CourseReviews({
               <div className="flex gap-2">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting && (
-                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="ms-2 h-4 w-4 animate-spin" />
                   )}
                   {t("submitReview")}
                 </Button>

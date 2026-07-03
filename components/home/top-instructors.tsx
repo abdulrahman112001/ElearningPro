@@ -67,7 +67,7 @@ export function TopInstructors() {
           <Button variant="outline" asChild className="mt-4 md:mt-0">
             <Link href="/instructors">
               {t("common.seeAll")}
-              <ArrowLeft className="mr-2 h-4 w-4 rtl:rotate-180" />
+              <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
             </Link>
           </Button>
         </div>

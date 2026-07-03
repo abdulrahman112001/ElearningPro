@@ -136,14 +136,14 @@ export function WithdrawalRequestDialog({
                   <FormLabel>{t("amount")}</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                      <span className="absolute start-3 top-1/2 -translate-y-1/2">
                         $
                       </span>
                       <Input
                         type="number"
                         min={50}
                         max={availableBalance}
-                        className="pl-8"
+                        className="ps-8"
                         {...field}
                         onChange={(e) =>
                           field.onChange(parseFloat(e.target.value))

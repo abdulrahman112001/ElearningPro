@@ -10,14 +10,12 @@ interface CourseContentProps {
   lesson: {
     id: string
     titleEn: string
-    titleAr?: string
-    descriptionEn?: string
-    descriptionAr?: string
-    content?: string
-    contentAr?: string
-    resources?: Array<{
+    titleAr?: string | null
+    descriptionEn?: string | null
+    descriptionAr?: string | null
+    attachments?: Array<{
       id: string
-      title: string
+      name: string
       url: string
       type: string
     }>
@@ -26,7 +24,6 @@ interface CourseContentProps {
 
 export function CourseContent({ lesson }: CourseContentProps) {
   const description = lesson.descriptionAr || lesson.descriptionEn
-  const content = lesson.contentAr || lesson.content
 
   return (
     <div className="space-y-6">
@@ -42,8 +39,8 @@ export function CourseContent({ lesson }: CourseContentProps) {
 
       <Separator />
 
-      {/* Lesson Content */}
-      {content && (
+      {/* Description as rich content */}
+      {description && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Lesson Notes</CardTitle>
@@ -51,21 +48,23 @@ export function CourseContent({ lesson }: CourseContentProps) {
           <CardContent>
             <div
               className="prose dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(description),
+              }}
             />
           </CardContent>
         </Card>
       )}
 
-      {/* Resources */}
-      {lesson.resources && lesson.resources.length > 0 && (
+      {/* Resources / Attachments */}
+      {lesson.attachments && lesson.attachments.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Resources</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {lesson.resources.map((resource) => (
+              {lesson.attachments.map((resource) => (
                 <a
                   key={resource.id}
                   href={resource.url}
@@ -79,7 +78,7 @@ export function CourseContent({ lesson }: CourseContentProps) {
                     ) : (
                       <ExternalLink className="h-5 w-5 text-muted-foreground" />
                     )}
-                    <span className="font-medium">{resource.title}</span>
+                    <span className="font-medium">{resource.name}</span>
                   </div>
                   <Button variant="ghost" size="sm">
                     {resource.type === "FILE" ? "Download" : "Open"}

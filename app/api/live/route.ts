@@ -115,7 +115,7 @@ export async function GET(request: Request) {
         course: {
           select: {
             id: true,
-            title: true,
+            titleEn: true,
             titleAr: true,
             slug: true,
           },

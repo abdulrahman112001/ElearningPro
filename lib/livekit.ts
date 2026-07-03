@@ -14,12 +14,12 @@ export function getRoomService() {
 }
 
 // Generate access token for participant
-export function generateToken(
+export async function generateToken(
   roomName: string,
   participantName: string,
   participantIdentity: string,
   isHost: boolean = false
-): string {
+): Promise<string> {
   const token = new AccessToken(apiKey, apiSecret, {
     identity: participantIdentity,
     name: participantName,
@@ -33,7 +33,7 @@ export function generateToken(
     canSubscribe: true,
   })
 
-  return token.toJwt()
+  return await token.toJwt()
 }
 
 // Create a new room
@@ -145,7 +145,7 @@ export async function sendDataMessage(
   const roomService = getRoomService()
 
   try {
-    await roomService.sendData(roomName, data, {
+    await roomService.sendData(roomName, data, 0, {
       destinationIdentities,
     })
     return true

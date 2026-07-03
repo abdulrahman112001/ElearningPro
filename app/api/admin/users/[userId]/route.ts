@@ -33,7 +33,7 @@ export async function GET(
         courses: {
           select: {
             id: true,
-            title: true,
+            titleEn: true,
             status: true,
             totalStudents: true,
           },
@@ -44,7 +44,7 @@ export async function GET(
             course: {
               select: {
                 id: true,
-                title: true,
+                titleEn: true,
               },
             },
             progress: true,

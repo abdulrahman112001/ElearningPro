@@ -63,7 +63,7 @@ export default async function LearnPage({ params }: LearnPageProps) {
     },
   })
 
-  if (!enrollment) {
+  if (!enrollment && course.instructorId !== session.user.id) {
     redirect(`/courses/${params.slug}`)
   }
 
@@ -83,7 +83,7 @@ export default async function LearnPage({ params }: LearnPageProps) {
       },
       include: {
         chapter: true,
-        resources: true,
+        attachments: true,
       },
     })
 

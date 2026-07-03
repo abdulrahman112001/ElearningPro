@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const purchases = await db.payment.findMany({
+    const purchases = await db.purchase.findMany({
       where: { userId: session.user.id },
       include: {
         course: {

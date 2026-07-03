@@ -71,7 +71,7 @@ export async function POST(
       chapter.lessons.forEach((lesson) => {
         if (lesson.isPublished) {
           totalLessons++
-          totalDuration += lesson.duration || 0
+          totalDuration += lesson.videoDuration || 0
         }
       })
     })

@@ -28,14 +28,23 @@ export async function POST(request: Request) {
       .update(token)
       .digest("hex");
 
-    // Find user with valid reset token
-    const user = await db.user.findFirst({
+    // Find valid reset token
+    const resetRecord = await db.passwordResetToken.findFirst({
       where: {
-        resetToken: hashedToken,
-        resetTokenExpiry: {
-          gt: new Date(),
-        },
+        token: hashedToken,
+        expires: { gt: new Date() },
       },
+    });
+
+    if (!resetRecord) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 400 }
+      );
+    }
+
+    const user = await db.user.findUnique({
+      where: { email: resetRecord.email },
     });
 
     if (!user) {
@@ -48,14 +57,13 @@ export async function POST(request: Request) {
     // Hash new password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Update user password and clear reset token
+    // Update user password and consume the token
     await db.user.update({
       where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null,
-      },
+      data: { password: hashedPassword },
+    });
+    await db.passwordResetToken.deleteMany({
+      where: { email: resetRecord.email },
     });
 
     return NextResponse.json(

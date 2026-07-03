@@ -31,7 +31,7 @@ export async function POST(
 
     if (liveClass.status === "LIVE") {
       // Already live, just return token
-      const token = generateToken(
+      const token = await generateToken(
         liveClass.roomName,
         session.user.name || "Instructor",
         session.user.id,
@@ -58,7 +58,7 @@ export async function POST(
     })
 
     // Generate token for instructor (host)
-    const token = generateToken(
+    const token = await generateToken(
       liveClass.roomName,
       session.user.name || "Instructor",
       session.user.id,

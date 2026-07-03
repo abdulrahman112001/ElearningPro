@@ -179,7 +179,7 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
 
             <div className="flex gap-4">
               <Button type="submit" className="flex-1" disabled={isLoading}>
-                {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                {isLoading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
                 {t("continue")}
               </Button>
               <Button

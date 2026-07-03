@@ -28,20 +28,22 @@ import { cn } from "@/lib/utils"
 interface VideoPlayerProps {
   lesson: {
     id: string
-    title: string
-    videoUrl?: string
-    videoProvider?: string
-    duration?: number
+    titleEn: string
+    titleAr?: string | null
+    videoUrl?: string | null
+    videoProvider?: string | null
+    videoDuration?: number
   }
   progress?: {
-    completed: boolean
-    watchedDuration: number
+    isCompleted: boolean
+    watchedTime: number
   } | null
   userId: string
   courseSlug: string
   nextLesson?: {
     id: string
-    title: string
+    titleEn: string
+    titleAr?: string | null
   } | null
 }
 
@@ -65,7 +67,7 @@ export function VideoPlayer({
   const [playbackRate, setPlaybackRate] = useState(1)
   const [showControls, setShowControls] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [isCompleted, setIsCompleted] = useState(progress?.completed || false)
+  const [isCompleted, setIsCompleted] = useState(progress?.isCompleted || false)
   const [isSavingProgress, setIsSavingProgress] = useState(false)
 
   // Auto-hide controls
@@ -231,7 +233,7 @@ export function VideoPlayer({
       >
         {/* Completion Badge */}
         {isCompleted && (
-          <div className="absolute top-4 right-4 bg-green-600 text-white px-3 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium">
+          <div className="absolute top-4 end-4 bg-green-600 text-white px-3 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium">
             <CheckCircle className="h-4 w-4" />
             Completed
           </div>
@@ -239,7 +241,7 @@ export function VideoPlayer({
 
         {/* Saving Indicator */}
         {isSavingProgress && (
-          <div className="absolute top-4 left-4 bg-black/60 text-white px-3 py-1.5 rounded-full flex items-center gap-2 text-sm">
+          <div className="absolute top-4 start-4 bg-black/60 text-white px-3 py-1.5 rounded-full flex items-center gap-2 text-sm">
             <Loader2 className="h-3 w-3 animate-spin" />
             Saving...
           </div>
@@ -252,13 +254,13 @@ export function VideoPlayer({
             className="absolute inset-0 flex items-center justify-center"
           >
             <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
-              <Play className="h-10 w-10 text-black ml-1" />
+              <Play className="h-10 w-10 text-black ms-1" />
             </div>
           </button>
         )}
 
         {/* Bottom Controls */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+        <div className="absolute bottom-0 start-0 end-0 p-4 space-y-2">
           {/* Progress Bar */}
           <div className="flex items-center gap-2">
             <Slider

@@ -530,13 +530,13 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild>
             <Link href={`/courses/${course.slug}`} target="_blank">
-              <Eye className="ml-2 h-4 w-4" />
+              <Eye className="ms-2 h-4 w-4" />
               {t("preview")}
             </Link>
           </Button>
           {course.status !== "PUBLISHED" && (
             <Button onClick={handlePublish} disabled={isLoading}>
-              {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              {isLoading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
               {t("publish")}
             </Button>
           )}
@@ -729,8 +729,8 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                <Save className="ml-2 h-4 w-4" />
+                {isLoading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
+                <Save className="ms-2 h-4 w-4" />
                 {t("saveChanges")}
               </Button>
             </div>
@@ -745,7 +745,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
               <Dialog open={isAddingChapter} onOpenChange={setIsAddingChapter}>
                 <DialogTrigger asChild>
                   <Button>
-                    <Plus className="ml-2 h-4 w-4" />
+                    <Plus className="ms-2 h-4 w-4" />
                     {t("addChapter")}
                   </Button>
                 </DialogTrigger>
@@ -780,7 +780,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
 
                         <button
                           onClick={() => toggleChapter(chapter.id)}
-                          className="flex-1 flex items-center gap-2 text-left"
+                          className="flex-1 flex items-center gap-2 text-start"
                         >
                           {expandedChapters.includes(chapter.id) ? (
                             <ChevronDown className="h-4 w-4" />
@@ -791,7 +791,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                             {chapterIndex + 1}.{" "}
                             {chapter.titleAr || chapter.titleEn}
                           </span>
-                          <Badge variant="outline" className="mr-2">
+                          <Badge variant="outline" className="me-2">
                             {chapter.lessons.length} {t("lessons")}
                           </Badge>
                           {!chapter.isPublished && (
@@ -809,14 +809,14 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                             <DropdownMenuItem
                               onClick={() => setEditingChapter(chapter)}
                             >
-                              <Edit className="ml-2 h-4 w-4" />
+                              <Edit className="ms-2 h-4 w-4" />
                               {t("edit")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeleteChapter(chapter.id)}
                               className="text-destructive"
                             >
-                              <Trash2 className="ml-2 h-4 w-4" />
+                              <Trash2 className="ms-2 h-4 w-4" />
                               {t("delete")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -829,9 +829,9 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                           {chapter.lessons.map((lesson, lessonIndex) => (
                             <div
                               key={lesson.id}
-                              className="flex items-center gap-3 p-3 pr-4 hover:bg-muted/30"
+                              className="flex items-center gap-3 p-3 pe-4 hover:bg-muted/30"
                             >
-                              <GripVertical className="h-4 w-4 text-muted-foreground cursor-move mr-4" />
+                              <GripVertical className="h-4 w-4 text-muted-foreground cursor-move me-4" />
 
                               <div className="flex items-center gap-2 flex-1">
                                 {getLessonIcon(lesson.type || "VIDEO")}

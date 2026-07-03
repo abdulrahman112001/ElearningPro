@@ -531,7 +531,7 @@ model Purchase {
 
     user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-    coupon Coupon? @relation(fields: [couponId], references: [id])
+    coupon Coupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
 
     @@index([userId])
     @@index([courseId])
@@ -575,7 +575,7 @@ model Coupon {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    course    Course?    @relation(fields: [courseId], references: [id])
+    course    Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
     createdBy User       @relation("CouponCreator", fields: [createdById], references: [id])
     purchases Purchase[]
 

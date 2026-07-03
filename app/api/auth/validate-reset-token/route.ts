@@ -20,17 +20,15 @@ export async function GET(request: Request) {
       .update(token)
       .digest("hex");
 
-    // Find user with valid reset token
-    const user = await db.user.findFirst({
+    // Find valid reset token
+    const resetRecord = await db.passwordResetToken.findFirst({
       where: {
-        resetToken: hashedToken,
-        resetTokenExpiry: {
-          gt: new Date(),
-        },
+        token: hashedToken,
+        expires: { gt: new Date() },
       },
     });
 
-    if (!user) {
+    if (!resetRecord) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
         { status: 400 }

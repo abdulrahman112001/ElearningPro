@@ -23,9 +23,9 @@ let lastCleanup = Date.now()
 function cleanup(now: number) {
   if (now - lastCleanup < CLEANUP_INTERVAL) return
   lastCleanup = now
-  for (const [key, state] of buckets) {
+  buckets.forEach((state, key) => {
     if (state.resetAt <= now) buckets.delete(key)
-  }
+  })
 }
 
 export interface RateLimitOptions {

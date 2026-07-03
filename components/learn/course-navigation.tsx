@@ -9,12 +9,12 @@ interface CourseNavigationProps {
   previousLesson?: {
     id: string
     titleEn: string
-    titleAr?: string
+    titleAr?: string | null
   } | null
   nextLesson?: {
     id: string
     titleEn: string
-    titleAr?: string
+    titleAr?: string | null
   } | null
 }
 
@@ -29,8 +29,8 @@ export function CourseNavigation({
       {previousLesson ? (
         <Button asChild variant="outline" className="flex-1">
           <Link href={`/courses/${courseSlug}/learn/${previousLesson.id}`}>
-            <ArrowLeft className="ml-2 h-4 w-4" />
-            <div className="text-left flex-1">
+            <ArrowLeft className="ms-2 h-4 w-4" />
+            <div className="text-start flex-1">
               <p className="text-xs text-muted-foreground">Previous</p>
               <p className="font-medium line-clamp-1">
                 {previousLesson.titleAr || previousLesson.titleEn}
@@ -46,13 +46,13 @@ export function CourseNavigation({
       {nextLesson ? (
         <Button asChild className="flex-1">
           <Link href={`/courses/${courseSlug}/learn/${nextLesson.id}`}>
-            <div className="text-right flex-1">
+            <div className="text-end flex-1">
               <p className="text-xs opacity-90">Next</p>
               <p className="font-medium line-clamp-1">
                 {nextLesson.titleAr || nextLesson.titleEn}
               </p>
             </div>
-            <ArrowRight className="mr-2 h-4 w-4" />
+            <ArrowRight className="me-2 h-4 w-4" />
           </Link>
         </Button>
       ) : (

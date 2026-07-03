@@ -117,14 +117,14 @@ export default async function InstructorStudentsPage({
     const existing = studentsMap.get(enrollment.userId)
     if (existing) {
       existing.enrolledCourses.push(enrollment.course)
-      if (enrollment.createdAt > existing.lastEnrolled) {
-        existing.lastEnrolled = enrollment.createdAt
+      if (enrollment.enrolledAt > existing.lastEnrolled) {
+        existing.lastEnrolled = enrollment.enrolledAt
       }
     } else {
       studentsMap.set(enrollment.userId, {
         user: enrollment.user,
         enrolledCourses: [enrollment.course],
-        lastEnrolled: enrollment.createdAt,
+        lastEnrolled: enrollment.enrolledAt,
         progress: enrollment.progress || 0,
       })
     }
@@ -137,7 +137,7 @@ export default async function InstructorStudentsPage({
   const totalEnrollments = enrollments.length
   const thisMonthEnrollments = enrollments.filter((e) => {
     const now = new Date()
-    const enrollDate = new Date(e.createdAt)
+    const enrollDate = new Date(e.enrolledAt)
     return (
       enrollDate.getMonth() === now.getMonth() &&
       enrollDate.getFullYear() === now.getFullYear()

@@ -74,7 +74,6 @@ export async function POST(
         courseId: params.courseId,
         rating,
         comment,
-        status: "APPROVED", // Auto-approve for now
       },
     });
 
@@ -105,7 +104,6 @@ export async function GET(
       db.review.findMany({
         where: {
           courseId: params.courseId,
-          status: "APPROVED",
         },
         include: {
           user: {
@@ -123,7 +121,6 @@ export async function GET(
       db.review.count({
         where: {
           courseId: params.courseId,
-          status: "APPROVED",
         },
       }),
     ]);
@@ -146,19 +143,18 @@ async function updateCourseRating(courseId: string) {
   const result = await db.review.aggregate({
     where: {
       courseId,
-      status: "APPROVED",
     },
     _avg: {
       rating: true,
     },
-    _count: true,
+    _count: { _all: true },
   });
 
   await db.course.update({
     where: { id: courseId },
     data: {
-      averageRating: result._avg.rating || 0,
-      totalReviews: result._count,
+      averageRating: result._avg?.rating || 0,
+      totalReviews: result._count?._all || 0,
     },
   });
 }

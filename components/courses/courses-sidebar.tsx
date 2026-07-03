@@ -85,7 +85,7 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
                     </span>
                   </div>
                   {category.children.length > 0 && selectedCategory === category.id && (
-                    <div className="mr-4 mt-1 space-y-1">
+                    <div className="me-4 mt-1 space-y-1">
                       {category.children.map((child) => (
                         <div
                           key={child.id}

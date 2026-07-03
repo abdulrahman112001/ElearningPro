@@ -49,7 +49,7 @@ export async function PATCH(
           publishedAt: new Date(),
         }
         notificationTitle = "Course Approved!"
-        notificationMessage = `Your course "${course.title}" has been approved and is now live.`
+        notificationMessage = `Your course "${course.titleEn}" has been approved and is now live.`
         break
 
       case "reject":
@@ -58,14 +58,14 @@ export async function PATCH(
         }
         notificationTitle = "Course Rejected"
         notificationMessage = `Your course "${
-          course.title
+          course.titleEn
         }" was not approved. Reason: ${reason || "Please review guidelines."}`
         break
 
       case "feature":
         updateData = { isFeatured: true }
         notificationTitle = "Course Featured!"
-        notificationMessage = `Your course "${course.title}" has been featured on the homepage.`
+        notificationMessage = `Your course "${course.titleEn}" has been featured on the homepage.`
         break
 
       case "unfeature":

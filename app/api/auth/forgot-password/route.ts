@@ -51,11 +51,12 @@ export async function POST(request: Request) {
       .digest("hex");
 
     // Save reset token to database
-    await db.user.update({
-      where: { id: user.id },
+    await db.passwordResetToken.deleteMany({ where: { email: user.email! } });
+    await db.passwordResetToken.create({
       data: {
-        resetToken: hashedToken,
-        resetTokenExpiry,
+        email: user.email!,
+        token: hashedToken,
+        expires: resetTokenExpiry,
       },
     });
 

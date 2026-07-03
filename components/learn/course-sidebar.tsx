@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
 interface Chapter {
   id: string
   titleEn: string
-  titleAr?: string
+  titleAr?: string | null
   position: number
   lessons: Lesson[]
 }
@@ -28,8 +28,7 @@ interface Chapter {
 interface Lesson {
   id: string
   titleEn: string
-  titleAr?: string
-  type: string
+  titleAr?: string | null
   videoDuration?: number
   isFree: boolean
 }
@@ -39,7 +38,7 @@ interface CourseSidebarProps {
     id: string
     slug: string
     titleEn: string
-    titleAr?: string
+    titleAr?: string | null
   }
   chapters: Chapter[]
   currentLessonId: string
@@ -103,15 +102,7 @@ export function CourseSidebar({
     if (isCompleted) {
       return <CheckCircle className="h-4 w-4 text-green-600" />
     }
-
-    switch (lesson.type) {
-      case "VIDEO":
-        return <PlayCircle className="h-4 w-4" />
-      case "ARTICLE":
-        return <FileText className="h-4 w-4" />
-      default:
-        return <PlayCircle className="h-4 w-4" />
-    }
+    return <PlayCircle className="h-4 w-4" />
   }
 
   const totalLessons = chapters.reduce((sum, ch) => sum + ch.lessons.length, 0)
@@ -158,7 +149,7 @@ export function CourseSidebar({
                 onClick={() => toggleChapter(chapter.id)}
                 className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-center gap-2 flex-1 text-left">
+                <div className="flex items-center gap-2 flex-1 text-start">
                   {isExpanded ? (
                     <ChevronDown className="h-4 w-4 flex-shrink-0" />
                   ) : (
@@ -233,7 +224,7 @@ export function CourseSidebar({
       <Button
         variant="outline"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className="fixed top-4 start-4 z-50 lg:hidden"
         onClick={() => setIsMobileOpen(true)}
       >
         <Menu className="h-5 w-5" />
