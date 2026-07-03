@@ -81,7 +81,7 @@ export function TopInstructors() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <Link href={`/instructor/${instructor.id}`}>
+              <Link href={`/instructors/${instructor.id}`}>
                 <Card className="text-center card-hover group">
                   <CardContent className="p-6">
                     <Avatar className="h-24 w-24 mx-auto mb-4 ring-4 ring-primary/10">

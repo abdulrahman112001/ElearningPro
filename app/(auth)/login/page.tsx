@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
@@ -33,6 +33,8 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const t = useTranslations("auth")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -57,7 +59,7 @@ export default function LoginPage() {
         toast.error("بيانات الدخول غير صحيحة")
       } else {
         toast.success("تم تسجيل الدخول بنجاح")
-        router.push("/")
+        router.push(callbackUrl)
         router.refresh()
       }
     } catch (error) {
@@ -70,7 +72,7 @@ export default function LoginPage() {
   const handleSocialLogin = async (provider: "google" | "github") => {
     setIsLoading(true)
     try {
-      await signIn(provider, { callbackUrl: "/" })
+      await signIn(provider, { callbackUrl })
     } catch (error) {
       toast.error("حدث خطأ ما")
     } finally {
