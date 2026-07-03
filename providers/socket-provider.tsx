@@ -31,9 +31,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || "", {
       path: "/api/socket/io",
       addTrailingSlash: false,
-      auth: {
-        userId: session.user.id,
-      },
+      withCredentials: true,
     })
 
     socketInstance.on("connect", () => {

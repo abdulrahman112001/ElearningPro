@@ -36,12 +36,28 @@ export async function PATCH(
       )
     }
 
-    // If rejecting, return amount to pending earnings
-    if (status === "REJECTED" && withdrawal.status === "PENDING") {
+    // If rejecting, return the reserved amount to pending earnings
+    if (
+      status === "REJECTED" &&
+      withdrawal.status !== "COMPLETED" &&
+      withdrawal.status !== "REJECTED"
+    ) {
       await db.instructorProfile.update({
         where: { userId: withdrawal.userId },
         data: {
           pendingEarnings: {
+            increment: withdrawal.amount,
+          },
+        },
+      })
+    }
+
+    // If completing, move the reserved amount into paid earnings
+    if (status === "COMPLETED" && withdrawal.status !== "COMPLETED") {
+      await db.instructorProfile.update({
+        where: { userId: withdrawal.userId },
+        data: {
+          paidEarnings: {
             increment: withdrawal.amount,
           },
         },

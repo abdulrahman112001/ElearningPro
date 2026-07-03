@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
+import DOMPurify from "isomorphic-dompurify"
 import { getTranslations } from "next-intl/server"
 import { db } from "@/lib/db"
 import { auth } from "@/lib/auth"
@@ -215,7 +216,9 @@ export default async function CoursePage({ params }: CoursePageProps) {
               <div
                 className="prose prose-gray dark:prose-invert max-w-none"
                 dangerouslySetInnerHTML={{
-                  __html: course.descriptionAr || course.descriptionEn || "",
+                  __html: DOMPurify.sanitize(
+                    course.descriptionAr || course.descriptionEn || ""
+                  ),
                 }}
               />
             </div>

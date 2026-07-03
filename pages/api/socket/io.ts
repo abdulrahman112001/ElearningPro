@@ -1,6 +1,7 @@
 import { Server as NetServer } from "http"
 import { NextApiRequest, NextApiResponse } from "next"
 import { Server as ServerIO } from "socket.io"
+import { getToken } from "next-auth/jwt"
 
 export const config = {
   api: {
@@ -30,43 +31,59 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
       },
     })
 
-    io.on("connection", (socket) => {
-      const userId = socket.handshake.auth.userId
-
-      if (userId) {
-        socket.join(userId)
-        console.log(`User ${userId} connected`)
+    io.on("connection", async (socket) => {
+      // Authenticate the socket using the NextAuth session cookie instead of
+      // trusting a client-supplied userId (which could be spoofed).
+      let userId: string | undefined
+      try {
+        const token = await getToken({
+          req: {
+            headers: { cookie: socket.handshake.headers.cookie || "" },
+          } as any,
+          secret:
+            process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "",
+        })
+        userId = (token?.id as string | undefined) ?? undefined
+      } catch {
+        userId = undefined
       }
+
+      if (!userId) {
+        socket.disconnect(true)
+        return
+      }
+
+      socket.join(userId)
+      console.log(`User ${userId} connected`)
 
       socket.on("send-message", (message) => {
         const { toUserId } = message
         if (toUserId) {
-          io.to(toUserId).emit("new-message", message)
+          // Bind the sender identity to the authenticated user.
+          io.to(toUserId).emit("new-message", { ...message, fromUserId: userId })
         }
       })
 
       socket.on("mark-as-read", ({ partnerId }) => {
-        if (userId && partnerId) {
+        if (partnerId) {
           io.to(partnerId).emit("messages-read", { by: userId })
         }
       })
 
       socket.on("typing", ({ toUserId }) => {
-        if (userId && toUserId) {
+        if (toUserId) {
           io.to(toUserId).emit("user-typing", { userId })
         }
       })
 
       socket.on("stop-typing", ({ toUserId }) => {
-        if (userId && toUserId) {
+        if (toUserId) {
           io.to(toUserId).emit("user-stop-typing", { userId })
         }
       })
 
       socket.on("disconnect", () => {
-        if (userId) {
-          console.log(`User ${userId} disconnected`)
-        }
+        console.log(`User ${userId} disconnected`)
       })
     })
 

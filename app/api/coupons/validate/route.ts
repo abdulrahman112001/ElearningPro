@@ -25,7 +25,10 @@ export async function POST(request: Request) {
       where: {
         code: code.toUpperCase(),
         isActive: true,
-        expiresAt: { gte: new Date() },
+        AND: [
+          { OR: [{ expiryDate: null }, { expiryDate: { gte: new Date() } }] },
+          { OR: [{ courseId: null }, { courseId }] },
+        ],
       },
     })
 
@@ -77,9 +80,17 @@ export async function POST(request: Request) {
         ? course.discountPrice
         : course.price
 
+    // Enforce minimum purchase requirement
+    if (coupon.minPurchase && coursePrice < coupon.minPurchase) {
+      return NextResponse.json(
+        { error: "Purchase amount is below the coupon minimum" },
+        { status: 400 }
+      )
+    }
+
     // Calculate discount
     let discount = 0
-    if (coupon.discountType === "PERCENTAGE") {
+    if (coupon.discountType === "percentage") {
       discount = (coursePrice * coupon.discountValue) / 100
       if (coupon.maxDiscount && discount > coupon.maxDiscount) {
         discount = coupon.maxDiscount

@@ -60,18 +60,33 @@ export async function POST(request: Request) {
     if (couponCode) {
       coupon = await db.coupon.findFirst({
         where: {
-          code: couponCode,
+          code: couponCode.toUpperCase(),
           isActive: true,
-          expiresAt: { gte: new Date() },
-          OR: [
-            { maxUses: null },
-            { usedCount: { lt: db.coupon.fields.maxUses } },
+          AND: [
+            { OR: [{ expiryDate: null }, { expiryDate: { gte: new Date() } }] },
+            { OR: [{ courseId: null }, { courseId }] },
           ],
         },
       })
 
+      // Reject exhausted coupons and enforce minimum purchase
+      if (coupon && coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
+        coupon = null
+      }
+      if (coupon && coupon.minPurchase && finalPrice < coupon.minPurchase) {
+        coupon = null
+      }
+
+      // Prevent reusing the same coupon by the same user
       if (coupon) {
-        if (coupon.discountType === "PERCENTAGE") {
+        const alreadyUsed = await db.purchase.findFirst({
+          where: { userId: session.user.id, couponId: coupon.id },
+        })
+        if (alreadyUsed) coupon = null
+      }
+
+      if (coupon) {
+        if (coupon.discountType === "percentage") {
           couponDiscount = (finalPrice * coupon.discountValue) / 100
           if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
             couponDiscount = coupon.maxDiscount
@@ -79,13 +94,25 @@ export async function POST(request: Request) {
         } else {
           couponDiscount = coupon.discountValue
         }
+        couponDiscount = Math.min(couponDiscount, finalPrice)
         finalPrice = Math.max(0, finalPrice - couponDiscount)
       }
     }
 
-    // Platform fee (e.g., 20%)
-    const platformFee = 0.2
-    const instructorEarnings = finalPrice * (1 - platformFee)
+    // Platform commission comes from the instructor profile (default 30%)
+    const instructorProfile = await db.instructorProfile.findUnique({
+      where: { userId: course.instructorId },
+      select: { commissionRate: true },
+    })
+    const commissionRate = instructorProfile?.commissionRate ?? 30
+    const platformShare = Number(((finalPrice * commissionRate) / 100).toFixed(2))
+    const instructorShare = Number((finalPrice - platformShare).toFixed(2))
+
+    const breakdown = {
+      instructorShare,
+      platformShare,
+      discountAmount: Number(couponDiscount.toFixed(2)),
+    }
 
     // Handle different payment methods
     switch (paymentMethod) {
@@ -94,7 +121,7 @@ export async function POST(request: Request) {
           session,
           course,
           finalPrice,
-          instructorEarnings,
+          breakdown,
           coupon
         )
 
@@ -103,7 +130,7 @@ export async function POST(request: Request) {
           session,
           course,
           finalPrice,
-          instructorEarnings,
+          breakdown.instructorShare,
           coupon
         )
 
@@ -112,7 +139,7 @@ export async function POST(request: Request) {
           session,
           course,
           finalPrice,
-          instructorEarnings,
+          breakdown.instructorShare,
           coupon
         )
 
@@ -121,7 +148,7 @@ export async function POST(request: Request) {
           session,
           course,
           finalPrice,
-          instructorEarnings,
+          breakdown.instructorShare,
           coupon
         )
 
@@ -141,7 +168,7 @@ async function handleStripePayment(
   session: any,
   course: any,
   amount: number,
-  instructorEarnings: number,
+  breakdown: { instructorShare: number; platformShare: number; discountAmount: number },
   coupon: any
 ) {
   const checkoutSession = await stripe.checkout.sessions.create({
@@ -167,7 +194,9 @@ async function handleStripePayment(
       userId: session.user.id,
       courseId: course.id,
       instructorId: course.instructorId,
-      instructorEarnings: instructorEarnings.toString(),
+      instructorShare: breakdown.instructorShare.toString(),
+      platformShare: breakdown.platformShare.toString(),
+      discountAmount: breakdown.discountAmount.toString(),
       couponId: coupon?.id || "",
     },
     customer_email: session.user.email,

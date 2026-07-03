@@ -41,14 +41,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check available balance
-    if (amount > profile.pendingEarnings) {
-      return NextResponse.json(
-        { error: "Insufficient balance" },
-        { status: 400 }
-      )
-    }
-
     // Minimum withdrawal amount (e.g., $50)
     const minWithdrawal = 50
     if (amount < minWithdrawal) {
@@ -73,6 +65,24 @@ export async function POST(request: Request) {
       )
     }
 
+    // Atomically reserve the funds to prevent race conditions / negative balance
+    const reserved = await db.instructorProfile.updateMany({
+      where: {
+        userId: session.user.id,
+        pendingEarnings: { gte: amount },
+      },
+      data: {
+        pendingEarnings: { decrement: amount },
+      },
+    })
+
+    if (reserved.count === 0) {
+      return NextResponse.json(
+        { error: "Insufficient balance" },
+        { status: 400 }
+      )
+    }
+
     // Create withdrawal request
     const withdrawal = await db.withdrawal.create({
       data: {
@@ -81,16 +91,6 @@ export async function POST(request: Request) {
         method,
         note: JSON.stringify(paymentDetails),
         status: "PENDING",
-      },
-    })
-
-    // Deduct from pending earnings
-    await db.instructorProfile.update({
-      where: { userId: session.user.id },
-      data: {
-        pendingEarnings: {
-          decrement: amount,
-        },
       },
     })
 

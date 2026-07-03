@@ -68,9 +68,9 @@ export default async function InstructorDashboard() {
         instructorShare: true,
       },
     }),
-    db.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true },
+    db.instructorProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { pendingEarnings: true },
     }),
     db.review.findMany({
       where: {
@@ -183,12 +183,12 @@ export default async function InstructorDashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">
-              {(totalEarnings._sum.instructorEarnings || 0).toLocaleString()}{" "}
+              {(totalEarnings._sum.instructorShare || 0).toLocaleString()}{" "}
               ج.م
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {t("pendingBalance")}:{" "}
-              {(pendingWithdrawal?.balance || 0).toLocaleString()} ج.م
+              {(pendingWithdrawal?.pendingEarnings || 0).toLocaleString()} ج.م
             </p>
           </CardContent>
         </Card>

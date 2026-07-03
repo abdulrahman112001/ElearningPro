@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit"
 
 // Verify certificate (public endpoint)
 export async function GET(
@@ -7,6 +8,17 @@ export async function GET(
   { params }: { params: { certificateNo: string } }
 ) {
   try {
+    // Throttle to prevent enumeration/brute-force of certificate numbers
+    const { success, resetAt } = rateLimit({
+      identifier: getClientIp(request),
+      scope: "certificate-verify",
+      limit: 10,
+      windowMs: 60_000,
+    })
+    if (!success) {
+      return tooManyRequests(resetAt)
+    }
+
     const certificate = await db.certificate.findUnique({
       where: { certificateNo: params.certificateNo },
       include: {

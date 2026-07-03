@@ -2,9 +2,21 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    // Throttle password-reset requests to mitigate spam / enumeration
+    const limit = rateLimit({
+      identifier: getClientIp(request),
+      scope: "auth-forgot-password",
+      limit: 5,
+      windowMs: 60_000,
+    });
+    if (!limit.success) {
+      return tooManyRequests(limit.resetAt);
+    }
+
     const body = await request.json();
     const { email } = body;
 

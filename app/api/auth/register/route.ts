@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    // Throttle account creation to mitigate spam / abuse
+    const limit = rateLimit({
+      identifier: getClientIp(request),
+      scope: "auth-register",
+      limit: 5,
+      windowMs: 60_000,
+    });
+    if (!limit.success) {
+      return tooManyRequests(limit.resetAt);
+    }
+
     const body = await request.json();
     const { name, email, password, role } = body;
 

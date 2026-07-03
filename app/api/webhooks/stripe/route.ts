@@ -55,49 +55,75 @@ export async function POST(request: Request) {
 }
 
 async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
-  const { userId, courseId, instructorId, instructorEarnings, couponId } = session.metadata!;
+  const {
+    userId,
+    courseId,
+    instructorId,
+    instructorShare,
+    platformShare,
+    discountAmount,
+    couponId,
+  } = session.metadata!;
 
-  // Create purchase record
-  const purchase = await db.purchase.create({
-    data: {
-      userId,
-      courseId,
-      amount: session.amount_total! / 100, // Convert from cents
-      instructorEarnings: parseFloat(instructorEarnings),
-      status: "COMPLETED",
-      provider: "STRIPE",
-      transactionId: session.payment_intent as string,
-      couponId: couponId || null,
-    },
+  const transactionId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id ?? session.id;
+
+  // Idempotency: if this transaction was already processed, stop here.
+  const existing = await db.purchase.findFirst({
+    where: { providerId: transactionId },
   });
+  if (existing) {
+    console.log("Webhook already processed:", transactionId);
+    return;
+  }
 
-  // Create enrollment
-  await db.enrollment.create({
-    data: {
-      userId,
-      courseId,
-    },
-  });
+  const instructorShareValue = parseFloat(instructorShare || "0");
+  const platformShareValue = parseFloat(platformShare || "0");
+  const discountValue = parseFloat(discountAmount || "0");
 
-  // Update instructor balance
-  await db.user.update({
-    where: { id: instructorId },
-    data: {
-      balance: {
-        increment: parseFloat(instructorEarnings),
-      },
-    },
-  });
-
-  // Update coupon usage if applicable
-  if (couponId) {
-    await db.coupon.update({
-      where: { id: couponId },
+  // Create purchase, enrollment, earnings and coupon usage atomically.
+  const purchase = await db.$transaction(async (tx) => {
+    const created = await tx.purchase.create({
       data: {
-        usedCount: { increment: 1 },
+        userId,
+        courseId,
+        amount: session.amount_total! / 100, // Convert from cents
+        provider: "STRIPE",
+        providerId: transactionId,
+        status: "COMPLETED",
+        instructorShare: instructorShareValue,
+        platformShare: platformShareValue,
+        discountAmount: discountValue,
+        couponId: couponId || null,
       },
     });
-  }
+
+    await tx.enrollment.create({
+      data: {
+        userId,
+        courseId,
+      },
+    });
+
+    await tx.instructorProfile.update({
+      where: { userId: instructorId },
+      data: {
+        pendingEarnings: { increment: instructorShareValue },
+        totalEarnings: { increment: instructorShareValue },
+      },
+    });
+
+    if (couponId) {
+      await tx.coupon.update({
+        where: { id: couponId },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
+
+    return created;
+  });
 
   // Send confirmation email
   const user = await db.user.findUnique({ where: { id: userId } });
@@ -107,9 +133,9 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     const template = emailTemplates.paymentSuccess(
       user.name || "User",
       session.amount_total! / 100,
-      course.title
+      course.titleEn
     );
-    
+
     try {
       await sendEmail({
         to: user.email!,

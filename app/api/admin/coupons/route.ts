@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const existing = await db.coupon.findUnique({ where: { code } })
+    const existing = await db.coupon.findUnique({ where: { code: code.toUpperCase() } })
 
     if (existing) {
       return NextResponse.json(
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     const coupon = await db.coupon.create({
       data: {
-        code,
+        code: code.toUpperCase(),
         discountType,
         discountValue,
         maxUses: typeof maxUses === "number" ? maxUses : null,
