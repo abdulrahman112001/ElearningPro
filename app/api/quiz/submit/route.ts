@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit"
 
 interface AnswerInput {
   questionId: string
@@ -13,6 +14,16 @@ export async function POST(req: Request) {
 
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { success, resetAt } = rateLimit({
+      identifier: session.user.id,
+      scope: "quiz-submit",
+      limit: 20,
+      windowMs: 60_000,
+    })
+    if (!success) {
+      return tooManyRequests(resetAt)
     }
 
     const { attemptId, answers } = (await req.json()) as {

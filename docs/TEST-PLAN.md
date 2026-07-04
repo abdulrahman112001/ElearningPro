@@ -1,9 +1,13 @@
 # ElearningPro — Comprehensive Test Plan
 
-> **Version:** 1.0  
+> **Version:** 1.2  
 > **Author:** QA Engineering  
 > **Scope:** Next.js 14 + Prisma + PostgreSQL + NextAuth v5 + Stripe + LiveKit + Socket.IO + next-intl  
-> **Baseline:** بعد ريفاكتور الأمان والأخطاء النوعية (0 TS errors)
+> **Baseline:** بعد ريفاكتور الأمان والأخطاء النوعية
+
+**Changelog v1.1:** أُعيد التحقق من كل الأخطاء الحرجة المذكورة في v1.0 مقابل الكود الحالي (Socket.IO auth, webhook idempotency/atomicity, حقول الكوبون, rate limit الشهادة) — **كلها لا تزال مُصلَحة فعليًا**. أُضيف: قسم صريح لـ Relations & Data Integrity (§3.0)، جدول Page-by-Page شامل لكل صفحة (§3.17)، مصفوفة تغطية كل API route + الكشف عن مسارات مكرّرة/ميتة (§3.18)، وBUG-033/BUG-034 الجديدان.
+
+**Changelog v1.2:** تم إصلاح كل الأخطاء المفتوحة القابلة للإصلاح مباشرة بالكود: **BUG-026** (ترجمة الـ616 مفتاحًا الناقصة بالكامل، تحقق 0 فجوة)، **BUG-033/BUG-035** (حذف الكود الميت: مكوّن `QuizPlayer` وroute الاختبار اليتيم، وroute التقدّم اليتيم `progress/[lessonId]`)، **BUG-034** (إضافة `app/error.tsx` + `app/global-error.tsx` + `app/not-found.tsx` مترجمة ومتوافقة مع RTL)، **QZ-008** (rate limiting على `quiz/start` و`quiz/submit`، 20/دقيقة لكل مستخدم). تم **تأجيل** BUG-027 (دمج LiveSession/LiveClass) وBUG-032 (استضافة Socket.IO) بقرار من المستخدم لحاجتهما لقرار/migration خارج نطاق هذا التعديل، و**اعتماد** BUG-028 كسلوك مقصود، و**تخطي** BUG-029/030 (تتطلب بيانات اعتماد ونطاق عمل جديد). BUG-031 (انحراف العدّادات) لا يزال مفتوحًا. ملاحظة: `tsc --noEmit` كشف عن 30 خطأ TypeScript موجودة مسبقًا (`searchParams`/`pathname` قد تكون `null`) في ملفات لم تُمَس بهذا التعديل — تناقض الادعاء بـ"0 TS errors" في القاعدة الأساسية، ولم تكن ضمن نطاق هذا الطلب.
 
 ---
 
@@ -28,6 +32,8 @@
 | XSS via `dangerouslySetInnerHTML` | High | Low (mitigated by DOMPurify) | **P1** | Frontend |
 | Denormalized counters drift | Medium | High | **P2** | Backend |
 | Free course price-change loophole | Medium | Low | **P2** | Backend |
+| ~~Duplicate/orphaned API routes still callable (quiz, progress)~~ | — | — | **FIXED** | Backend |
+| ~~No `error.tsx`/`not-found.tsx` anywhere in the app~~ | — | — | **FIXED** | Frontend |
 
 **Severity legend:** P0 = block release · P1 = fix before GA · P2 = fix in next sprint
 
@@ -63,6 +69,28 @@
 ---
 
 ## 3. Test Cases
+
+### 3.0 Relations & Data Integrity (Cross-Entity Test Cases)
+
+هذه حالات تختبر تناسق البيانات عبر جداول مترابطة مباشرة (لا نموذج واحد)، بمعزل عن أي endpoint واحد — الهدف اكتشاف Data Inconsistency لا يظهر إلا عند تتبّع السلسلة كاملة.
+
+| Test ID | Relation Chain | Scenario | Steps | Expected | Priority |
+|---|---|---|---|---|---|
+| REL-001 | Enrollment ↔ Purchase | كل `Purchase.status=COMPLETED` لكورس مدفوع له `Enrollment` مطابق (`userId`+`courseId`) | `SELECT` كل completed purchases لكورس price>0 وقارن بـ enrollments | 1:1 مطابقة تامة، لا purchase بلا enrollment | **P0** |
+| REL-002 | Enrollment ↔ Progress | `Enrollment.progress` = نسبة `Progress.isCompleted=true` من إجمالي الدروس المنشورة في الكورس | أكمل 3 من 10 دروس → افحص `enrollment.progress` | = 30 (مطابق لحساب `updateCourseProgress`) | P0 |
+| REL-003 | Progress ↔ Certificate | لا يوجد `Certificate` لمستخدم لم يصل `Enrollment.isCompleted=true` | افحص كل certificates → تحقق من enrollment المطابق | 100% من الشهادات لديها enrollment مكتمل | **P0** |
+| REL-004 | Enrollment ↔ Certificate (uniqueness) | مستخدم لا يمكن أن يملك أكثر من شهادة واحدة لنفس الكورس | أكمل الكورس مرتين (إعادة تعيين progress يدويًا) → اطلب شهادة | Unique constraint `userId_courseId` يمنع التكرار | P1 |
+| REL-005 | Coupon ↔ Purchase | `Purchase.discountAmount` غير صفري ⇒ `Purchase.couponId` غير null، والعكس | افحص كل purchases بخصم | لا purchase بخصم بلا couponId مرتبط | P1 |
+| REL-006 | Coupon ↔ Purchase (usedCount) | `Coupon.usedCount` = `COUNT(Purchase WHERE couponId=X)` فعليًا | استخدم كوبون 3 مرات من مستخدمين مختلفين → قارن العدّاد بالعدّ الفعلي | تطابق تام (لا drift) | **P0** — يرتبط بـ BUG-031 |
+| REL-007 | Instructor Earnings ↔ Payments | `InstructorProfile.totalEarnings` = `SUM(Purchase.instructorShare)` لكل مشترياته | نفّذ 5 عمليات شراء لمدرّس واحد → قارن المجموع | تطابق؛ أي انحراف = دليل على bug في webhook أو خصم مزدوج | **P0** |
+| REL-008 | Instructor Earnings ↔ Withdrawals | `pendingEarnings + paidEarnings + (SUM withdrawals PENDING/APPROVED)` لا يتجاوز `totalEarnings` | نفّذ سحوبات متعددة بحالات مختلفة | لا bypass للسقف الكلي | **P0** |
+| REL-009 | Quiz ↔ Attempt ↔ Answer | كل `QuizAnswer` مرتبطة بـ `QuizAttempt` ينتمي لنفس `Quiz` الذي يملك `Question` | افحص FK chain لعيّنة عشوائية | لا orphan answers، لا اختلاط أسئلة من quiz آخر | P1 |
+| REL-010 | Quiz ↔ Attempt (best score) | حساب شهادة الدرجة يعتمد على "أفضل محاولة" وليس آخر محاولة | أدِّ الاختبار 3 مرات بنتائج متفاوتة (80%, 60%, 95%) | Certificate.grade يعكس 95% | P1 |
+| REL-011 | LiveSession/LiveClass ↔ Course | كل جلسة بث مرتبطة بكورس موجود ومنشور، ولا تظهر لغير المسجَّلين | أنشئ live class لكورس DRAFT | لا تظهر في `/student/live` لأي طالب | P1 |
+| REL-012 | LiveSession ↔ LiveClass duplication (BUG-027) | النموذجان `LiveSession` و`LiveClass` قد يحملان بيانات متضاربة لنفس الحدث | ابحث عن سجلات بنفس `courseId`+`scheduledAt` في كلا الجدولين | يجب ألا يوجد ازدواج فعلي في الاستخدام الحالي؛ وثّق أي حالة | **P2** — Open (BUG-027) |
+| REL-013 | Category ↔ Course (children) | حذف تصنيف له كورسات تابعة | Admin يحذف category مرتبط بكورسات | يُرفض الحذف أو `onDelete` policy واضحة (لا orphan `categoryId`) | P1 |
+| REL-014 | Review ↔ Enrollment | مستخدم غير مسجَّل بالكورس لا يمكنه إضافة review | POST `/api/courses/${courseId}/reviews` بدون enrollment | 403 | **P0** |
+| REL-015 | Review ↔ Course rating aggregate | `Course.averageRating`/`totalReviews` تطابق `AVG`/`COUNT` الفعلي من جدول Review | أضف/عدّل/احذف reviews متعددة | تطابق فوري بعد كل عملية (لا drift) | P2 — يرتبط بـ BUG-031 |
 
 ### 3.1 Authentication ([app/(auth)](app/(auth)), [lib/auth.ts](lib/auth.ts))
 
@@ -182,7 +210,7 @@
 | QZ-005 | Security | Client يرسل score مباشرة | POST مع {score: 100} | Server يتجاهله ويحسب بنفسه | **P0** | — |
 | QZ-006 | Negative | Submit بدون enrollment | 403 | P0 | — |
 | QZ-007 | Positive | Best score يُحسب للـ certificate | quiz مرتين، أعلى درجة تُستخدم | ✓ | P1 | — |
-| QZ-008 | Edge | Rate limit على quiz submit | 100 محاولة في دقيقة | 429 | P1 | Missing rate limiting |
+| QZ-008 | Edge | Rate limit على quiz submit/start | 21 محاولة في دقيقة لنفس المستخدم | 429 | P1 | **FIXED** — `rateLimit()` مضاف لـ `quiz/start` و`quiz/submit` (20/min per user) |
 | QZ-009 | Negative | Submit لـ attempt مكتمل بالفعل | 400 already submitted | P1 | — |
 
 ### 3.8 Certificates ([app/api/certificates/**](app/api/certificates), [app/(main)/verify/[certificateNo]](app/(main)/verify/%5BcertificateNo%5D))
@@ -302,6 +330,89 @@
 | I18N-003 | Positive | RTL Arabic layout | dir="rtl" | Icons flip, layout mirror | P1 | Fixed 53 files |
 | I18N-004 | Positive | Number formatting per locale | 1,000 vs ١٬٠٠٠ | — | P2 | — |
 
+### 3.17 Page-by-Page UI, Accessibility & State Coverage
+
+**Loading state architecture (verified):** Next.js App Router uses the nearest ancestor `loading.tsx`. Only 5 exist: [app/(main)/loading.tsx](app/(main)/loading.tsx) (fallback for every page under the `(main)` group unless overridden), plus overrides for [admin](app/(main)/admin/loading.tsx), [courses](app/(main)/courses/loading.tsx), [instructor](app/(main)/instructor/loading.tsx), [student](app/(main)/student/loading.tsx). The `(auth)` group has **no** `loading.tsx`. **Error boundary architecture (verified):** there is **no** `error.tsx`, `global-error.tsx`, or `not-found.tsx` anywhere in `app/` — every thrown exception or `notFound()` call renders Next.js's default unstyled English page, breaking RTL/i18n/branding (**BUG-034**, new).
+
+Every row below is a real page found via `app/**/page.tsx`. "Loading" = which loading.tsx actually governs it. "Error" is uniformly "None" until BUG-034 is fixed — listed once at the top, not repeated per row, except where a page has additional custom needs (e.g. skeleton for slow data).
+
+| Test ID | Page | File | RTL/LTR | Loading (actual) | Responsive/A11y | Priority |
+|---|---|---|---|---|---|---|
+| PG-001 | Home | [app/(main)/page.tsx](app/(main)/page.tsx) | Hero/testimonials/stats mirror correctly | `(main)/loading.tsx` | Hero image `alt`, heading hierarchy, mobile nav collapse | P1 |
+| PG-002 | Login | [app/(auth)/login/page.tsx](app/(auth)/login/page.tsx) | Form fields + labels RTL-aligned | **None** (no `(auth)/loading.tsx`) | Form labels, focus order, error text `aria-live` | P0 |
+| PG-003 | Register | [app/(auth)/register/page.tsx](app/(auth)/register/page.tsx) | Same | None | Password strength indicator readable by SR | P0 |
+| PG-004 | Forgot password | [app/(auth)/forgot-password/page.tsx](app/(auth)/forgot-password/page.tsx) | Same | None | Success/error message announced | P1 |
+| PG-005 | Reset password | [app/(auth)/reset-password/page.tsx](app/(auth)/reset-password/page.tsx) | Same | None | Invalid/expired token state renders (no error.tsx to catch a thrown error) | **P0** |
+| PG-006 | Courses list | [app/(main)/courses/page.tsx](app/(main)/courses/page.tsx) | Filter sidebar `start-`/`end-` not `left-`/`right-` | `courses/loading.tsx` skeleton grid | Filter checkboxes keyboard-navigable, pagination `aria-current` | P0 |
+| PG-007 | Course detail | [app/(main)/courses/[slug]/page.tsx](app/(main)/courses/%5Bslug%5D/page.tsx) | Sidebar CTA mirrors to correct side | `courses/loading.tsx` (inherited) | `dangerouslySetInnerHTML` description must not break heading order; video preview has captions/alt | **P0** |
+| PG-008 | Course redirect (legacy) | [app/(main)/course/[slug]/page.tsx](app/(main)/course/%5Bslug%5D/page.tsx) | N/A (redirect only) | N/A | Verify 308/307 redirect preserves query params | P2 |
+| PG-009 | Categories | [app/(main)/categories/page.tsx](app/(main)/categories/page.tsx) | Grid mirrors | `(main)/loading.tsx` | Icons have text alternative | P2 |
+| PG-010 | Instructors list | [app/(main)/instructors/page.tsx](app/(main)/instructors/page.tsx) | Card RTL | `(main)/loading.tsx` | Avatar `alt=name` | P2 |
+| PG-011 | Instructor profile | [app/(main)/instructors/[id]/page.tsx](app/(main)/instructors/%5Bid%5D/page.tsx) | Bio dir-aware | `(main)/loading.tsx` | Same as PG-007 for `dangerouslySetInnerHTML` bio | P1 |
+| PG-012 | Checkout | [app/(main)/checkout/[slug]/page.tsx](app/(main)/checkout/%5Bslug%5D/page.tsx) | Price/coupon fields RTL numerals | `(main)/loading.tsx` — **no dedicated skeleton for a payment page**; a slow Stripe session-create leaves a blank/jumping layout | Stripe iframe focus trap, coupon error `aria-live`, no thrown-error safety net (BUG-034 is highest-impact here — a crash mid-checkout shows Next's default page, user unsure if charged) | **P0** |
+| PG-013 | Checkout success | [app/(main)/checkout/success/page.tsx](app/(main)/checkout/success/page.tsx) | Confirmation RTL | `(main)/loading.tsx` | Screen-reader announces success | P1 |
+| PG-014 | Checkout subscription (stub) | [app/(main)/checkout/subscription/page.tsx](app/(main)/checkout/subscription/page.tsx) | N/A — TODO stub (BUG-029) | `(main)/loading.tsx` | Verify stub clearly communicates "coming soon", not a silent dead end | P2 |
+| PG-015 | Learn / video player | [app/(main)/courses/[slug]/learn/[[...lessonId]]/page.tsx](app/(main)/courses/%5Bslug%5D/learn/%5B%5B...lessonId%5D%5D/page.tsx) | Sidebar/nav mirrors, video controls RTL-aware | `(main)/loading.tsx` only — **no skeleton for video buffering** | Video player keyboard controls, captions, progress bar `aria-valuenow` | **P0** |
+| PG-016 | Quiz | [app/(main)/courses/[slug]/lessons/[lessonId]/quiz/page.tsx](app/(main)/courses/%5Bslug%5D/lessons/%5BlessonId%5D/quiz/page.tsx) | Question/options RTL | `(main)/loading.tsx` | Radio/checkbox groups `role="radiogroup"`, timer announced if `timeLimit` set | P0 |
+| PG-017 | Quiz result | [app/(main)/courses/[slug]/lessons/[lessonId]/quiz/result/page.tsx](app/(main)/courses/%5Bslug%5D/lessons/%5BlessonId%5D/quiz/result/page.tsx) | Pass/fail badge RTL | `(main)/loading.tsx` | Score announced, retry button focus | P1 |
+| PG-018 | Certificate view | [app/(main)/certificates/[certificateId]/page.tsx](app/(main)/certificates/%5BcertificateId%5D/page.tsx) | Certificate layout mirrors for `ar` | `(main)/loading.tsx` | Print/PDF export accessible name | P1 |
+| PG-019 | Public certificate verify | [app/(main)/verify/[certificateNo]/page.tsx](app/(main)/verify/%5BcertificateNo%5D/page.tsx) | RTL | `(main)/loading.tsx` | Invalid cert state doesn't leak stack trace (no error.tsx) | **P0** |
+| PG-020 | Live class room | [app/(main)/live/[classId]/page.tsx](app/(main)/live/%5BclassId%5D/page.tsx) | Chat/participant panel mirrors | `(main)/loading.tsx` — **no skeleton while LiveKit token/room is provisioning** | Mic/cam toggle keyboard-accessible, connection-lost state has no fallback UI (BUG-034) | **P0** |
+| PG-021 | Pricing | [app/(main)/pricing/page.tsx](app/(main)/pricing/page.tsx) | RTL | `(main)/loading.tsx` | Plan comparison table `<th scope>` | P2 |
+| PG-022 | Contact | [app/(main)/contact/page.tsx](app/(main)/contact/page.tsx) | RTL | `(main)/loading.tsx` | Form validation messages | P2 |
+| PG-023 | Student dashboard | [app/(main)/student/page.tsx](app/(main)/student/page.tsx) | RTL | `student/loading.tsx` | Stat cards readable order | P1 |
+| PG-024 | Student courses | [app/(main)/student/courses/page.tsx](app/(main)/student/courses/page.tsx) | RTL | `student/loading.tsx` | Progress bars `aria-valuenow` | P1 |
+| PG-025 | Student certificates | [app/(main)/student/certificates/page.tsx](app/(main)/student/certificates/page.tsx) | RTL | `student/loading.tsx` | — | P2 |
+| PG-026 | Student purchases | [app/(main)/student/purchases/page.tsx](app/(main)/student/purchases/page.tsx) | RTL, currency formatting | `student/loading.tsx` | Table headers scoped | P2 |
+| PG-027 | Student wishlist | [app/(main)/student/wishlist/page.tsx](app/(main)/student/wishlist/page.tsx) | RTL | `student/loading.tsx` | Remove-button labeled per item (not generic "×") | P2 |
+| PG-028 | Student live | [app/(main)/student/live/page.tsx](app/(main)/student/live/page.tsx) | RTL | `student/loading.tsx` | — | P2 |
+| PG-029 | Student profile | [app/(main)/student/profile/page.tsx](app/(main)/student/profile/page.tsx) | RTL | `student/loading.tsx` | Avatar upload accessible | P2 |
+| PG-030 | Student settings | [app/(main)/student/settings/page.tsx](app/(main)/student/settings/page.tsx) | RTL | `student/loading.tsx` | Password change form | P2 |
+| PG-031 | Instructor dashboard | [app/(main)/instructor/page.tsx](app/(main)/instructor/page.tsx) | RTL | `instructor/loading.tsx` | Charts have text-table alternative | P1 |
+| PG-032 | Instructor analytics | [app/(main)/instructor/analytics/page.tsx](app/(main)/instructor/analytics/page.tsx) | RTL, chart mirroring (many chart libs don't auto-flip) | `instructor/loading.tsx` | Chart color contrast, non-color-only encoding | P1 |
+| PG-033 | Instructor courses | [app/(main)/instructor/courses/page.tsx](app/(main)/instructor/courses/page.tsx) | RTL | `instructor/loading.tsx` | Status badges have text not just color | P1 |
+| PG-034 | Instructor course create | [app/(main)/instructor/courses/create/page.tsx](app/(main)/instructor/courses/create/page.tsx) | RTL form | `instructor/loading.tsx` | Multi-step form focus management | P1 |
+| PG-035 | Instructor course editor | [app/(main)/instructor/courses/[courseId]/edit/page.tsx](app/(main)/instructor/courses/%5BcourseId%5D/edit/page.tsx) | RTL, drag-reorder mirrors | `instructor/loading.tsx` | Drag-and-drop chapter/lesson reorder must have keyboard alternative | **P1** |
+| PG-036 | Instructor earnings | [app/(main)/instructor/earnings/page.tsx](app/(main)/instructor/earnings/page.tsx) | RTL currency | `instructor/loading.tsx` | Withdrawal dialog focus trap | P1 |
+| PG-037 | Instructor withdrawals | [app/(main)/instructor/withdrawals/page.tsx](app/(main)/instructor/withdrawals/page.tsx) | RTL | `instructor/loading.tsx` | Status history table | P1 |
+| PG-038 | Instructor live | [app/(main)/instructor/live/page.tsx](app/(main)/instructor/live/page.tsx) | RTL | `instructor/loading.tsx` | Schedule dialog date-picker locale-aware (Hijri/Gregorian) | P2 |
+| PG-039 | Instructor messages | [app/(main)/instructor/messages/page.tsx](app/(main)/instructor/messages/page.tsx) | RTL chat bubbles align correctly | `instructor/loading.tsx` — **no reconnect UI if Socket.IO drops** | Unread badge announced, message list `aria-live="polite"` | P1 |
+| PG-040 | Instructor reviews | [app/(main)/instructor/reviews/page.tsx](app/(main)/instructor/reviews/page.tsx) | RTL | `instructor/loading.tsx` | Star rating has numeric equivalent for SR | P2 |
+| PG-041 | Instructor students | [app/(main)/instructor/students/page.tsx](app/(main)/instructor/students/page.tsx) | RTL | `instructor/loading.tsx` | Table sortable headers | P2 |
+| PG-042 | Instructor settings | [app/(main)/instructor/settings/page.tsx](app/(main)/instructor/settings/page.tsx) | RTL | `instructor/loading.tsx` | Payment method form PCI-sensitive fields not autofilled insecurely | P1 |
+| PG-043 | Admin dashboard | [app/(main)/admin/page.tsx](app/(main)/admin/page.tsx) | RTL | `admin/loading.tsx` | Overview stat tiles | P1 |
+| PG-044 | Admin analytics | [app/(main)/admin/analytics/page.tsx](app/(main)/admin/analytics/page.tsx) | RTL | `admin/loading.tsx` | Same chart caveats as PG-032 | P1 |
+| PG-045 | Admin courses | [app/(main)/admin/courses/page.tsx](app/(main)/admin/courses/page.tsx) | RTL | `admin/loading.tsx` | Approve/reject dialog focus trap | P0 |
+| PG-046 | Admin categories | [app/(main)/admin/categories/page.tsx](app/(main)/admin/categories/page.tsx) | RTL, nested category tree mirrors | `admin/loading.tsx` | Tree expand/collapse keyboard | P2 |
+| PG-047 | Admin coupons | [app/(main)/admin/coupons/page.tsx](app/(main)/admin/coupons/page.tsx) | RTL | `admin/loading.tsx` | Create form validation | P1 |
+| PG-048 | Admin instructors | [app/(main)/admin/instructors/page.tsx](app/(main)/admin/instructors/page.tsx) | RTL | `admin/loading.tsx` | — | P2 |
+| PG-049 | Admin users | [app/(main)/admin/users/page.tsx](app/(main)/admin/users/page.tsx) | RTL | `admin/loading.tsx` | Role-change confirm dialog (irreversible action) | **P0** |
+| PG-050 | Admin payments | [app/(main)/admin/payments/page.tsx](app/(main)/admin/payments/page.tsx) | RTL, currency/date formatting | `admin/loading.tsx` | Large table virtualization/pagination performance | P1 |
+| PG-051 | Admin reviews | [app/(main)/admin/reviews/page.tsx](app/(main)/admin/reviews/page.tsx) | RTL | `admin/loading.tsx` | — | P2 |
+| PG-052 | Admin withdrawals | [app/(main)/admin/withdrawals/page.tsx](app/(main)/admin/withdrawals/page.tsx) | RTL | `admin/loading.tsx` | Approve/reject with amount double-confirmation | **P0** |
+| PG-053 | Admin notifications | [app/(main)/admin/notifications/page.tsx](app/(main)/admin/notifications/page.tsx) | RTL | `admin/loading.tsx` | — | P2 |
+| PG-054 | Admin settings | [app/(main)/admin/settings/page.tsx](app/(main)/admin/settings/page.tsx) | RTL | `admin/loading.tsx` | Commission-rate change affects future webhook calcs — needs a "this affects future purchases only" notice | P1 |
+
+### 3.18 API Route Coverage Matrix & Orphaned Endpoints (new finding)
+
+كل ملف `route.ts` تحت `app/api/**` (63 ملفًا) تمت مطابقته مع حالات §3.1–§3.16. الفجوات الحقيقية المكتشفة:
+
+| Test ID | Route | Coverage | Note |
+|---|---|---|---|
+| API-001 | [app/api/messages/[partnerId]/route.ts](app/api/messages/%5BpartnerId%5D/route.ts) | **Gap — add test** | Must verify only sender/recipient can read thread (maps to SEC-IDOR-04, previously undocumented as a real route) |
+| API-002 | [app/api/messages/students/route.ts](app/api/messages/students/route.ts) | **Gap — add test** | Instructor-only: must not leak students of other instructors |
+| API-003 | [app/api/user/notifications/route.ts](app/api/user/notifications/route.ts) | **Gap — add test** | User must only see own notifications |
+| API-004 | [app/api/user/password/route.ts](app/api/user/password/route.ts) | **Gap — add test** | Must require current password before change; rate-limit recommended (currently not in the 3-route rate-limit list) |
+| API-005 | [app/api/user/profile/route.ts](app/api/user/profile/route.ts) | **Gap — add test** | Verify role/id fields are not client-writable (mass-assignment) |
+| API-006 | [app/api/live/route.ts](app/api/live/route.ts) + [[classId]/route.ts](app/api/live/%5BclassId%5D/route.ts) + [/end](app/api/live/%5BclassId%5D/end/route.ts) | **Gap — add test** | `end` must be instructor/host-only (mirrors LIVE-002 pattern) |
+| API-007 | [app/api/courses/[courseId]/reviews/route.ts](app/api/courses/%5BcourseId%5D/reviews/route.ts) | **Gap — add test** | Maps to new REL-014; verify enrollment required, one review per user per course |
+| API-008 | [app/api/instructor/payment-methods/route.ts](app/api/instructor/payment-methods/route.ts) | **Gap — add test** | Sensitive payout details — must never be readable by another instructor or student |
+| API-009 | [app/api/instructor/courses/[courseId]/publish/route.ts](app/api/instructor/courses/%5BcourseId%5D/publish/route.ts) | Covered by INST-011/012 | — |
+| API-010 | [app/api/admin/categories/**](app/api/admin/categories) | **Gap — add test** | Delete-with-children behavior maps to REL-013 |
+| API-011 | [app/api/admin/notifications/**](app/api/admin/notifications) | **Gap — add test** | Admin-only broadcast; verify non-admin 403 |
+| **DUP-001** (RESOLVED — BUG-033) | ~~`app/api/quizzes/[lessonId]/attempt/route.ts`~~ + ~~`components/quiz/quiz-player.tsx`~~ | **Fixed** | Two independent, divergent quiz-submission implementations existed. Only `quiz/start`+`quiz/submit` was reachable from the UI ([quiz-client.tsx](components/quiz/quiz-client.tsx), used by [PG-016](app/(main)/courses/%5Bslug%5D/lessons/%5BlessonId%5D/quiz/page.tsx)). `quizzes/[lessonId]/attempt` backed the never-imported `QuizPlayer` component and diverged in behavior (no certificate auto-issue on 100% completion). Both the dead component and the orphaned route were deleted after confirming zero references anywhere in the codebase. `app/api/quizzes/[lessonId]/route.ts` (GET/POST/DELETE) was kept — its POST handler is live, used by [quiz-editor.tsx](components/quiz/quiz-editor.tsx) for instructor quiz authoring. | — |
+| **DUP-002** (RESOLVED — BUG-035) | ~~`app/api/progress/[lessonId]/route.ts`~~ | **Fixed** | `progress/lesson` (POST) + `progress/course/[courseId]` (GET) remain the live pair, called from [course-video-player.tsx](components/learn/course-video-player.tsx) / [course-sidebar.tsx](components/learn/course-sidebar.tsx). The orphaned `progress/[lessonId]` (PATCH+GET, client-supplied `enrollmentId`) was unreferenced anywhere in the UI and has been deleted. | — |
+
 ---
 
 ## 4. E2E User Journeys
@@ -371,6 +482,8 @@
 | SEC-IDOR-03 | Non-host tries `/api/live/${classId}/start` | 403 |
 | SEC-IDOR-04 | User A reads user B's messages via `/api/messages/${b}` | 403 — sender/recipient check |
 | SEC-IDOR-05 | Certificate download of another user | 403 — ownership |
+| SEC-IDOR-06 | Read another user's message thread via `GET /api/messages/${otherUserPairId}` | 403 — sender/recipient check (API-001, previously untested) |
+| ~~SEC-IDOR-07~~ | ~~Call orphaned `PATCH /api/progress/{lessonId}` with a forged `enrollmentId`~~ | **N/A — route deleted** (BUG-035/DUP-002 resolved) |
 
 ### 5.2 Injection
 | SEC-ID | Attack | Mitigation Expected |
@@ -422,6 +535,10 @@
 **RS-08 (Certificate rate limit):** 6/min verify → 429.  
 **RS-09 (Type safety):** `tsc --noEmit` = 0 errors.  
 **RS-10 (RTL/i18n):** locale=ar → dir="rtl" + `ms-*` present.
+**RS-11 (Orphaned routes, RESOLVED):** the two orphaned routes (`quizzes/{lessonId}/attempt`, `progress/{lessonId}`) were deleted rather than kept — confirm they now 404 at the framework level, and re-run a repo-wide "unreferenced API route" sweep after any future refactor touching quiz/progress models so new dead surface doesn't accumulate.
+**RS-12 (Error resilience, RESOLVED):** force-throw on checkout/live/learn and confirm the localized `app/error.tsx` renders instead of Next's default page; force a bad slug/certificate number and confirm `app/not-found.tsx` renders.
+**RS-13 (Quiz rate limiting, RESOLVED):** 21 rapid calls to `quiz/start` or `quiz/submit` from the same user within 60s → the 21st returns 429.
+**RS-14 (i18n, RESOLVED):** re-run the `ar.json` vs `en.json` key-diff script — expect 0 missing keys. Re-run after any future addition to `messages/ar.json` to catch new drift immediately.
 
 ---
 
@@ -531,18 +648,23 @@ test('webhook idempotency', async ({ request }) => {
 | BUG-023 | P2 | schema | `Purchase.coupon` had no `onDelete` policy — orphan risk | **FIXED** | `onDelete: SetNull` |
 | BUG-024 | P2 | schema | `Coupon.course` cascade blocks course deletion when coupons exist | **FIXED** | `onDelete: SetNull` |
 | BUG-025 | P2 | next.config.js | `ignoreBuildErrors: true` + `ignoreDuringBuilds: true` hid all bugs above | **FIXED** | Removed both flags |
-| BUG-026 | P2 | i18n | 616 keys missing from `messages/en.json` (falls back to Arabic) | Open | Translate |
-| BUG-027 | P2 | schema design | `LiveSession` and `LiveClass` are duplicate models | Open | Merge (needs data migration) |
-| BUG-028 | P2 | enrollment | Free-course → paid loophole (existing users keep access) | Open (documented) | Business decision |
-| BUG-029 | P2 | Subscriptions | `/checkout/subscription` = `// TODO` — no gateway integration | Open | Stripe subscriptions |
-| BUG-030 | P2 | Payment gateways | PayPal/Paymob/Tap return 501 stubs | Open | Needs credentials |
-| BUG-031 | P2 | Counters | `Course.totalStudents/averageRating/totalReviews`, `InstructorProfile.*Earnings`, `Coupon.usedCount` drift risk (manual updates) | Open | Nightly reconciliation job |
-| BUG-032 | P2 | Socket.IO | Won't work on Vercel serverless deployment | Open | Managed service (Pusher/Ably) or dedicated server |
+| BUG-026 | P2 | [messages/en.json](messages/en.json) | 616 keys missing from `messages/en.json` (fell back to Arabic) — entire namespaces (`learn`, `categories`, `instructors`, `pricing`, `settings`) were completely absent from the English file | **FIXED** | Translated and merged all 616 keys; verified 0 remaining diff vs `ar.json` |
+| BUG-027 | P2 | schema design | `LiveSession` and `LiveClass` are duplicate models | **Deferred** (by request) | Needs a migration plan proposed and reviewed before execution — data migration is hard to reverse |
+| BUG-028 | P2 | enrollment | Free-course → paid loophole (existing users keep access) | **Accepted as intended behavior** (by request) | "Grandfathering" existing access is the deliberate, documented policy — no code change needed |
+| BUG-029 | P2 | Subscriptions | `/checkout/subscription` = `// TODO` — no gateway integration | **Deferred** (by request) | Out of scope — full feature build requiring business/product decisions |
+| BUG-030 | P2 | Payment gateways | PayPal/Paymob/Tap return 501 stubs | **Deferred** (by request) | Needs real API credentials from each provider |
+| BUG-031 | P2 | Counters | `Course.totalStudents/averageRating/totalReviews`, `InstructorProfile.*Earnings`, `Coupon.usedCount` drift risk (manual updates) | Open | Nightly reconciliation job — not yet implemented |
+| BUG-032 | P2 | Socket.IO | Won't work on Vercel serverless deployment | **Deferred** (by request) | Needs a hosting/service decision (Pusher/Ably vs. dedicated server) before implementation |
+| BUG-033 | P2 | ~~`app/api/quizzes/[lessonId]/attempt/route.ts`~~, ~~`components/quiz/quiz-player.tsx`~~ | Two parallel quiz-submission systems existed. `quiz/start`+`quiz/submit` is the live path used by the UI; `quizzes/[lessonId]/attempt` backed `QuizPlayer`, which was never imported anywhere, yet the route was still publicly callable and diverged in behavior (no certificate auto-issue on 100% completion) | **FIXED** | Deleted the dead component and orphaned route entirely (confirmed zero references first) |
+| BUG-034 | P1 | [app/error.tsx](app/error.tsx), [app/global-error.tsx](app/global-error.tsx), [app/not-found.tsx](app/not-found.tsx) | No `error.tsx`, `global-error.tsx`, or `not-found.tsx` anywhere in the app. Any thrown Server Component exception or `notFound()` call rendered Next.js's default unstyled English error/404 page — broke RTL/i18n/branding, and on the checkout/live/learn pages left the user with no clear next step after a crash | **FIXED** | Added localized (`errors.*`/`navigation.home` via next-intl), RTL-aware `error.tsx`/`not-found.tsx`; `global-error.tsx` uses a hardcoded bilingual fallback (no provider access at that level) keyed off the `locale` cookie |
+| BUG-035 | P2 | ~~`app/api/progress/[lessonId]/route.ts`~~ | Same orphaned-route pattern as BUG-033: this PATCH/GET route was unreferenced by any component (live path is `progress/lesson` + `progress/course/[courseId]`), yet still publicly callable with a client-supplied `enrollmentId` | **FIXED** | Deleted the dead route (confirmed zero references first) |
 
 ### 8.3 Recommended follow-up test cases (for still-open bugs)
 - **T-BUG-028:** After enroll on price=0, admin updates price=100 → verify access stays. Then business decision test: should it revoke?
 - **T-BUG-031:** Nightly reconciliation script: `SUM(Purchase.instructorShare where userId=X) === InstructorProfile.totalEarnings` for each instructor.
-- **T-BUG-026:** Snapshot test on `/en` route: no fallback occurrences (`data-i18n-fallback="ar"` marker) beyond a threshold.
+- **T-BUG-026 (RESOLVED):** re-ran the ar/en key-diff script post-fix — 0 missing keys confirmed. Re-run this script in CI whenever `messages/ar.json` changes, to catch new drift before it reaches 616 keys again.
+- **T-BUG-033 (RESOLVED):** the orphaned route was deleted rather than reconciled — `POST /api/quizzes/{lessonId}/attempt` now 404s at the routing level, so the certificate-issuance divergence can no longer be triggered.
+- **T-BUG-034 (RESOLVED):** manually verify by throwing inside a Server Component on `/checkout/[slug]`, `/live/[classId]`, and `/courses/[slug]/learn/...` — confirm the new `app/error.tsx` renders (localized, with Retry + Home actions) instead of Next's default screen.
 
 ---
 
@@ -576,4 +698,4 @@ export const testCards = {
 
 ---
 
-**End of Test Plan v1.0**
+**End of Test Plan v1.2**
