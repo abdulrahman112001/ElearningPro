@@ -15,8 +15,10 @@ export async function loginAs(
   await page.locator("#email").fill(email)
   await page.locator("#password").fill(password)
   await page.locator('button[type="submit"]').click()
+  // Generous timeout: next dev compiles routes on first hit, which can be
+  // slow, especially the first login of a fresh test run.
   await page.waitForURL((url) => !url.pathname.includes("/login"), {
-    timeout: 15_000,
+    timeout: 45_000,
   })
 }
 
@@ -54,7 +56,7 @@ export async function visitAndInspect(
     // is what Playwright itself recommends for exactly this case.
     const response = await page.goto(url, {
       waitUntil: "load",
-      timeout: 20_000,
+      timeout: 45_000,
     })
     status = response?.status() ?? null
     // Give client components a moment to throw/log after hydration.
