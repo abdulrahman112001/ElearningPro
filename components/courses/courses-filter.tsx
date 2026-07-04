@@ -24,7 +24,7 @@ export function CoursesFilter({ totalCourses }: CoursesFilterProps) {
   const searchParams = useSearchParams();
 
   const updateSearchParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString());
     if (value) {
       params.set(key, value);
     } else {
@@ -35,14 +35,14 @@ export function CoursesFilter({ totalCourses }: CoursesFilterProps) {
   };
 
   const clearFilters = () => {
-    router.push(pathname);
+    router.push(pathname || "/courses");
   };
 
   const hasFilters = 
-    searchParams.get("category") ||
-    searchParams.get("level") ||
-    searchParams.get("price") ||
-    searchParams.get("search");
+    searchParams?.get("category") ||
+    searchParams?.get("level") ||
+    searchParams?.get("price") ||
+    searchParams?.get("search");
 
   return (
     <div className="border-b bg-background sticky top-16 z-10">
@@ -51,7 +51,7 @@ export function CoursesFilter({ totalCourses }: CoursesFilterProps) {
           {/* Left Side - Results & Filters */}
           <div className="flex items-center gap-4 flex-wrap">
             <p className="text-sm text-muted-foreground">
-              {totalCourses} {t("coursesFound")}
+              {t("coursesFound", { count: totalCourses })}
             </p>
             
             {hasFilters && (
@@ -73,7 +73,7 @@ export function CoursesFilter({ totalCourses }: CoursesFilterProps) {
             <div className="relative flex-1 md:w-64">
               <Input
                 placeholder={t("searchPlaceholder")}
-                defaultValue={searchParams.get("search") || ""}
+                defaultValue={searchParams?.get("search") || ""}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value.length > 2 || value.length === 0) {
@@ -85,7 +85,7 @@ export function CoursesFilter({ totalCourses }: CoursesFilterProps) {
 
             {/* Sort */}
             <Select
-              value={searchParams.get("sort") || "newest"}
+              value={searchParams?.get("sort") || "newest"}
               onValueChange={(value) => updateSearchParams("sort", value)}
             >
               <SelectTrigger className="w-[180px]">

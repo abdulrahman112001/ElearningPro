@@ -94,7 +94,7 @@ export function AdminSidebar() {
         pathname === "/en/admin"
       )
     }
-    return pathname.includes(href)
+    return pathname?.includes(href) ?? false
   }
 
   return (

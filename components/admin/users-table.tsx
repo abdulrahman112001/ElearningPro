@@ -93,8 +93,8 @@ export function UsersTable({ users, pagination }: UsersTableProps) {
   const searchParams = useSearchParams()
   const dateLocale = locale === "ar" ? ar : enUS
 
-  const [search, setSearch] = useState(searchParams.get("search") || "")
-  const [roleFilter, setRoleFilter] = useState(searchParams.get("role") || "")
+  const [search, setSearch] = useState(searchParams?.get("search") || "")
+  const [roleFilter, setRoleFilter] = useState(searchParams?.get("role") || "")
   const [deleteUser, setDeleteUser] = useState<User | null>(null)
 
   const handleSearch = () => {
@@ -188,7 +188,7 @@ export function UsersTable({ users, pagination }: UsersTableProps) {
           value={roleFilter || "all"}
           onValueChange={(value) => {
             setRoleFilter(value === "all" ? "" : value)
-            const params = new URLSearchParams(searchParams.toString())
+            const params = new URLSearchParams(searchParams?.toString())
             if (value && value !== "all") params.set("role", value)
             else params.delete("role")
             router.push(`/admin/users?${params.toString()}`)

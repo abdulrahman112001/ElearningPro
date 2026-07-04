@@ -163,7 +163,7 @@ export function CouponsTable({ coupons, pagination }: CouponsTableProps) {
   )
 
   const handleSearch = () => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams?.toString())
     if (search) params.set("search", search)
     else params.delete("search")
     params.delete("page")
@@ -172,7 +172,7 @@ export function CouponsTable({ coupons, pagination }: CouponsTableProps) {
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value)
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams?.toString())
     if (value && value !== "all") params.set("status", value)
     else params.delete("status")
     params.delete("page")
@@ -457,7 +457,7 @@ export function CouponsTable({ coupons, pagination }: CouponsTableProps) {
             variant="outline"
             disabled={pagination.page === 1}
             onClick={() => {
-              const params = new URLSearchParams(searchParams.toString())
+              const params = new URLSearchParams(searchParams?.toString())
               params.set("page", String(pagination.page - 1))
               router.push(`/admin/coupons?${params.toString()}`)
             }}
@@ -468,7 +468,7 @@ export function CouponsTable({ coupons, pagination }: CouponsTableProps) {
             variant="outline"
             disabled={pagination.page === pagination.pages}
             onClick={() => {
-              const params = new URLSearchParams(searchParams.toString())
+              const params = new URLSearchParams(searchParams?.toString())
               params.set("page", String(pagination.page + 1))
               router.push(`/admin/coupons?${params.toString()}`)
             }}

@@ -170,9 +170,9 @@ export function WithdrawalsTable({
       {/* Filter */}
       <div className="flex gap-4">
         <Select
-          value={searchParams.get("status") || "all"}
+          value={searchParams?.get("status") || "all"}
           onValueChange={(value) => {
-            const params = new URLSearchParams(searchParams.toString())
+            const params = new URLSearchParams(searchParams?.toString())
             if (value && value !== "all") params.set("status", value)
             else params.delete("status")
             router.push(`/admin/withdrawals?${params.toString()}`)

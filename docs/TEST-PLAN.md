@@ -1,6 +1,6 @@
 # ElearningPro — Comprehensive Test Plan
 
-> **Version:** 1.2  
+> **Version:** 1.3  
 > **Author:** QA Engineering  
 > **Scope:** Next.js 14 + Prisma + PostgreSQL + NextAuth v5 + Stripe + LiveKit + Socket.IO + next-intl  
 > **Baseline:** بعد ريفاكتور الأمان والأخطاء النوعية
@@ -577,6 +577,15 @@ jobs:
       - uses: aquasecurity/trivy-action@master
 ```
 
+### 7.2b Implemented: full-app Playwright smoke suite
+
+**Status: implemented and passing (70/70) as of v1.3.** Located at [tests/e2e/](tests/e2e) — `helpers.ts` (login + page-inspection utilities), `public.spec.ts` (16 guest pages), `student.spec.ts` (13 pages), `instructor.spec.ts` (14 pages), `admin.spec.ts` (13 pages), `api.spec.ts` (14 API/security/rate-limit checks). Run with:
+```bash
+npx playwright test              # full suite
+npx playwright test tests/e2e/admin.spec.ts   # one role
+```
+Each page visit asserts: no uncaught JS exception (`pageerror`), HTTP status < 500, and logs any `console.error` output for review (does not hard-fail on console noise from expected dev-environment gaps like LiveKit/Socket.IO not being configured, but does fail on `MISSING_MESSAGE`/`FORMATTING_ERROR` style bugs since those indicate real broken UI text). Uses seeded accounts (`admin@elearning.com` / `ahmed@elearning.com` / `student@elearning.com`, see [prisma/seed.ts](prisma/seed.ts)) and real DB-derived IDs, not mocks — this is what caught BUG-036/037/038, which no amount of static code reading found.
+
 ### 7.3 Priority automation
 1. **P0:** RS-01 through RS-05 as Playwright specs (block PR merge on fail).
 2. **P0:** Webhook idempotency test with Stripe CLI `stripe listen` + replay.
@@ -658,6 +667,9 @@ test('webhook idempotency', async ({ request }) => {
 | BUG-033 | P2 | ~~`app/api/quizzes/[lessonId]/attempt/route.ts`~~, ~~`components/quiz/quiz-player.tsx`~~ | Two parallel quiz-submission systems existed. `quiz/start`+`quiz/submit` is the live path used by the UI; `quizzes/[lessonId]/attempt` backed `QuizPlayer`, which was never imported anywhere, yet the route was still publicly callable and diverged in behavior (no certificate auto-issue on 100% completion) | **FIXED** | Deleted the dead component and orphaned route entirely (confirmed zero references first) |
 | BUG-034 | P1 | [app/error.tsx](app/error.tsx), [app/global-error.tsx](app/global-error.tsx), [app/not-found.tsx](app/not-found.tsx) | No `error.tsx`, `global-error.tsx`, or `not-found.tsx` anywhere in the app. Any thrown Server Component exception or `notFound()` call rendered Next.js's default unstyled English error/404 page — broke RTL/i18n/branding, and on the checkout/live/learn pages left the user with no clear next step after a crash | **FIXED** | Added localized (`errors.*`/`navigation.home` via next-intl), RTL-aware `error.tsx`/`not-found.tsx`; `global-error.tsx` uses a hardcoded bilingual fallback (no provider access at that level) keyed off the `locale` cookie |
 | BUG-035 | P2 | ~~`app/api/progress/[lessonId]/route.ts`~~ | Same orphaned-route pattern as BUG-033: this PATCH/GET route was unreferenced by any component (live path is `progress/lesson` + `progress/course/[courseId]`), yet still publicly callable with a client-supplied `enrollmentId` | **FIXED** | Deleted the dead route (confirmed zero references first) |
+| BUG-036 | P1 | [messages/ar.json](messages/ar.json), [messages/en.json](messages/en.json) | Live smoke-testing of every page (not just static grep) surfaced **118 more** i18n keys referenced by components but missing from **both** locale files — the original BUG-026 fix only diffed `ar.json` against `en.json`, so it never caught keys missing from `ar.json` itself (the default/source locale). A second wave, `admin.failed`/`admin.refunded` (built via `t(status.toLowerCase())`) and the full `admin.notificationTypeLabels.*` map (built via `` t(`notificationTypeLabels.${type}`) ``), was missed even by a purpose-built static-analysis script because the keys are assembled from runtime expressions, not string literals — only caught by actually rendering the pages | **FIXED** | Added all 120 keys (118 + 2) to both locale files; re-ran the full 70-test Playwright suite afterward and confirmed **zero** `MISSING_MESSAGE` console errors across every page/role |
+| BUG-037 | P2 | [components/courses/courses-filter.tsx](components/courses/courses-filter.tsx) | `courses.coursesFound` is defined as `"تم العثور على {count} كورس"` (requires a `{count}` variable) but the call site passed no variables at all and prepended the count manually outside the translation call — produced an `IntlError: FORMATTING_ERROR` on every `/courses` page load | **FIXED** | Changed to `t("coursesFound", { count: totalCourses })`, removed the redundant manual prefix |
+| BUG-038 | P2 | ~~`components/quiz/quiz-editor.tsx`~~ | A **third** orphaned quiz-authoring component existed alongside BUG-033's findings — never imported anywhere (the live instructor course editor uses `components/instructor/quiz-editor.tsx` instead). Found while tracing i18n key usage per component | **FIXED** | Deleted the dead component (confirmed zero references first); avoided needing to translate its 12 now-moot `quiz.*` keys |
 
 ### 8.3 Recommended follow-up test cases (for still-open bugs)
 - **T-BUG-028:** After enroll on price=0, admin updates price=100 → verify access stays. Then business decision test: should it revoke?
@@ -698,4 +710,10 @@ export const testCards = {
 
 ---
 
-**End of Test Plan v1.2**
+**Changelog v1.3:** نُفِّذت خطة الاختبار فعليًا بدلاً من توثيقها فقط. أُضيفت مجموعة اختبارات [Playwright](tests/e2e) حقيقية (70 اختبارًا) تُشغِّل خادم Next.js فعليًا وتزور **كل صفحة** من §3.17 بأربعة أدوار (زائر/طالب/معلم/أدمن) باستخدام بيانات مزروعة فعلية من قاعدة البيانات، وترصد: HTTP status، استثناءات JS غير معالجة، وأخطاء console. **النتيجة: 70/70 نجحت** — لا صفحة تتحطم، والتحكم بالوصول (role-based redirects) يعمل كما هو موثّق، والإصلاحات من v1.2 (rate limiting على الاختبارات، حذف المسارات اليتيمة) تم التحقق منها فعليًا عبر طلبات API حقيقية وليس قراءة كود فقط.
+
+الاختبار الحي كشف عن 3 أخطاء إضافية **لم يكتشفها التحليل الساكن للكود سابقًا** (BUG-036/037/038 أدناه) — دليل على أن الفحص الديناميكي (تشغيل فعلي) يجد فئة مختلفة من الأخطاء عن قراءة الكود وحدها، خصوصًا مفاتيح i18n المبنية ديناميكيًا (`t(status.toLowerCase())`, `` t(`ns.${variable}`) ``) التي لا تُكتشف بالبحث النصي البسيط.
+
+---
+
+**End of Test Plan v1.3**

@@ -39,7 +39,7 @@ export function InstructorShell({ children }: { children: React.ReactNode }) {
     if (href === "/instructor") {
       return pathname === "/instructor"
     }
-    return pathname.startsWith(href)
+    return pathname?.startsWith(href) ?? false
   }
 
   return (

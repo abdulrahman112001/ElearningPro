@@ -69,7 +69,7 @@ export function CoursesGrid({
   const searchParams = useSearchParams()
 
   const goToPage = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams?.toString())
     params.set("page", page.toString())
     router.push(`${pathname}?${params.toString()}`)
   }

@@ -101,13 +101,13 @@ export function CoursesTable({ courses, pagination }: CoursesTableProps) {
   const searchParams = useSearchParams()
   const dateLocale = locale === "ar" ? ar : enUS
 
-  const [search, setSearch] = useState(searchParams.get("search") || "")
+  const [search, setSearch] = useState(searchParams?.get("search") || "")
   const [processing, setProcessing] = useState<string | null>(null)
   const [rejectDialog, setRejectDialog] = useState<Course | null>(null)
   const [rejectReason, setRejectReason] = useState("")
 
   const handleSearch = () => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams?.toString())
     if (search) params.set("search", search)
     else params.delete("search")
     params.delete("page")
@@ -197,9 +197,9 @@ export function CoursesTable({ courses, pagination }: CoursesTableProps) {
         </div>
 
         <Select
-          value={searchParams.get("status") || "all"}
+          value={searchParams?.get("status") || "all"}
           onValueChange={(value) => {
-            const params = new URLSearchParams(searchParams.toString())
+            const params = new URLSearchParams(searchParams?.toString())
             if (value && value !== "all") params.set("status", value)
             else params.delete("status")
             params.delete("page")

@@ -35,7 +35,7 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
   const searchParams = useSearchParams();
 
   const updateSearchParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString());
     if (value && value !== "all") {
       params.set(key, value);
     } else {
@@ -45,11 +45,11 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const selectedCategory = searchParams.get("category") || "";
-  const selectedLevel = searchParams.get("level") || "";
-  const selectedPrice = searchParams.get("price") || "";
-  const selectedRating = searchParams.get("rating") || "";
-  const selectedDuration = searchParams.get("duration") || "";
+  const selectedCategory = searchParams?.get("category") || "";
+  const selectedLevel = searchParams?.get("level") || "";
+  const selectedPrice = searchParams?.get("price") || "";
+  const selectedRating = searchParams?.get("rating") || "";
+  const selectedDuration = searchParams?.get("duration") || "";
 
   return (
     <div className="bg-background rounded-lg border p-4 sticky top-32">
