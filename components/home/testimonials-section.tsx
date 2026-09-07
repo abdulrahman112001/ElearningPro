@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Quote, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SectionHeader } from "@/components/home/section-header";
 import { getInitials } from "@/lib/utils";
 
 const testimonials = [
@@ -41,18 +42,16 @@ export function TestimonialsSection() {
   const t = useTranslations();
 
   return (
-    <section className="py-16 md:py-24 bg-muted/30">
+    <section className="bg-muted/30 py-16 md:py-24">
       <div className="container">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            ماذا يقول طلابنا
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            آراء حقيقية من طلاب حققوا أهدافهم من خلال منصتنا
-          </p>
-        </div>
+        <SectionHeader
+          align="center"
+          eyebrow={t("home.testimonials.badge")}
+          title={t("home.testimonials.title")}
+          subtitle={t("home.testimonials.subtitle")}
+        />
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid gap-6 md:grid-cols-3">
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={testimonial.id}
@@ -61,24 +60,26 @@ export function TestimonialsSection() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <Card className="h-full">
+              <Card className="card-hover h-full rounded-2xl border-transparent bg-card shadow-sm">
                 <CardContent className="p-6">
-                  <Quote className="h-10 w-10 text-primary/20 mb-4" />
-                  <p className="text-muted-foreground mb-6">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <Quote className="h-5 w-5 text-primary" />
+                  </div>
+                  <p className="mb-6 text-muted-foreground">
                     {testimonial.content}
                   </p>
-                  <div className="flex items-center gap-1 mb-4">
+                  <div className="mb-4 flex items-center gap-1">
                     {[...Array(testimonial.rating)].map((_, i) => (
                       <Star
                         key={i}
-                        className="h-4 w-4 fill-amber-400 text-amber-400"
+                        className="star-filled h-4 w-4 fill-current"
                       />
                     ))}
                   </div>
                   <div className="flex items-center gap-3">
-                    <Avatar>
+                    <Avatar className="ring-2 ring-primary/10">
                       <AvatarImage src={testimonial.image} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white">
                         {getInitials(testimonial.name)}
                       </AvatarFallback>
                     </Avatar>

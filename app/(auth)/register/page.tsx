@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Card,
   CardContent,
@@ -24,26 +24,28 @@ import {
 } from "@/components/ui/card"
 import { signIn } from "next-auth/react"
 
-const registerSchema = z
-  .object({
-    name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
-    email: z.string().email("البريد الإلكتروني غير صالح"),
-    password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "كلمات المرور غير متطابقة",
-    path: ["confirmPassword"],
-  })
-
-type RegisterFormData = z.infer<typeof registerSchema>
-
 export default function RegisterPage() {
   const t = useTranslations("auth")
+  const tCommon = useTranslations("common")
+  const tFooter = useTranslations("footer")
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [userType, setUserType] = useState<"student" | "instructor">("student")
+
+  const registerSchema = z
+    .object({
+      name: z.string().min(2, t("nameMinLength")),
+      email: z.string().email(t("invalidEmail")),
+      password: z.string().min(6, t("passwordMinLength")),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("passwordMismatch"),
+      path: ["confirmPassword"],
+    })
+
+  type RegisterFormData = z.infer<typeof registerSchema>
 
   const {
     register,
@@ -68,10 +70,10 @@ export default function RegisterPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || "حدث خطأ ما")
+        throw new Error(result.error || t("genericError"))
       }
 
-      toast.success("تم إنشاء الحساب بنجاح")
+      toast.success(t("registerSuccess"))
 
       // Auto login after registration
       await signIn("credentials", {
@@ -94,20 +96,20 @@ export default function RegisterPage() {
     try {
       await signIn(provider, { callbackUrl: "/" })
     } catch (error) {
-      toast.error("حدث خطأ ما")
+      toast.error(t("genericError"))
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <Card className="border-0 shadow-none lg:border lg:shadow-sm bg-card">
+    <Card className="border-0 bg-card shadow-none lg:rounded-2xl lg:border lg:shadow-xl lg:shadow-black/5">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl text-foreground">
           {t("register")}
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          أنشئ حساباً جديداً للبدء في التعلم
+          {t("registerSubtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -128,6 +130,7 @@ export default function RegisterPage() {
         <div className="grid grid-cols-2 gap-4">
           <Button
             variant="outline"
+            className="h-11 border-2"
             onClick={() => handleSocialLogin("google")}
             disabled={isLoading}
           >
@@ -153,6 +156,7 @@ export default function RegisterPage() {
           </Button>
           <Button
             variant="outline"
+            className="h-11 border-2"
             onClick={() => handleSocialLogin("github")}
             disabled={isLoading}
           >
@@ -171,7 +175,7 @@ export default function RegisterPage() {
             <Separator />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
+            <span className="bg-card px-2 text-muted-foreground">
               {t("orContinueWith")}
             </span>
           </div>
@@ -184,7 +188,8 @@ export default function RegisterPage() {
             <Input
               id="name"
               type="text"
-              placeholder="أدخل اسمك الكامل"
+              placeholder={t("namePlaceholder")}
+              className="h-11 rounded-lg"
               {...register("name")}
               error={errors.name?.message}
               disabled={isLoading}
@@ -197,6 +202,7 @@ export default function RegisterPage() {
               id="email"
               type="email"
               placeholder="example@email.com"
+              className="h-11 rounded-lg"
               {...register("email")}
               error={errors.email?.message}
               disabled={isLoading}
@@ -210,6 +216,7 @@ export default function RegisterPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
+                className="h-11 rounded-lg"
                 {...register("password")}
                 error={errors.password?.message}
                 disabled={isLoading}
@@ -218,8 +225,9 @@ export default function RegisterPage() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute end-0 top-0 h-10 w-10"
+                className="absolute end-0 top-0 h-11 w-11"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -236,26 +244,32 @@ export default function RegisterPage() {
               id="confirmPassword"
               type="password"
               placeholder="••••••••"
+              className="h-11 rounded-lg"
               {...register("confirmPassword")}
               error={errors.confirmPassword?.message}
               disabled={isLoading}
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            variant="gradient"
+            className="h-11 w-full shadow-glow"
+            disabled={isLoading}
+          >
             {isLoading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
             {t("register")}
           </Button>
         </form>
 
-        <p className="text-xs text-center text-muted-foreground">
-          بالتسجيل، أنت توافق على{" "}
+        <p className="text-center text-xs text-muted-foreground">
+          {t("agreeToTermsPrefix")}{" "}
           <Link href="/terms" className="text-primary hover:underline">
-            شروط الخدمة
+            {tFooter("termsOfService")}
           </Link>{" "}
-          و{" "}
+          {tCommon("and")}{" "}
           <Link href="/privacy" className="text-primary hover:underline">
-            سياسة الخصوصية
+            {tFooter("privacyPolicy")}
           </Link>
         </p>
       </CardContent>
@@ -264,7 +278,7 @@ export default function RegisterPage() {
           {t("alreadyHaveAccount")}{" "}
           <Link
             href="/login"
-            className="text-primary hover:underline font-medium"
+            className="font-medium text-primary hover:underline"
           >
             {t("login")}
           </Link>

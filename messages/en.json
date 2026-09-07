@@ -140,9 +140,26 @@
     "registerAsInstructor": "Register as Instructor",
     "registerAsStudent": "Register as Student",
     "newPassword": "New Password",
-    "sendResetLink": "Send Reset Link"
+    "sendResetLink": "Send Reset Link",
+    "loginSubtitle": "Enter your details to access your account",
+    "invalidEmail": "Invalid email address",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "invalidCredentials": "Invalid login credentials",
+    "loginSuccess": "Signed in successfully",
+    "genericError": "Something went wrong, please try again",
+    "brandTitle": "Start your learning journey today",
+    "brandSubtitle": "Join thousands of students learning new skills from the best instructors in the Arab world",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "registerSubtitle": "Create a new account to start learning",
+    "registerSuccess": "Account created successfully",
+    "nameMinLength": "Name must be at least 2 characters",
+    "passwordMismatch": "Passwords do not match",
+    "namePlaceholder": "Enter your full name",
+    "agreeToTermsPrefix": "By signing up, you agree to the"
   },
   "hero": {
+    "badge": "The Leading Arabic Platform for Online Learning",
     "title": "Learn New Skills from the Best Instructors",
     "subtitle": "Discover thousands of courses in programming, design, marketing and more",
     "searchPlaceholder": "Search for any course...",
@@ -1132,6 +1149,21 @@
     "emailAlreadyExists": "Email already exists",
     "networkError": "Network error",
     "tryAgain": "Please try again"
+  },
+  "home": {
+    "topInstructors": {
+      "subtitle": "Learn from the best experts in their fields"
+    },
+    "cta": {
+      "badge": "Start Your Learning Journey Today",
+      "title": "Join thousands of students learning new skills every day",
+      "subtitle": "Sign up now and get unlimited access to thousands of courses across every field"
+    },
+    "testimonials": {
+      "badge": "Real Success Stories",
+      "title": "What Our Students Say",
+      "subtitle": "Real reviews from students who achieved their goals through our platform"
+    }
   },
   "footer": {
     "about": "About",

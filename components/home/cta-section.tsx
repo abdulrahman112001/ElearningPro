@@ -17,30 +17,30 @@ export function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 dark:from-primary-foreground dark:to-primary-foreground/90 p-8 md:p-16 text-center text-white"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-8 text-center text-white md:p-16"
         >
           {/* Background decoration */}
           <div className="absolute inset-0 -z-0">
-            <div className="absolute top-0 start-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 end-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute top-0 start-1/4 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute bottom-0 end-1/4 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
           </div>
 
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 mb-6">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 backdrop-blur-sm">
               <Sparkles className="h-5 w-5" />
-              <span>ابدأ رحلة التعلم اليوم</span>
+              <span>{t("home.cta.badge")}</span>
             </div>
 
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 max-w-3xl mx-auto">
-              انضم لآلاف الطلاب الذين يتعلمون مهارات جديدة كل يوم
+            <h2 className="mx-auto mb-6 max-w-3xl text-3xl font-bold md:text-5xl">
+              {t("home.cta.title")}
             </h2>
 
-            <p className="text-lg md:text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-              سجل الآن واحصل على وصول غير محدود لآلاف الكورسات في مختلف المجالات
+            <p className="mx-auto mb-8 max-w-2xl text-lg text-white/80 md:text-xl">
+              {t("home.cta.subtitle")}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="xl" variant="secondary" asChild>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              <Button size="xl" variant="secondary" className="shadow-xl" asChild>
                 <Link href="/register">
                   {t("auth.register")}
                   <ArrowLeft className="me-2 h-5 w-5 rtl:rotate-180" />
@@ -49,7 +49,7 @@ export function CTASection() {
               <Button
                 size="xl"
                 variant="outline"
-                className="bg-transparent border-white text-white hover:bg-white hover:text-primary"
+                className="border-white bg-transparent text-white hover:bg-white hover:text-primary"
                 asChild
               >
                 <Link href="/courses">{t("hero.exploreCoures")}</Link>

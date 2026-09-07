@@ -138,12 +138,13 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background py-12">
+      <div className="bg-mesh-brand relative overflow-hidden py-12 md:py-16">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-background/30 via-background/90 to-muted/30" />
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            {t("browseCourses")}
+          <h1 className="mb-4 text-3xl font-extrabold tracking-tight md:text-4xl">
+            <span className="gradient-text">{t("browseCourses")}</span>
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
+          <p className="max-w-2xl text-muted-foreground">
             {t("browseDescription")}
           </p>
         </div>

@@ -3,11 +3,11 @@
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { motion } from "framer-motion"
-import { ArrowLeft, Star, Clock, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Star, Clock, Users, Code2, Atom, Palette, BrainCircuit } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { SectionHeader } from "@/components/home/section-header"
 import { formatPrice, getInitials } from "@/lib/utils"
 
 // Mock data - will be replaced with real data
@@ -18,6 +18,7 @@ const featuredCourses = [
     titleEn: "Complete Web Development Course",
     slug: "complete-web-development",
     thumbnail: "/images/courses/web-dev.jpg",
+    icon: Code2,
     price: 99.99,
     discountPrice: 49.99,
     instructor: { name: "أحمد محمد", image: "" },
@@ -34,6 +35,7 @@ const featuredCourses = [
     titleEn: "Learn React from Zero to Hero",
     slug: "react-zero-to-hero",
     thumbnail: "/images/courses/react.jpg",
+    icon: Atom,
     price: 79.99,
     discountPrice: null,
     instructor: { name: "سارة أحمد", image: "" },
@@ -50,6 +52,7 @@ const featuredCourses = [
     titleEn: "Professional UI/UX Design Course",
     slug: "ui-ux-design",
     thumbnail: "/images/courses/design.jpg",
+    icon: Palette,
     price: 89.99,
     discountPrice: 59.99,
     instructor: { name: "محمد علي", image: "" },
@@ -66,6 +69,7 @@ const featuredCourses = [
     titleEn: "AI and Machine Learning",
     slug: "ai-machine-learning",
     thumbnail: "/images/courses/ai.jpg",
+    icon: BrainCircuit,
     price: 129.99,
     discountPrice: 89.99,
     instructor: { name: "خالد إبراهيم", image: "" },
@@ -84,20 +88,11 @@ export function FeaturedCourses() {
   return (
     <section className="py-16 md:py-24">
       <div className="container">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-12">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              {t("course.featured")}
-            </h2>
-            <p className="text-muted-foreground">{t("course.allCourses")}</p>
-          </div>
-          <Button variant="outline" asChild className="mt-4 md:mt-0">
-            <Link href="/courses">
-              {t("common.seeAll")}
-              <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
-            </Link>
-          </Button>
-        </div>
+        <SectionHeader
+          title={t("course.featured")}
+          subtitle={t("course.allCourses")}
+          action={{ href: "/courses", label: t("common.seeAll") }}
+        />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {featuredCourses.map((course, index) => (
@@ -109,12 +104,14 @@ export function FeaturedCourses() {
               viewport={{ once: true }}
             >
               <Link href={`/course/${course.slug}`}>
-                <Card className="h-full overflow-hidden card-hover group">
+                <Card className="h-full overflow-hidden card-hover group rounded-2xl border-2 hover:border-primary/40">
                   <CardHeader className="p-0">
                     <div className="relative aspect-video bg-muted">
                       {/* Course thumbnail placeholder */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                        <span className="text-4xl">📚</span>
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 shadow-md">
+                          <course.icon className="h-8 w-8 text-white" strokeWidth={1.75} />
+                        </div>
                       </div>
                       {/* Badges */}
                       <div className="absolute top-2 start-2 flex gap-2">
@@ -146,7 +143,7 @@ export function FeaturedCourses() {
                     </div>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex items-center">
-                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        <Star className="h-4 w-4 star-filled fill-current" />
                         <span className="ms-1 font-semibold">
                           {course.rating}
                         </span>

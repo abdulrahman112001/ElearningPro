@@ -4,65 +4,65 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --background: 240 33% 99%;
+    --foreground: 240 25% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 240 25% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 240 25% 8%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 25% 95.5%;
+    --secondary-foreground: 240 20% 15%;
+    --muted: 240 25% 95.5%;
+    --muted-foreground: 240 8% 46%;
+    --accent: 243 70% 96%;
+    --accent-foreground: 243 70% 34%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --success: 142 76% 36%;
+    --success: 152 69% 35%;
     --success-foreground: 210 40% 98%;
     --warning: 38 92% 50%;
     --warning-foreground: 210 40% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
+    --border: 240 20% 90%;
+    --input: 240 20% 90%;
+    --ring: 243 75% 59%;
+    --radius: 0.75rem;
+    --chart-1: 243 75% 59%;
     --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
+    --chart-3: 291 64% 58%;
+    --chart-4: 38 92% 50%;
     --chart-5: 27 87% 67%;
   }
 
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 240 22% 7%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 240 20% 10%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 240 20% 10%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --primary: 243 85% 68%;
+    --primary-foreground: 240 25% 8%;
+    --secondary: 240 15% 15%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --muted: 240 15% 15%;
+    --muted-foreground: 240 8% 66%;
+    --accent: 243 40% 20%;
+    --accent-foreground: 243 85% 88%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --success: 142 76% 36%;
+    --success: 152 60% 45%;
     --success-foreground: 210 40% 98%;
-    --warning: 38 92% 50%;
+    --warning: 38 92% 55%;
     --warning-foreground: 210 40% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
+    --border: 240 15% 18%;
+    --input: 240 15% 18%;
+    --ring: 243 85% 68%;
+    --chart-1: 243 85% 68%;
     --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
+    --chart-3: 291 70% 66%;
+    --chart-4: 38 92% 55%;
     --chart-5: 340 75% 55%;
   }
 }
@@ -300,9 +300,15 @@ input[type="password"]::-webkit-clear-button {
   }
 }
 
-/* Gradient Text */
+/* Gradient Text — explicit stops per theme so the headline stays bold
+   and legible instead of washing out to a pastel tint on a light background */
 .gradient-text {
-  @apply bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent;
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(90deg, hsl(243 78% 45%), hsl(271 76% 48%));
+}
+
+.dark .gradient-text {
+  background-image: linear-gradient(90deg, hsl(243 92% 74%), hsl(271 88% 76%));
 }
 
 /* Card Hover Effect */
@@ -369,5 +375,78 @@ input[type="password"]::-webkit-clear-button {
 
 .live-indicator::before {
   content: "";
-  @apply absolute -left-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full animate-pulse;
+  @apply absolute -start-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full animate-pulse;
+}
+
+/* ==================== Brand / Redesign utilities ==================== */
+
+/* Soft dotted grid backdrop for hero / section headers */
+.bg-grid-brand {
+  background-image: radial-gradient(
+    hsl(var(--primary) / 0.16) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* Blurred, colorful mesh blobs used behind hero/CTA sections */
+.bg-mesh-brand {
+  position: relative;
+  isolation: isolate;
+}
+
+.bg-mesh-brand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(45% 65% at 15% 20%, hsl(var(--primary) / 0.22), transparent 60%),
+    radial-gradient(40% 60% at 85% 15%, hsl(291 64% 58% / 0.18), transparent 60%),
+    radial-gradient(50% 50% at 50% 100%, hsl(38 92% 50% / 0.12), transparent 60%);
+}
+
+/* Glassy elevated surface for floating cards on top of mesh/hero backgrounds */
+.glass-card {
+  @apply border border-white/20 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+}
+
+/* Colored glow shadow for primary CTAs and highlighted cards */
+.shadow-glow {
+  box-shadow: 0 8px 30px -8px hsl(var(--primary) / 0.45);
+}
+
+.shadow-glow-lg {
+  box-shadow: 0 20px 60px -15px hsl(var(--primary) / 0.5);
+}
+
+/* Section eyebrow / kicker label */
+.eyebrow {
+  @apply inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary;
+}
+
+/* Animated gradient border wrapper (used sparingly on featured cards) */
+.gradient-border {
+  position: relative;
+  border-radius: var(--radius);
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary)),
+    hsl(291 64% 58%),
+    hsl(38 92% 50%)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }

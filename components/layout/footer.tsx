@@ -46,13 +46,15 @@ export function Footer() {
   ]
 
   return (
-    <footer className="bg-muted/50 border-t">
+    <footer className="bg-muted/30 border-t">
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <GraduationCap className="h-8 w-8 text-primary" />
+            <Link href="/" className="flex items-center gap-2.5 mb-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 shadow-md shadow-primary/20">
+                <GraduationCap className="h-5 w-5 text-white" />
+              </div>
               <span className="text-xl font-bold">E-Learn</span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm">
@@ -67,9 +69,10 @@ export function Footer() {
               <div className="flex gap-2">
                 <Input
                   placeholder={t("footer.emailPlaceholder")}
-                  className="max-w-[240px]"
+                  className="max-w-[240px] rounded-lg"
+                  aria-label={t("footer.emailPlaceholder")}
                 />
-                <Button>{t("footer.subscribe")}</Button>
+                <Button variant="gradient">{t("footer.subscribe")}</Button>
               </div>
             </div>
           </div>
@@ -145,9 +148,10 @@ export function Footer() {
                 <Link
                   key={social.label}
                   href={social.href}
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label={social.label}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                 >
-                  <social.icon className="h-5 w-5" />
+                  <social.icon className="h-[1.125rem] w-[1.125rem]" />
                   <span className="sr-only">{social.label}</span>
                 </Link>
               ))}

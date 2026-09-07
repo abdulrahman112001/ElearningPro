@@ -15,9 +15,9 @@ export function StatsSection() {
   const t = useTranslations("hero.stats");
 
   return (
-    <section className="py-12 border-y bg-muted/30">
+    <section className="relative border-y bg-card py-10 md:py-12">
       <div className="container">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 gap-y-8 md:grid-cols-4 md:gap-x-6">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.key}
@@ -25,15 +25,17 @@ export function StatsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="text-center"
+              className="flex flex-col items-center gap-3 text-center md:flex-row md:text-start"
             >
-              <div className="flex justify-center mb-3">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="h-7 w-7 text-primary" />
-                </div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 shadow-sm">
+                <stat.icon className="h-6 w-6 text-white" />
               </div>
-              <p className="text-2xl md:text-3xl font-bold">{stat.value}</p>
-              <p className="text-muted-foreground">{t(stat.key)}</p>
+              <div>
+                <p className="text-2xl font-extrabold tracking-tight md:text-3xl">
+                  {stat.value}
+                </p>
+                <p className="text-sm text-muted-foreground">{t(stat.key)}</p>
+              </div>
             </motion.div>
           ))}
         </div>

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { motion } from "framer-motion"
-import { Search, Play, ArrowLeft, ArrowRight } from "lucide-react"
+import { Search, Play, ArrowLeft, Sparkles, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -11,15 +11,12 @@ export function HeroSection() {
   const t = useTranslations()
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16 md:py-24 lg:py-32">
-      {/* Background decoration */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 start-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 end-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-      </div>
+    <section className="bg-mesh-brand relative overflow-hidden py-20 md:py-28 lg:py-36">
+      {/* Fade the mesh out toward the bottom so it reads as a subtle backdrop */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-background/30 via-background/90 to-background" />
 
       <div className="container">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Content */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -27,41 +24,70 @@ export function HeroSection() {
             transition={{ duration: 0.5 }}
             className="text-center lg:text-start"
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+            <div className="eyebrow mx-auto mb-6 lg:mx-0">
+              <Sparkles className="h-4 w-4" />
+              <span>{t("hero.badge")}</span>
+            </div>
+
+            <h1 className="mb-6 text-4xl font-extrabold leading-[1.1] tracking-tight md:text-5xl lg:text-6xl">
               <span className="gradient-text">{t("hero.title")}</span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+            <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground md:text-xl lg:mx-0">
               {t("hero.subtitle")}
             </p>
 
             {/* Search Box */}
-            <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto lg:mx-0 mb-8">
+            <div className="mx-auto mb-8 flex max-w-xl flex-col gap-3 sm:flex-row lg:mx-0">
               <div className="relative flex-1">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder={t("hero.searchPlaceholder")}
-                  className="ps-10 h-12 text-base"
+                  className="h-12 rounded-xl ps-10 text-base shadow-sm"
                 />
               </div>
-              <Button size="lg" className="h-12">
+              <Button size="lg" variant="gradient" className="h-12 rounded-xl">
                 {t("common.search")}
               </Button>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="xl" asChild>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">
+              <Button size="xl" variant="gradient" className="shadow-glow-lg" asChild>
                 <Link href="/courses">
                   {t("hero.exploreCoures")}
                   <ArrowLeft className="me-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
-              <Button size="xl" variant="outline" asChild>
+              <Button size="xl" variant="outline" className="border-2" asChild>
                 <Link href="/register">
                   <Play className="ms-2 h-5 w-5" />
                   {t("hero.startLearning")}
                 </Link>
               </Button>
+            </div>
+
+            {/* Social proof strip */}
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
+              <div className="flex -space-x-3 rtl:space-x-reverse">
+                {["🎓", "👩‍💻", "👨‍🏫", "👩‍🎓"].map((emoji, i) => (
+                  <div
+                    key={i}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-background bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-sm shadow-sm"
+                  >
+                    {emoji}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="flex">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="star-filled h-4 w-4 fill-current" />
+                  ))}
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">
+                  4.9/5 &middot; 50K+ {t("hero.stats.students")}
+                </span>
+              </div>
             </div>
           </motion.div>
 
@@ -72,17 +98,19 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="relative hidden lg:block"
           >
-            <div className="relative aspect-square max-w-lg mx-auto">
-              {/* Decorative elements */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl transform rotate-6" />
-              <div className="absolute inset-0 bg-card border rounded-3xl shadow-2xl overflow-hidden">
+            <div className="relative mx-auto aspect-square max-w-lg">
+              {/* Decorative gradient backdrop */}
+              <div className="absolute inset-0 rotate-6 rounded-[2rem] bg-gradient-to-br from-indigo-500/30 via-violet-500/20 to-fuchsia-500/30 blur-sm" />
+              <div className="glass-card absolute inset-0 overflow-hidden rounded-[2rem] shadow-glow-lg">
                 <div className="p-8">
-                  <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
-                    <Play className="h-16 w-16 text-primary" />
+                  <div className="mb-4 flex aspect-video items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/25 backdrop-blur-sm">
+                      <Play className="h-8 w-8 fill-white text-white" />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-muted rounded w-3/4" />
-                    <div className="h-4 bg-muted rounded w-1/2" />
+                  <div className="space-y-2.5">
+                    <div className="h-4 w-3/4 rounded-full bg-muted" />
+                    <div className="h-4 w-1/2 rounded-full bg-muted" />
                   </div>
                 </div>
               </div>
@@ -92,10 +120,10 @@ export function HeroSection() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="absolute -start-8 top-1/4 bg-card border rounded-xl p-4 shadow-lg"
+                className="glass-card absolute -start-8 top-1/4 rounded-xl p-4 shadow-lg"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                     <span className="text-2xl">🎓</span>
                   </div>
                   <div>
@@ -111,10 +139,10 @@ export function HeroSection() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
-                className="absolute -end-8 bottom-1/4 bg-card border rounded-xl p-4 shadow-lg"
+                className="glass-card absolute -end-8 bottom-1/4 rounded-xl p-4 shadow-lg"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 bg-success/10 rounded-full flex items-center justify-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                     <span className="text-2xl">👨‍🎓</span>
                   </div>
                   <div>

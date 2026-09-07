@@ -23,15 +23,16 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-const loginSchema = z.object({
-  email: z.string().email("البريد الإلكتروني غير صالح"),
-  password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
-})
-
-type LoginFormData = z.infer<typeof loginSchema>
-
 export default function LoginPage() {
   const t = useTranslations("auth")
+
+  const loginSchema = z.object({
+    email: z.string().email(t("invalidEmail")),
+    password: z.string().min(6, t("passwordMinLength")),
+  })
+
+  type LoginFormData = z.infer<typeof loginSchema>
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams?.get("callbackUrl") || "/"
@@ -56,14 +57,14 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        toast.error("بيانات الدخول غير صحيحة")
+        toast.error(t("invalidCredentials"))
       } else {
-        toast.success("تم تسجيل الدخول بنجاح")
+        toast.success(t("loginSuccess"))
         router.push(callbackUrl)
         router.refresh()
       }
     } catch (error) {
-      toast.error("حدث خطأ ما")
+      toast.error(t("genericError"))
     } finally {
       setIsLoading(false)
     }
@@ -74,18 +75,18 @@ export default function LoginPage() {
     try {
       await signIn(provider, { callbackUrl })
     } catch (error) {
-      toast.error("حدث خطأ ما")
+      toast.error(t("genericError"))
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <Card className="border-0 shadow-none lg:border lg:shadow-sm bg-card">
+    <Card className="border-0 bg-card shadow-none lg:rounded-2xl lg:border lg:shadow-xl lg:shadow-black/5">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl text-foreground">{t("login")}</CardTitle>
         <CardDescription className="text-muted-foreground">
-          أدخل بياناتك للوصول إلى حسابك
+          {t("loginSubtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -93,6 +94,7 @@ export default function LoginPage() {
         <div className="grid grid-cols-2 gap-4">
           <Button
             variant="outline"
+            className="h-11 border-2"
             onClick={() => handleSocialLogin("google")}
             disabled={isLoading}
           >
@@ -118,6 +120,7 @@ export default function LoginPage() {
           </Button>
           <Button
             variant="outline"
+            className="h-11 border-2"
             onClick={() => handleSocialLogin("github")}
             disabled={isLoading}
           >
@@ -136,7 +139,7 @@ export default function LoginPage() {
             <Separator />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
+            <span className="bg-card px-2 text-muted-foreground">
               {t("orContinueWith")}
             </span>
           </div>
@@ -150,6 +153,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               placeholder="example@email.com"
+              className="h-11 rounded-lg"
               {...register("email")}
               error={errors.email?.message}
               disabled={isLoading}
@@ -171,6 +175,7 @@ export default function LoginPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
+                className="h-11 rounded-lg"
                 {...register("password")}
                 error={errors.password?.message}
                 disabled={isLoading}
@@ -179,8 +184,9 @@ export default function LoginPage() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute end-0 top-0 h-10 w-10"
+                className="absolute end-0 top-0 h-11 w-11"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -191,7 +197,12 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            variant="gradient"
+            className="h-11 w-full shadow-glow"
+            disabled={isLoading}
+          >
             {isLoading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
             {t("login")}
           </Button>
@@ -202,7 +213,7 @@ export default function LoginPage() {
           {t("dontHaveAccount")}{" "}
           <Link
             href="/register"
-            className="text-primary hover:underline font-medium"
+            className="font-medium text-primary hover:underline"
           >
             {t("register")}
           </Link>

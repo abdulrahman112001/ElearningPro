@@ -143,7 +143,7 @@ export function CoursesGrid({
             transition={{ delay: index * 0.05 }}
           >
             <Link href={`/courses/${course.slug}`}>
-              <Card className="h-full overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <Card className="h-full overflow-hidden rounded-2xl border-2 group hover:border-primary/40 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 {/* Thumbnail */}
                 <div className="relative aspect-video overflow-hidden">
                   {course.thumbnail ? (
@@ -154,8 +154,8 @@ export function CoursesGrid({
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <PlayCircle className="h-12 w-12 text-primary/50" />
+                    <div className="w-full h-full bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                      <PlayCircle className="h-12 w-12 text-primary/60" />
                     </div>
                   )}
 
@@ -207,7 +207,7 @@ export function CoursesGrid({
                   {/* Rating & Enrollments */}
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <Star className="h-4 w-4 star-filled fill-current" />
                       <span className="font-medium">
                         {course.averageRating.toFixed(1)}
                       </span>
@@ -239,7 +239,7 @@ export function CoursesGrid({
                   {/* Price */}
                   <div className="text-start">
                     {course.price === 0 ? (
-                      <span className="text-lg font-bold text-green-600">
+                      <span className="text-lg font-bold text-success">
                         {t("free")}
                       </span>
                     ) : (
@@ -301,7 +301,7 @@ export function CoursesGrid({
                     <span className="px-2 text-muted-foreground">...</span>
                   )}
                   <Button
-                    variant={page === currentPage ? "default" : "outline"}
+                    variant={page === currentPage ? "gradient" : "outline"}
                     size="icon"
                     onClick={() => goToPage(page)}
                   >

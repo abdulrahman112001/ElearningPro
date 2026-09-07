@@ -5,9 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Arabic script has no case and its letters change shape by position, so
+// concatenating two isolated letters (Western-style "first + last" initials)
+// often renders with a stray hamza/diacritic mark that looks broken. A single
+// letter always renders cleanly in its initial form, so Arabic names get one
+// letter while Latin names keep the familiar two-letter initials.
+const ARABIC_SCRIPT_RE = /[؀-ۿ]/
+
 export function getInitials(name: string | null | undefined): string {
   if (!name) return "U"
-  const parts = name.trim().split(/\s+/)
+  const trimmed = name.trim()
+  const parts = trimmed.split(/\s+/)
+
+  if (ARABIC_SCRIPT_RE.test(trimmed)) {
+    return parts[0].charAt(0)
+  }
+
   if (parts.length === 1) {
     return parts[0].charAt(0).toUpperCase()
   }

@@ -1,49 +1,60 @@
 import { GraduationCap } from "lucide-react"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const t = await getTranslations()
+
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left Side - Auth Form */}
-      <div className="flex items-center justify-center p-6 lg:p-12 bg-background order-1 lg:order-none">
+      <div className="order-1 flex items-center justify-center bg-background p-6 lg:order-none lg:p-12">
         <div className="w-full max-w-md">{children}</div>
       </div>
 
       {/* Right Side - Branding */}
-      <div className="hidden lg:flex flex-col justify-between bg-zinc-900 dark:bg-zinc-800 text-white p-12">
-        <Link href="/" className="flex items-center gap-2">
-          <GraduationCap className="h-10 w-10" />
+      <div className="bg-mesh-brand relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-700 p-12 text-white lg:flex">
+        <div className="absolute inset-0 -z-0">
+          <div className="absolute -top-24 -end-24 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-24 -start-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        </div>
+
+        <Link href="/" className="relative z-10 flex items-center gap-2.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+            <GraduationCap className="h-6 w-6" />
+          </div>
           <span className="text-2xl font-bold">E-Learn</span>
         </Link>
 
-        <div className="space-y-6">
-          <h1 className="text-4xl font-bold">ابدأ رحلة التعلم اليوم</h1>
-          <p className="text-lg text-white/80 max-w-md">
-            انضم لآلاف الطلاب الذين يتعلمون مهارات جديدة من أفضل المدربين في
-            العالم العربي
+        <div className="relative z-10 space-y-6">
+          <h1 className="text-4xl font-bold leading-tight">
+            {t("auth.brandTitle")}
+          </h1>
+          <p className="max-w-md text-lg text-white/80">
+            {t("auth.brandSubtitle")}
           </p>
           <div className="flex gap-8 pt-4">
             <div>
               <p className="text-3xl font-bold">10K+</p>
-              <p className="text-white/70">كورس</p>
+              <p className="text-white/70">{t("hero.stats.courses")}</p>
             </div>
             <div>
               <p className="text-3xl font-bold">50K+</p>
-              <p className="text-white/70">طالب</p>
+              <p className="text-white/70">{t("hero.stats.students")}</p>
             </div>
             <div>
               <p className="text-3xl font-bold">5K+</p>
-              <p className="text-white/70">معلم</p>
+              <p className="text-white/70">{t("hero.stats.instructors")}</p>
             </div>
           </div>
         </div>
 
-        <p className="text-sm text-white/60">
-          © {new Date().getFullYear()} E-Learn. جميع الحقوق محفوظة
+        <p className="relative z-10 text-sm text-white/60">
+          &copy; {new Date().getFullYear()} E-Learn. {t("footer.allRightsReserved")}
         </p>
       </div>
     </div>

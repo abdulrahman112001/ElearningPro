@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
 import { useSession, signOut } from "next-auth/react"
@@ -43,6 +44,7 @@ export function Navbar() {
   const { data: session } = useSession()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const pathname = usePathname()
 
   const navLinks = [
     { href: "/", label: t("navigation.home") },
@@ -71,27 +73,38 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
       <nav className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <GraduationCap className="h-8 w-8 text-primary" />
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 shadow-md shadow-primary/20">
+            <GraduationCap className="h-5 w-5 text-white" />
+          </div>
           <span className="text-xl font-bold hidden sm:inline-block">
             E-Learn
           </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="hidden lg:flex items-center gap-1">
+          {navLinks.map((link) => {
+            const isActive =
+              link.href === "/" ? pathname === "/" : pathname?.startsWith(link.href)
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  isActive
+                    ? "text-primary bg-primary/5"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                )}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
         </div>
 
         {/* Search */}
@@ -113,6 +126,8 @@ export function Navbar() {
             size="icon"
             className="md:hidden"
             onClick={() => setIsSearchOpen(!isSearchOpen)}
+            aria-label={t("common.search")}
+            aria-expanded={isSearchOpen}
           >
             <Search className="h-5 w-5" />
           </Button>
@@ -122,6 +137,7 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label="Toggle theme"
           >
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -129,7 +145,12 @@ export function Navbar() {
           </Button>
 
           {/* Language Toggle */}
-          <Button variant="ghost" size="icon" onClick={toggleLanguage}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleLanguage}
+            aria-label={isRTL ? "Switch to English" : "التبديل للعربية"}
+          >
             <Globe className="h-5 w-5" />
           </Button>
 
@@ -195,11 +216,7 @@ export function Navbar() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() =>
-                    signOut({
-                      callbackUrl: "https://elearning-pro-pearl.vercel.app/",
-                    })
-                  }
+                  onClick={() => signOut({ callbackUrl: "/" })}
                   className="text-destructive cursor-pointer"
                 >
                   <LogOut className="me-2 h-4 w-4" />
@@ -213,7 +230,7 @@ export function Navbar() {
               <Button variant="ghost" asChild>
                 <Link href="/login">{t("auth.login")}</Link>
               </Button>
-              <Button asChild>
+              <Button variant="gradient" asChild>
                 <Link href="/register">{t("auth.register")}</Link>
               </Button>
             </div>
@@ -225,6 +242,8 @@ export function Navbar() {
             size="icon"
             className="lg:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? (
               <X className="h-5 w-5" />
@@ -267,7 +286,7 @@ export function Navbar() {
                 <Button variant="outline" asChild>
                   <Link href="/login">{t("auth.login")}</Link>
                 </Button>
-                <Button asChild>
+                <Button variant="gradient" asChild>
                   <Link href="/register">{t("auth.register")}</Link>
                 </Button>
               </div>

@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, BookOpen, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Star, BookOpen, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SectionHeader } from "@/components/home/section-header";
 import { getInitials } from "@/lib/utils";
 
 // Mock data
@@ -55,22 +55,11 @@ export function TopInstructors() {
   return (
     <section className="py-16 md:py-24">
       <div className="container">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-12">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              {t("navigation.instructors")}
-            </h2>
-            <p className="text-muted-foreground">
-              تعلم من أفضل الخبراء في مجالاتهم
-            </p>
-          </div>
-          <Button variant="outline" asChild className="mt-4 md:mt-0">
-            <Link href="/instructors">
-              {t("common.seeAll")}
-              <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
-            </Link>
-          </Button>
-        </div>
+        <SectionHeader
+          title={t("navigation.instructors")}
+          subtitle={t("home.topInstructors.subtitle")}
+          action={{ href: "/instructors", label: t("common.seeAll") }}
+        />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {topInstructors.map((instructor, index) => (
@@ -82,14 +71,17 @@ export function TopInstructors() {
               viewport={{ once: true }}
             >
               <Link href={`/instructors/${instructor.id}`}>
-                <Card className="text-center card-hover group">
+                <Card className="text-center card-hover group rounded-2xl border-2 hover:border-primary/40">
                   <CardContent className="p-6">
-                    <Avatar className="h-24 w-24 mx-auto mb-4 ring-4 ring-primary/10">
-                      <AvatarImage src={instructor.image} />
-                      <AvatarFallback className="text-2xl">
-                        {getInitials(instructor.name)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative mx-auto mb-4 h-24 w-24">
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 opacity-0 blur-md transition-opacity group-hover:opacity-40" />
+                      <Avatar className="relative h-24 w-24 ring-4 ring-primary/10">
+                        <AvatarImage src={instructor.image} />
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white">
+                          {getInitials(instructor.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
                     <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
                       {instructor.name}
                     </h3>
@@ -97,7 +89,7 @@ export function TopInstructors() {
                       {instructor.headline}
                     </p>
                     <div className="flex items-center justify-center gap-1 mb-4">
-                      <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                      <Star className="h-4 w-4 star-filled fill-current" />
                       <span className="font-semibold">{instructor.rating}</span>
                     </div>
                     <div className="flex justify-center gap-6 text-sm">

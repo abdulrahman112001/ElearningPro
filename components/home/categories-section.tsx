@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SectionHeader } from "@/components/home/section-header";
 
 const categories = [
   { icon: "💻", nameEn: "Programming", nameAr: "البرمجة", slug: "programming", count: 1500 },
@@ -19,47 +18,41 @@ const categories = [
 
 export function CategoriesSection() {
   const t = useTranslations();
+  const locale = useLocale();
 
   return (
-    <section className="py-16 md:py-24 bg-muted/30">
+    <section className="bg-muted/30 py-16 md:py-24">
       <div className="container">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-12">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              {t("navigation.categories")}
-            </h2>
-            <p className="text-muted-foreground">
-              {t("filter.allCategories")}
-            </p>
-          </div>
-          <Button variant="outline" asChild className="mt-4 md:mt-0">
-            <Link href="/categories">
-              {t("common.seeAll")}
-              <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
-            </Link>
-          </Button>
-        </div>
+        <SectionHeader
+          eyebrow={t("navigation.categories")}
+          title={t("filter.allCategories")}
+          action={{ href: "/categories", label: t("common.seeAll") }}
+        />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
           {categories.map((category, index) => (
             <motion.div
               key={category.slug}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
               viewport={{ once: true }}
             >
               <Link
                 href={`/courses?category=${category.slug}`}
-                className="block p-6 bg-card border rounded-xl hover:border-primary hover:shadow-lg transition-all group card-hover"
+                className="card-hover group flex items-center gap-4 rounded-2xl border-2 bg-card p-5 transition-colors hover:border-primary/40"
               >
-                <div className="text-4xl mb-4">{category.icon}</div>
-                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                  {category.nameAr}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {category.count}+ {t("course.courses")}
-                </p>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-2xl transition-colors group-hover:bg-primary/12">
+                  {category.icon}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold transition-colors group-hover:text-primary">
+                    {locale === "ar" ? category.nameAr : category.nameEn}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {category.count}+ {t("course.courses")}
+                  </p>
+                </div>
               </Link>
             </motion.div>
           ))}
