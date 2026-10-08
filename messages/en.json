@@ -160,7 +160,10 @@
     "nameMinLength": "Name must be at least 2 characters",
     "passwordMismatch": "Passwords do not match",
     "namePlaceholder": "Enter your full name",
-    "agreeToTermsPrefix": "By signing up, you agree to the"
+    "agreeToTermsPrefix": "By signing up, you agree to the",
+    "serverError": "Sign-in failed because of a server problem. Please try again later.",
+    "accountBlocked": "This account has been blocked. Please contact support.",
+    "tooManyAttempts": "Too many failed attempts. Try again in 15 minutes."
   },
   "hero": {
     "badge": "The Leading Arabic Platform for Online Learning",

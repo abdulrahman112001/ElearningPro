@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import type { Adapter } from "next-auth/adapters"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import Credentials from "next-auth/providers/credentials"
+import { CredentialsSignin } from "next-auth"
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import bcrypt from "bcryptjs"
@@ -13,6 +14,20 @@ import { isLocked, recordFailure, resetLimit } from "@/lib/rate-limit"
 const LOGIN_SCOPE = "login-failures"
 const LOGIN_MAX_FAILURES = 10
 const LOGIN_WINDOW_MS = 15 * 60 * 1000
+
+// Expected login failures must be CredentialsSignin errors: NextAuth v5
+// reports any other thrown error as "Configuration", which made the login
+// page unable to tell a wrong password from a server/database outage.
+// The code is sent to the client as `result.code`.
+class InvalidCredentials extends CredentialsSignin {
+  code = "invalid_credentials"
+}
+class AccountBlocked extends CredentialsSignin {
+  code = "account_blocked"
+}
+class TooManyAttempts extends CredentialsSignin {
+  code = "too_many_attempts"
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db) as Adapter,
@@ -42,13 +57,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials")
+          throw new InvalidCredentials()
         }
 
         const email = (credentials.email as string).trim().toLowerCase()
 
         if (isLocked(LOGIN_SCOPE, email, LOGIN_MAX_FAILURES)) {
-          throw new Error("Too many failed attempts. Try again later.")
+          throw new TooManyAttempts()
         }
 
         const user = await db.user.findFirst({
@@ -57,7 +72,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!user || !user.password) {
           recordFailure(LOGIN_SCOPE, email, LOGIN_WINDOW_MS)
-          throw new Error("Invalid credentials")
+          throw new InvalidCredentials()
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -67,13 +82,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!isPasswordValid) {
           recordFailure(LOGIN_SCOPE, email, LOGIN_WINDOW_MS)
-          throw new Error("Invalid credentials")
+          throw new InvalidCredentials()
         }
 
         resetLimit(LOGIN_SCOPE, email)
 
         if (user.isBlocked) {
-          throw new Error("Your account has been blocked")
+          throw new AccountBlocked()
         }
 
         return {

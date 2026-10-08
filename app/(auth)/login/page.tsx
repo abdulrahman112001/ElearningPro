@@ -57,7 +57,17 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        toast.error(t("invalidCredentials"))
+        // "CredentialsSignin" = expected failure with a code; anything else
+        // (e.g. "Configuration") is a server-side problem, not the password.
+        if (result.error !== "CredentialsSignin") {
+          toast.error(t("serverError"))
+        } else if (result.code === "account_blocked") {
+          toast.error(t("accountBlocked"))
+        } else if (result.code === "too_many_attempts") {
+          toast.error(t("tooManyAttempts"))
+        } else {
+          toast.error(t("invalidCredentials"))
+        }
       } else {
         toast.success(t("loginSuccess"))
         router.push(callbackUrl)
