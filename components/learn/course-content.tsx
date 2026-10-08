@@ -1,6 +1,6 @@
 "use client"
 
-import DOMPurify from "isomorphic-dompurify"
+import { sanitizeRichText } from "@/lib/sanitize"
 import { FileDown, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -49,7 +49,7 @@ export function CourseContent({ lesson }: CourseContentProps) {
             <div
               className="prose dark:prose-invert max-w-none"
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(description),
+                __html: sanitizeRichText(description),
               }}
             />
           </CardContent>
