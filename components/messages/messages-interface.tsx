@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
 import { useSocket } from "@/providers/socket-provider"
 import { formatDistanceToNow } from "date-fns"
-import { ar } from "date-fns/locale"
+import { ar, enUS } from "date-fns/locale"
 import {
   Search,
   Send,
@@ -50,6 +50,8 @@ interface Conversation {
 
 export function MessagesInterface() {
   const t = useTranslations("instructor")
+  const tm = useTranslations("messagesUi")
+  const locale = useLocale()
   const { data: session } = useSession()
   const { socket, isConnected } = useSocket()
 
@@ -245,6 +247,7 @@ export function MessagesInterface() {
                 size="icon"
                 className="md:hidden"
                 onClick={handleBackToList}
+                aria-label={tm("backToList")}
               >
                 <ArrowRight className="h-5 w-5" />
               </Button>
@@ -265,7 +268,7 @@ export function MessagesInterface() {
               {isConnected && (
                 <span className="ms-auto text-xs text-green-500 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-green-500" />
-                  {t("online") || "متصل"}
+                  {t("online")}
                 </span>
               )}
             </div>
@@ -280,7 +283,7 @@ export function MessagesInterface() {
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
-                    {t("startConversation") || "ابدأ المحادثة بإرسال رسالة"}
+                    {t("startConversation")}
                   </p>
                 </div>
               ) : (
@@ -316,7 +319,7 @@ export function MessagesInterface() {
                         >
                           {formatDistanceToNow(new Date(message.createdAt), {
                             addSuffix: true,
-                            locale: ar,
+                            locale: locale === "ar" ? ar : enUS,
                           })}
                         </p>
                       </div>
@@ -338,7 +341,7 @@ export function MessagesInterface() {
               >
                 <Input
                   ref={inputRef}
-                  placeholder={t("typeMessage") || "اكتب رسالتك..."}
+                  placeholder={t("typeMessage")}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   disabled={isSending}
@@ -346,6 +349,7 @@ export function MessagesInterface() {
                 <Button
                   type="submit"
                   disabled={!newMessage.trim() || isSending}
+                  aria-label={tm("send")}
                 >
                   {isSending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -360,11 +364,10 @@ export function MessagesInterface() {
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
             <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">
-              {t("selectConversation") || "اختر محادثة"}
+              {t("selectConversation")}
             </h3>
             <p className="text-muted-foreground">
-              {t("selectConversationDescription") ||
-                "اختر طالب من القائمة لبدء المحادثة"}
+              {t("selectConversationDescription")}
             </p>
           </div>
         )}

@@ -126,6 +126,7 @@ export function NotificationsManager({
 }: NotificationsManagerProps) {
   const t = useTranslations("admin")
   const common = useTranslations("common")
+  const ta = useTranslations("a11y")
   const router = useRouter()
   const searchParams = useSearchParams() as URLSearchParams
 
@@ -440,7 +441,11 @@ export function NotificationsManager({
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 />
-                <Button variant="secondary" onClick={handleSearch}>
+                <Button
+                  variant="secondary"
+                  onClick={handleSearch}
+                  aria-label={common("search")}
+                >
                   <Search className="h-4 w-4" />
                 </Button>
               </div>
@@ -526,6 +531,7 @@ export function NotificationsManager({
                               variant="ghost"
                               size="icon"
                               onClick={() => copyLink(notification.link)}
+                              aria-label={ta("copyLink")}
                             >
                               <LinkIcon className="h-4 w-4" />
                             </Button>
@@ -535,6 +541,11 @@ export function NotificationsManager({
                             size="icon"
                             onClick={() => handleToggleRead(notification)}
                             disabled={processingId === notification.id}
+                            aria-label={
+                              notification.isRead
+                                ? ta("markAsUnread")
+                                : ta("markAsRead")
+                            }
                           >
                             {processingId === notification.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -549,6 +560,7 @@ export function NotificationsManager({
                             size="icon"
                             className="text-destructive"
                             onClick={() => setDeleteTarget(notification)}
+                            aria-label={common("delete")}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

@@ -5,9 +5,13 @@ import { existsSync } from "fs"
 import path from "path"
 import { v4 as uuidv4 } from "uuid"
 import sharp from "sharp"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Configure max file size (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+// Folders a client may upload into
+const UPLOAD_FOLDERS = ["images", "thumbnails", "avatars", "attachments"]
 
 // Allowed file types
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
@@ -29,7 +33,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Get form data
-    const formData = await request.formData()
+    const formData = await request.formData().catch(() => null)
+    if (!formData) {
+      return NextResponse.json({ error: "Expected multipart form data" }, { status: 400 })
+    }
     const file = formData.get("file") as File | null
     const type = formData.get("type") as string | null // "thumbnail", "avatar", etc.
 
@@ -62,13 +69,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // The folder comes from the client, so it is whitelisted: a value like
+    // "../../x" must never reach path.join (path traversal).
+    const folder = type || "images"
+    if (!UPLOAD_FOLDERS.includes(folder)) {
+      return NextResponse.json(
+        { error: "Invalid upload type", errorAr: "نوع الرفع غير صالح" },
+        { status: 400 }
+      )
+    }
+
     // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      type || "images"
-    )
+    const uploadsDir = path.join(process.cwd(), "public", "uploads", folder)
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
     }
@@ -118,14 +130,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const uniqueFilename = `${uuidv4()}.${safeExtension}`
+    // The uploader id prefix is what DELETE checks for ownership.
+    const uniqueFilename = `${session.user.id}-${uuidv4()}.${safeExtension}`
     const filePath = path.join(uploadsDir, uniqueFilename)
 
     // Save the validated buffer
     await writeFile(filePath, buffer)
 
     // Return the public URL
-    const publicUrl = `/uploads/${type || "images"}/${uniqueFilename}`
+    const publicUrl = `/uploads/${folder}/${uniqueFilename}`
 
     return NextResponse.json({
       success: true,
@@ -135,6 +148,8 @@ export async function POST(request: NextRequest) {
       type: file.type,
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Upload error:", error)
     return NextResponse.json(
       { error: "Upload failed", errorAr: "فشل رفع الملف" },
@@ -151,7 +166,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { url } = await request.json()
+    const { url } = await readJson(request)
 
     if (!url || typeof url !== "string" || !url.startsWith("/uploads/")) {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 })
@@ -169,6 +184,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 })
     }
 
+    // Only the uploader (filename prefix) or an admin may delete a file.
+    const isOwner = path.basename(filePath).startsWith(`${session.user.id}-`)
+    if (!isOwner && session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     // Check if file exists before deleting
     if (existsSync(filePath)) {
       const { unlink } = await import("fs/promises")
@@ -177,6 +198,8 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Delete error:", error)
     return NextResponse.json({ error: "Delete failed" }, { status: 500 })
   }

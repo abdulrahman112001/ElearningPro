@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -66,6 +67,8 @@ export async function POST(
       { status: 402 }
     );
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error enrolling in course:", error);
     return NextResponse.json(
       { error: "Failed to enroll" },

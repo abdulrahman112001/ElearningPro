@@ -42,6 +42,7 @@ export function CourseReviews({
   isEnrolled,
 }: CourseReviewsProps) {
   const t = useTranslations("courses")
+  const ta = useTranslations("a11y")
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -161,7 +162,7 @@ export function CourseReviews({
                       onMouseEnter={() => setHoverRating(star)}
                       onMouseLeave={() => setHoverRating(0)}
                       className="p-1"
-                    >
+                      aria-label={ta("rateStars", { count: star })}                    >
                       <Star
                         className={`h-8 w-8 transition-colors ${
                           star <= (hoverRating || selectedRating)

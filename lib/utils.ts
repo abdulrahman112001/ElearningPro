@@ -27,10 +27,21 @@ export function getInitials(name: string | null | undefined): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
 
-export function formatPrice(price: number, currency: string = "EGP"): string {
-  if (price === 0) return "مجاني"
+export type AppLocale = "ar" | "en"
 
-  const formatter = new Intl.NumberFormat("ar-EG", {
+/**
+ * Formats a price for the active UI locale. Pass the locale from
+ * `useLocale()` (client) or `getLocale()` (server); it defaults to Arabic.
+ */
+export function formatPrice(
+  price: number,
+  currency: string = "EGP",
+  locale: AppLocale | string = "ar"
+): string {
+  const isAr = locale !== "en"
+  if (price === 0) return isAr ? "مجاني" : "Free"
+
+  const formatter = new Intl.NumberFormat(isAr ? "ar-EG" : "en-US", {
     style: "decimal",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
@@ -39,7 +50,7 @@ export function formatPrice(price: number, currency: string = "EGP"): string {
   const formattedPrice = formatter.format(price)
 
   if (currency === "EGP") {
-    return `${formattedPrice} ج.م`
+    return isAr ? `${formattedPrice} ج.م` : `${formattedPrice} EGP`
   } else if (currency === "USD") {
     return `$${formattedPrice}`
   }
@@ -47,17 +58,22 @@ export function formatPrice(price: number, currency: string = "EGP"): string {
   return `${formattedPrice} ${currency}`
 }
 
-export function formatDuration(minutes: number): string {
-  if (!minutes || minutes <= 0) return "0 د"
+/** Formats a duration given in minutes for the active UI locale. */
+export function formatDuration(
+  minutes: number | null | undefined,
+  locale: AppLocale | string = "ar"
+): string {
+  const isAr = locale !== "en"
+  if (!minutes || minutes <= 0) return isAr ? "0 د" : "0m"
 
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
 
   if (hours > 0 && mins > 0) {
-    return `${hours} س ${mins} د`
+    return isAr ? `${hours} س ${mins} د` : `${hours}h ${mins}m`
   } else if (hours > 0) {
-    return `${hours} ساعة`
+    return isAr ? `${hours} ساعة` : `${hours} ${hours === 1 ? "hour" : "hours"}`
   } else {
-    return `${mins} دقيقة`
+    return isAr ? `${mins} دقيقة` : `${mins} ${mins === 1 ? "minute" : "minutes"}`
   }
 }

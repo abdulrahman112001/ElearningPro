@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { format } from "date-fns"
-import { ar } from "date-fns/locale"
+import { ar, enUS } from "date-fns/locale"
 import {
   Video,
   Calendar,
@@ -46,6 +46,15 @@ interface LiveClass {
 export default function StudentLiveClassesPage() {
   const t = useTranslations("student")
   const tLive = useTranslations("live")
+  const tsl = useTranslations("studentLive")
+  const locale = useLocale()
+  const dateLocale = locale === "ar" ? ar : enUS
+  const pickTitle = (c: LiveClass) =>
+    (locale === "ar" ? c.titleAr || c.title : c.title || c.titleAr) || ""
+  const pickCourseTitle = (course: NonNullable<LiveClass["course"]>) =>
+    locale === "ar"
+      ? course.titleAr || course.titleEn
+      : course.titleEn || course.titleAr
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("upcoming")
@@ -79,21 +88,21 @@ export default function StudentLiveClassesPage() {
         return (
           <Badge className="bg-red-500 text-white animate-pulse">
             <span className="w-2 h-2 bg-white rounded-full me-1 animate-pulse" />
-            {tLive("liveNow") || "مباشر الآن"}
+            {tLive("liveNow")}
           </Badge>
         )
       case "SCHEDULED":
         return (
           <Badge variant="secondary">
             <CalendarClock className="w-3 h-3 me-1" />
-            {tLive("scheduled") || "مجدول"}
+            {tLive("scheduled")}
           </Badge>
         )
       case "ENDED":
         return (
           <Badge variant="outline">
             <History className="w-3 h-3 me-1" />
-            {tLive("ended") || "انتهى"}
+            {tLive("ended")}
           </Badge>
         )
       default:
@@ -114,7 +123,7 @@ export default function StudentLiveClassesPage() {
       <div>
         <h1 className="text-2xl font-bold">{t("liveClasses")}</h1>
         <p className="text-muted-foreground">
-          {t("liveClassesDescription") || "الفصول المباشرة المتاحة لك"}
+          {t("liveClassesDescription")}
         </p>
       </div>
 
@@ -124,7 +133,7 @@ export default function StudentLiveClassesPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">
               <Video className="h-5 w-5 animate-pulse" />
-              {tLive("liveNow") || "مباشر الآن"}
+              {tLive("liveNow")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -135,7 +144,7 @@ export default function StudentLiveClassesPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="font-semibold">
-                          {liveClass.titleAr || liveClass.title}
+                          {pickTitle(liveClass)}
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           {liveClass.instructor.name}
@@ -149,7 +158,7 @@ export default function StudentLiveClassesPage() {
                     >
                       <Link href={`/live/${liveClass.id}`}>
                         <PlayCircle className="h-4 w-4 me-2" />
-                        {tLive("joinNow") || "انضم الآن"}
+                        {tLive("joinNow")}
                       </Link>
                     </Button>
                   </CardContent>
@@ -165,7 +174,7 @@ export default function StudentLiveClassesPage() {
         <TabsList>
           <TabsTrigger value="upcoming" className="gap-2">
             <CalendarClock className="h-4 w-4" />
-            {tLive("upcoming") || "القادمة"}
+            {tLive("upcoming")}
             {upcomingClasses.length > 0 && (
               <Badge variant="secondary" className="ms-1">
                 {upcomingClasses.length}
@@ -174,7 +183,7 @@ export default function StudentLiveClassesPage() {
           </TabsTrigger>
           <TabsTrigger value="past" className="gap-2">
             <History className="h-4 w-4" />
-            {tLive("past") || "السابقة"}
+            {tLive("past")}
           </TabsTrigger>
         </TabsList>
 
@@ -184,11 +193,10 @@ export default function StudentLiveClassesPage() {
               <CardContent className="py-12 text-center">
                 <CalendarClock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="font-semibold mb-2">
-                  {tLive("noUpcomingClasses") || "لا توجد فصول قادمة"}
+                  {tsl("noUpcomingClasses")}
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  {tLive("noUpcomingClassesDescription") ||
-                    "لم يتم جدولة أي فصول مباشرة بعد"}
+                  {tsl("noUpcomingClassesDescription")}
                 </p>
               </CardContent>
             </Card>
@@ -200,7 +208,7 @@ export default function StudentLiveClassesPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="font-semibold line-clamp-1">
-                          {liveClass.titleAr || liveClass.title}
+                          {pickTitle(liveClass)}
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           {liveClass.instructor.name}
@@ -211,7 +219,7 @@ export default function StudentLiveClassesPage() {
 
                     {liveClass.course && (
                       <p className="text-xs text-muted-foreground mb-3">
-                        {liveClass.course.titleAr || liveClass.course.titleEn}
+                        {pickCourseTitle(liveClass.course)}
                       </p>
                     )}
 
@@ -222,14 +230,14 @@ export default function StudentLiveClassesPage() {
                           new Date(liveClass.scheduledAt),
                           "dd MMM yyyy",
                           {
-                            locale: ar,
+                            locale: dateLocale,
                           }
                         )}
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
                         {format(new Date(liveClass.scheduledAt), "hh:mm a", {
-                          locale: ar,
+                          locale: dateLocale,
                         })}
                       </div>
                     </div>
@@ -248,8 +256,8 @@ export default function StudentLiveClassesPage() {
                       >
                         <Link href={`/live/${liveClass.id}`}>
                           {liveClass.status === "LIVE"
-                            ? tLive("joinNow") || "انضم الآن"
-                            : tLive("viewDetails") || "عرض التفاصيل"}
+                            ? tLive("joinNow")
+                            : tLive("viewDetails")}
                         </Link>
                       </Button>
                     </div>
@@ -266,11 +274,10 @@ export default function StudentLiveClassesPage() {
               <CardContent className="py-12 text-center">
                 <History className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="font-semibold mb-2">
-                  {tLive("noPastClasses") || "لا توجد فصول سابقة"}
+                  {tsl("noPastClasses")}
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  {tLive("noPastClassesDescription") ||
-                    "لم تحضر أي فصول مباشرة بعد"}
+                  {tsl("noPastClassesDescription")}
                 </p>
               </CardContent>
             </Card>
@@ -282,7 +289,7 @@ export default function StudentLiveClassesPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="font-semibold line-clamp-1">
-                          {liveClass.titleAr || liveClass.title}
+                          {pickTitle(liveClass)}
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           {liveClass.instructor.name}
@@ -298,13 +305,13 @@ export default function StudentLiveClassesPage() {
                           new Date(liveClass.scheduledAt),
                           "dd MMM yyyy",
                           {
-                            locale: ar,
+                            locale: dateLocale,
                           }
                         )}
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        {liveClass.duration} {t("minutes")}
+                        {liveClass.duration} {tLive("minutes")}
                       </div>
                     </div>
                   </CardContent>

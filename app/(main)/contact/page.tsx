@@ -24,42 +24,25 @@ import {
 import toast from "react-hot-toast"
 
 const contactInfo = [
-  {
-    icon: Mail,
-    title: "البريد الإلكتروني",
-    value: "support@elearning.com",
-    description: "راسلنا في أي وقت",
-  },
-  {
-    icon: Phone,
-    title: "رقم الهاتف",
-    value: "+20 123 456 7890",
-    description: "متاح من 9ص - 9م",
-  },
-  {
-    icon: MapPin,
-    title: "العنوان",
-    value: "القاهرة، مصر",
-    description: "المقر الرئيسي",
-  },
-  {
-    icon: Clock,
-    title: "ساعات العمل",
-    value: "9:00 ص - 9:00 م",
-    description: "السبت - الخميس",
-  },
-]
+  { key: "email", icon: Mail, value: "support@elearning.com" },
+  { key: "phone", icon: Phone, value: "+20 123 456 7890" },
+  { key: "address", icon: MapPin, value: null },
+  { key: "hours", icon: Clock, value: null },
+] as const
 
 const subjects = [
-  { value: "general", label: "استفسار عام" },
-  { value: "technical", label: "دعم فني" },
-  { value: "billing", label: "استفسار عن الفواتير" },
-  { value: "partnership", label: "شراكة أو تعاون" },
-  { value: "instructor", label: "الانضمام كمعلم" },
-  { value: "feedback", label: "اقتراحات وملاحظات" },
-]
+  "general",
+  "technical",
+  "billing",
+  "partnership",
+  "instructor",
+  "feedback",
+] as const
+
+const faqKeys = ["refund", "certificates", "becomeInstructor", "download"] as const
 
 export default function ContactPage() {
+  const t = useTranslations("contactPage")
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -75,7 +58,7 @@ export default function ContactPage() {
     // Simulate sending
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    toast.success("تم إرسال رسالتك بنجاح! سنتواصل معك قريباً")
+    toast.success(t("successToast"))
     setFormData({ name: "", email: "", subject: "", message: "" })
     setIsLoading(false)
   }
@@ -85,26 +68,28 @@ export default function ContactPage() {
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">تواصل معنا</h1>
+          <h1 className="text-4xl font-bold mb-4">{t("title")}</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            نحن هنا لمساعدتك! راسلنا وسنرد عليك في أقرب وقت ممكن
+            {t("subtitle")}
           </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Contact Info */}
           <div className="space-y-4">
-            {contactInfo.map((info, index) => (
-              <Card key={index} className="border-0 shadow-sm">
+            {contactInfo.map((info) => (
+              <Card key={info.key} className="border-0 shadow-sm">
                 <CardContent className="flex items-start gap-4 p-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                     <info.icon className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">{info.title}</h3>
-                    <p className="text-foreground">{info.value}</p>
+                    <h3 className="font-semibold">{t(`info.${info.key}.title`)}</h3>
+                    <p className="text-foreground" dir={info.value ? "ltr" : undefined}>
+                      {info.value ?? t(`info.${info.key}.value`)}
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      {info.description}
+                      {t(`info.${info.key}.description`)}
                     </p>
                   </div>
                 </CardContent>
@@ -114,11 +99,12 @@ export default function ContactPage() {
             {/* Social Links */}
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-3">تابعنا على</h3>
+                <h3 className="font-semibold mb-3">{t("followUs")}</h3>
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
                     size="icon"
+                    aria-label={t("social.twitter")}
                     className="rounded-full"
                   >
                     <svg
@@ -132,6 +118,7 @@ export default function ContactPage() {
                   <Button
                     variant="outline"
                     size="icon"
+                    aria-label={t("social.facebook")}
                     className="rounded-full"
                   >
                     <svg
@@ -145,6 +132,7 @@ export default function ContactPage() {
                   <Button
                     variant="outline"
                     size="icon"
+                    aria-label={t("social.instagram")}
                     className="rounded-full"
                   >
                     <svg
@@ -158,6 +146,7 @@ export default function ContactPage() {
                   <Button
                     variant="outline"
                     size="icon"
+                    aria-label={t("social.youtube")}
                     className="rounded-full"
                   >
                     <svg
@@ -178,20 +167,20 @@ export default function ContactPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                أرسل لنا رسالة
+                {t("form.title")}
               </CardTitle>
               <CardDescription>
-                املأ النموذج أدناه وسنرد عليك خلال 24 ساعة
+                {t("form.description")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">الاسم الكامل *</Label>
+                    <Label htmlFor="name">{t("form.name")} *</Label>
                     <Input
                       id="name"
-                      placeholder="أدخل اسمك"
+                      placeholder={t("form.namePlaceholder")}
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
@@ -200,7 +189,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">البريد الإلكتروني *</Label>
+                    <Label htmlFor="email">{t("form.email")} *</Label>
                     <Input
                       id="email"
                       type="email"
@@ -215,7 +204,7 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject">الموضوع *</Label>
+                  <Label htmlFor="subject">{t("form.subject")} *</Label>
                   <Select
                     value={formData.subject}
                     onValueChange={(value) =>
@@ -224,12 +213,12 @@ export default function ContactPage() {
                     required
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="اختر موضوع الرسالة" />
+                      <SelectValue placeholder={t("form.subjectPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {subjects.map((subject) => (
-                        <SelectItem key={subject.value} value={subject.value}>
-                          {subject.label}
+                        <SelectItem key={subject} value={subject}>
+                          {t(`subjects.${subject}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -237,10 +226,10 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="message">الرسالة *</Label>
+                  <Label htmlFor="message">{t("form.message")} *</Label>
                   <Textarea
                     id="message"
-                    placeholder="اكتب رسالتك هنا..."
+                    placeholder={t("form.messagePlaceholder")}
                     rows={6}
                     value={formData.message}
                     onChange={(e) =>
@@ -257,11 +246,11 @@ export default function ContactPage() {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    "جاري الإرسال..."
+                    t("form.sending")
                   ) : (
                     <>
                       <Send className="h-4 w-4" />
-                      إرسال الرسالة
+                      {t("form.send")}
                     </>
                   )}
                 </Button>
@@ -273,31 +262,14 @@ export default function ContactPage() {
         {/* FAQ Section */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold text-center mb-8">
-            الأسئلة الشائعة
+            {t("faq.title")}
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
-            {[
-              {
-                q: "كيف يمكنني استرداد أموالي؟",
-                a: "يمكنك طلب استرداد الأموال خلال 7 أيام من الشراء عبر صفحة الدعم الفني أو بالتواصل معنا مباشرة.",
-              },
-              {
-                q: "هل الشهادات معتمدة؟",
-                a: "نعم، جميع شهاداتنا معتمدة ويمكن التحقق منها عبر رابط فريد لكل شهادة.",
-              },
-              {
-                q: "كيف أصبح معلماً على المنصة؟",
-                a: "يمكنك التقديم من خلال صفحة 'انضم كمعلم' وسنتواصل معك خلال 48 ساعة.",
-              },
-              {
-                q: "هل يمكنني تحميل الفيديوهات؟",
-                a: "نعم، المشتركون في الخطة المميزة يمكنهم تحميل الفيديوهات للمشاهدة أوفلاين.",
-              },
-            ].map((faq, index) => (
-              <Card key={index} className="border-0 shadow-sm">
+            {faqKeys.map((faq) => (
+              <Card key={faq} className="border-0 shadow-sm">
                 <CardContent className="p-4">
-                  <h3 className="font-semibold mb-2">{faq.q}</h3>
-                  <p className="text-sm text-muted-foreground">{faq.a}</p>
+                  <h3 className="font-semibold mb-2">{t(`faq.items.${faq}.q`)}</h3>
+                  <p className="text-sm text-muted-foreground">{t(`faq.items.${faq}.a`)}</p>
                 </CardContent>
               </Card>
             ))}

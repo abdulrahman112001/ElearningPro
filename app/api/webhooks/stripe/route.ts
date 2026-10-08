@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { sendEmail, emailTemplates } from "@/lib/email";
 
@@ -70,60 +71,68 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       ? session.payment_intent
       : session.payment_intent?.id ?? session.id;
 
-  // Idempotency: if this transaction was already processed, stop here.
-  const existing = await db.purchase.findFirst({
-    where: { providerId: transactionId },
-  });
-  if (existing) {
-    console.log("Webhook already processed:", transactionId);
-    return;
-  }
-
   const instructorShareValue = parseFloat(instructorShare || "0");
   const platformShareValue = parseFloat(platformShare || "0");
   const discountValue = parseFloat(discountAmount || "0");
 
-  // Create purchase, enrollment, earnings and coupon usage atomically.
-  const purchase = await db.$transaction(async (tx) => {
-    const created = await tx.purchase.create({
-      data: {
-        userId,
-        courseId,
-        amount: session.amount_total! / 100, // Convert from cents
-        provider: "STRIPE",
-        providerId: transactionId,
-        status: "COMPLETED",
-        instructorShare: instructorShareValue,
-        platformShare: platformShareValue,
-        discountAmount: discountValue,
-        couponId: couponId || null,
-      },
-    });
-
-    await tx.enrollment.create({
-      data: {
-        userId,
-        courseId,
-      },
-    });
-
-    await tx.instructorProfile.update({
-      where: { userId: instructorId },
-      data: {
-        pendingEarnings: { increment: instructorShareValue },
-        totalEarnings: { increment: instructorShareValue },
-      },
-    });
-
-    if (couponId) {
-      await tx.coupon.update({
-        where: { id: couponId },
-        data: { usedCount: { increment: 1 } },
+  // Purchase.providerId is unique, so a duplicate or concurrent delivery of
+  // the same event fails on the first insert and rolls back the whole
+  // transaction. Nothing is credited twice.
+  let purchase;
+  try {
+    purchase = await db.$transaction(async (tx) => {
+      const created = await tx.purchase.create({
+        data: {
+          userId,
+          courseId,
+          amount: session.amount_total! / 100, // Convert from cents
+          provider: "STRIPE",
+          providerId: transactionId,
+          status: "COMPLETED",
+          instructorShare: instructorShareValue,
+          platformShare: platformShareValue,
+          discountAmount: discountValue,
+          couponId: couponId || null,
+        },
       });
-    }
 
-    return created;
-  });
+      // The user may already be enrolled (e.g. paid twice, or enrolled by an
+      // admin). The payment is still recorded instead of failing forever.
+      await tx.enrollment.upsert({
+        where: { userId_courseId: { userId, courseId } },
+        update: {},
+        create: { userId, courseId },
+      });
+
+      await tx.instructorProfile.upsert({
+        where: { userId: instructorId },
+        update: {
+          pendingEarnings: { increment: instructorShareValue },
+          totalEarnings: { increment: instructorShareValue },
+        },
+        create: {
+          userId: instructorId,
+          pendingEarnings: instructorShareValue,
+          totalEarnings: instructorShareValue,
+        },
+      });
+
+      if (couponId) {
+        await tx.coupon.update({
+          where: { id: couponId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
+      return created;
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      console.log("Webhook already processed:", transactionId);
+      return;
+    }
+    throw error;
+  }
 
   // Send confirmation email
   const user = await db.user.findUnique({ where: { id: userId } });

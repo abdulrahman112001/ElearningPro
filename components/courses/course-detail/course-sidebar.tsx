@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -58,6 +58,15 @@ export function CourseSidebar({
   const [isLoading, setIsLoading] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
 
+  // Load the real wishlist state for this course.
+  useEffect(() => {
+    if (!session) return
+    fetch(`/api/wishlist?courseId=${course.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setIsWishlisted(!!data.wishlisted))
+      .catch(() => {})
+  }, [session, course.id])
+
   const handleEnroll = async () => {
     if (!session) {
       router.push(`/login?callbackUrl=/courses/${course.slug}`)
@@ -77,10 +86,10 @@ export function CourseSidebar({
 
         if (!response.ok) throw new Error()
 
-        toast.success("تم التسجيل في الكورس بنجاح")
+        toast.success(t("enrollSuccess"))
         router.refresh()
       } catch (error) {
-        toast.error("حدث خطأ أثناء التسجيل")
+        toast.error(t("enrollError"))
       } finally {
         setIsLoading(false)
       }
@@ -97,8 +106,21 @@ export function CourseSidebar({
       return
     }
 
-    setIsWishlisted(!isWishlisted)
-    toast.success(isWishlisted ? "تم الحذف من المفضلة" : "تم الإضافة للمفضلة")
+    const removing = isWishlisted
+    try {
+      const response = removing
+        ? await fetch(`/api/wishlist/${course.id}`, { method: "DELETE" })
+        : await fetch("/api/wishlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ courseId: course.id }),
+          })
+      if (!response.ok) throw new Error()
+      setIsWishlisted(!removing)
+      toast.success(removing ? t("removedFromWishlist") : t("addedToWishlist"))
+    } catch {
+      toast.error(t("wishlistError"))
+    }
   }
 
   const handleShare = async () => {

@@ -64,6 +64,7 @@ export function CoursesGrid({
   currentPage,
 }: CoursesGridProps) {
   const t = useTranslations("courses")
+  const ta = useTranslations("a11y")
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -277,6 +278,7 @@ export function CoursesGrid({
             size="icon"
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
+            aria-label={ta("previousPage")}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -316,6 +318,7 @@ export function CoursesGrid({
             size="icon"
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
+            aria-label={ta("nextPage")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>

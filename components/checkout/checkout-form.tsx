@@ -104,19 +104,23 @@ export function CheckoutForm({ course, finalPrice }: CheckoutFormProps) {
         }),
       })
 
+      const data = await response.json().catch(() => ({}))
+
       if (!response.ok) {
-        throw new Error("Payment failed")
+        // e.g. 501 for a payment method that is not available yet
+        toast.error(response.status === 501 ? t("paymentMethodUnavailable") : t("paymentError"))
+        return
       }
 
-      const data = await response.json()
-
-      // Redirect to payment provider
-      if (data.redirectUrl) {
-        window.location.href = data.redirectUrl
-      } else {
-        // Payment completed (for some methods)
+      if (data.enrolled) {
+        // Total was 0 after the coupon: enrolled without a payment provider.
         toast.success(t("paymentSuccess"))
         router.push(`/courses/${course.slug}/learn`)
+      } else if (data.redirectUrl) {
+        // Redirect to payment provider; success is only shown after it confirms.
+        window.location.href = data.redirectUrl
+      } else {
+        toast.error(t("paymentError"))
       }
     } catch (error) {
       toast.error(t("paymentError"))

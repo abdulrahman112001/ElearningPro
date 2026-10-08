@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 
@@ -79,6 +80,8 @@ export async function GET(
       completedLessons: lessonProgress.filter((p) => p.isCompleted).length,
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get progress error:", error)
     return NextResponse.json(
       { error: "Failed to get progress" },

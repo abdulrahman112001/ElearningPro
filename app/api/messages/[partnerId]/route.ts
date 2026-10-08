@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 export async function GET(
   request: NextRequest,
@@ -53,6 +54,8 @@ export async function GET(
 
     return NextResponse.json({ messages })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error fetching messages:", error)
     return NextResponse.json(
       { error: "Failed to fetch messages" },
@@ -74,13 +77,51 @@ export async function POST(
 
     const { partnerId } = params
     const userId = session.user.id
-    const { content } = await request.json()
+    const { content } = await readJson(request)
 
-    if (!content || !content.trim()) {
+    if (typeof content !== "string" || !content.trim()) {
       return NextResponse.json(
         { error: "Message content is required" },
         { status: 400 }
       )
+    }
+
+    if (partnerId === userId) {
+      return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 })
+    }
+
+    const partner = await db.user.findUnique({
+      where: { id: partnerId },
+      select: { id: true, role: true },
+    })
+    if (!partner) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Messaging is for teaching relationships: student <-> instructor of a
+    // course the student is enrolled in, an existing conversation, or admins.
+    if (session.user.role !== "ADMIN" && partner.role !== "ADMIN") {
+      const [linked, existingConversation] = await Promise.all([
+        db.enrollment.findFirst({
+          where: {
+            OR: [
+              { userId, course: { instructorId: partnerId } },
+              { userId: partnerId, course: { instructorId: userId } },
+            ],
+          },
+          select: { id: true },
+        }),
+        db.message.findFirst({
+          where: { fromUserId: partnerId, toUserId: userId },
+          select: { id: true },
+        }),
+      ])
+      if (!linked && !existingConversation) {
+        return NextResponse.json(
+          { error: "You can only message your instructors or students" },
+          { status: 403 }
+        )
+      }
     }
 
     // Create message
@@ -103,6 +144,8 @@ export async function POST(
 
     return NextResponse.json(message)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error sending message:", error)
     return NextResponse.json(
       { error: "Failed to send message" },

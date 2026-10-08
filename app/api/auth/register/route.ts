@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit";
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 export async function POST(request: Request) {
   try {
@@ -16,11 +17,19 @@ export async function POST(request: Request) {
       return tooManyRequests(limit.resetAt);
     }
 
-    const body = await request.json();
-    const { name, email, password, role } = body;
+    const body = await readJson(request);
+    const { name, password, role } = body;
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
     // Validate required fields
-    if (!name || !email || !password) {
+    if (
+      typeof name !== "string" ||
+      typeof password !== "string" ||
+      !name.trim() ||
+      !email ||
+      !password
+    ) {
       return NextResponse.json(
         { error: "جميع الحقول مطلوبة" },
         { status: 400 }
@@ -45,8 +54,9 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    const existingUser = await db.user.findUnique({
-      where: { email },
+    // Case-insensitive: "A@x.com" and "a@x.com" are the same mailbox.
+    const existingUser = await db.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
     });
 
     if (existingUser) {
@@ -69,6 +79,13 @@ export async function POST(request: Request) {
         email,
         password: hashedPassword,
         role: userRole,
+        // The adapter's createUser event (which creates the FREE plan) only
+        // fires for OAuth sign-ups, so credentials sign-ups get it here.
+        subscription: { create: { plan: "FREE", status: "ACTIVE" } },
+        // New instructors start unapproved: their courses go to admin review.
+        ...(userRole === "INSTRUCTOR" && {
+          instructorProfile: { create: { isApproved: false } },
+        }),
       },
     });
 
@@ -83,6 +100,8 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Registration error:", error);
     return NextResponse.json(
       { error: "حدث خطأ أثناء إنشاء الحساب" },

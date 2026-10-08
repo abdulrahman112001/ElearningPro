@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Update category
 export async function PATCH(
@@ -18,7 +19,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { name, slug, description, icon, parentId } = body
 
     // Check slug uniqueness if changed
@@ -95,6 +96,8 @@ export async function PATCH(
 
     return NextResponse.json(formatted)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update category error:", error)
     return NextResponse.json(
       { error: "Failed to update category" },
@@ -146,6 +149,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Delete category error:", error)
     return NextResponse.json(
       { error: "Failed to delete category" },

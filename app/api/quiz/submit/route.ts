@@ -2,6 +2,12 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
+import {
+  computeCertificateGrade,
+  generateCertificateNumber,
+  hasPassedAllQuizzes,
+} from "@/lib/certificates"
 
 interface AnswerInput {
   questionId: string
@@ -26,14 +32,19 @@ export async function POST(req: Request) {
       return tooManyRequests(resetAt)
     }
 
-    const { attemptId, answers } = (await req.json()) as {
+    const { attemptId, answers } = (await readJson(req)) as {
       attemptId: string
       answers: AnswerInput[]
     }
 
-    if (!attemptId || !answers) {
+    if (
+      typeof attemptId !== "string" ||
+      !attemptId ||
+      !Array.isArray(answers) ||
+      !answers.every((a) => a && typeof a.questionId === "string")
+    ) {
       return NextResponse.json(
-        { error: "Attempt ID and answers are required" },
+        { error: "Attempt ID and an answers array are required" },
         { status: 400 }
       )
     }
@@ -72,6 +83,28 @@ export async function POST(req: Request) {
         { error: "This attempt has already been submitted" },
         { status: 400 }
       )
+    }
+
+    // Enforce the time limit on the server; the client timer alone can be
+    // bypassed. A short grace period covers network latency on auto-submit.
+    if (attempt.quiz.timeLimit) {
+      const elapsedSeconds = (Date.now() - attempt.startedAt.getTime()) / 1000
+      const GRACE_SECONDS = 60
+      if (elapsedSeconds > attempt.quiz.timeLimit * 60 + GRACE_SECONDS) {
+        await db.quizAttempt.update({
+          where: { id: attempt.id },
+          data: {
+            completedAt: new Date(),
+            score: 0,
+            passed: false,
+            timeSpent: Math.floor(elapsedSeconds),
+          },
+        })
+        return NextResponse.json(
+          { error: "Time limit exceeded", errorAr: "انتهى الوقت المحدد للاختبار" },
+          { status: 400 }
+        )
+      }
     }
 
     // Calculate score
@@ -227,7 +260,10 @@ export async function POST(req: Request) {
       })
 
       // Generate certificate if course completed
-      if (progressPercentage >= 100) {
+      if (
+        progressPercentage >= 100 &&
+        (await hasPassedAllQuizzes(session.user.id, course.id))
+      ) {
         const existingCertificate = await db.certificate.findUnique({
           where: {
             userId_courseId: {
@@ -238,10 +274,7 @@ export async function POST(req: Request) {
         })
 
         if (!existingCertificate) {
-          const certificateNo = `CERT-${Date.now()}-${Math.random()
-            .toString(36)
-            .substring(2, 8)
-            .toUpperCase()}`
+          const certificateNo = generateCertificateNumber()
 
           await db.certificate.create({
             data: {
@@ -249,7 +282,7 @@ export async function POST(req: Request) {
               userId: session.user.id,
               courseId: course.id,
               completedAt: new Date(),
-              grade: progressPercentage,
+              grade: await computeCertificateGrade(session.user.id, course.id),
             },
           })
         }
@@ -262,6 +295,8 @@ export async function POST(req: Request) {
       passed,
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("[QUIZ_SUBMIT]", error)
     return NextResponse.json(
       { error: "Internal server error" },

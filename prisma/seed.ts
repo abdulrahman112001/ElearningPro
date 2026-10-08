@@ -56,6 +56,15 @@ async function main() {
       headline: "مصممة واجهات المستخدم | خبيرة Figma",
     },
   })
+  // Instructor profiles hold earnings, payout details and the approval flag.
+  for (const instructor of [instructor1, instructor2]) {
+    await prisma.instructorProfile.upsert({
+      where: { userId: instructor.id },
+      update: {},
+      create: { userId: instructor.id, isApproved: true, approvedAt: new Date() },
+    })
+  }
+
   console.log("✅ Instructor users created")
 
   // Create student user

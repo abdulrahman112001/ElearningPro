@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get user profile
 export async function GET() {
@@ -37,6 +38,8 @@ export async function GET() {
       instructorProfile: user.instructorProfile,
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get profile error:", error)
     return NextResponse.json(
       { error: "Failed to get profile" },
@@ -54,7 +57,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { name, bio, image, headline, website, twitter, linkedin, youtube } =
       body
 
@@ -75,6 +78,8 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true, user })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update profile error:", error)
     return NextResponse.json(
       { error: "Failed to update profile" },

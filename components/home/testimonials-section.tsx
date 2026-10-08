@@ -8,34 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SectionHeader } from "@/components/home/section-header";
 import { getInitials } from "@/lib/utils";
 
+// Display text for each testimonial lives in messages under home.testimonials.items.<key>
 const testimonials = [
-  {
-    id: "1",
-    name: "محمد أحمد",
-    role: "مطور ويب",
-    image: "",
-    rating: 5,
-    content:
-      "منصة رائعة جداً! تعلمت منها الكثير وتمكنت من الحصول على وظيفة أحلامي بفضل الكورسات الموجودة هنا.",
-  },
-  {
-    id: "2",
-    name: "فاطمة علي",
-    role: "مصممة جرافيك",
-    image: "",
-    rating: 5,
-    content:
-      "الكورسات منظمة بشكل ممتاز والمدربين محترفين. أنصح بها بشدة لكل من يريد تطوير مهاراته.",
-  },
-  {
-    id: "3",
-    name: "أحمد خالد",
-    role: "طالب جامعي",
-    image: "",
-    rating: 5,
-    content:
-      "أفضل منصة تعليمية استخدمتها! المحتوى عالي الجودة والأسعار مناسبة جداً.",
-  },
+  { id: "1", key: "item1", image: "", rating: 5 },
+  { id: "2", key: "item2", image: "", rating: 5 },
+  { id: "3", key: "item3", image: "", rating: 5 },
 ];
 
 export function TestimonialsSection() {
@@ -52,7 +29,14 @@ export function TestimonialsSection() {
         />
 
         <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map((testimonial, index) => (
+          {testimonials.map((item, index) => {
+            const testimonial = {
+              ...item,
+              name: t(`home.testimonials.items.${item.key}.name`),
+              role: t(`home.testimonials.items.${item.key}.role`),
+              content: t(`home.testimonials.items.${item.key}.content`),
+            };
+            return (
             <motion.div
               key={testimonial.id}
               initial={{ opacity: 0, y: 20 }}
@@ -93,7 +77,8 @@ export function TestimonialsSection() {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

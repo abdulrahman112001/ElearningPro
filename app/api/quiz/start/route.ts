@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 export async function POST(req: Request) {
   try {
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       return tooManyRequests(resetAt)
     }
 
-    const { quizId } = await req.json()
+    const { quizId } = await readJson(req)
 
     if (!quizId) {
       return NextResponse.json(
@@ -92,6 +93,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ attemptId: attempt.id })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("[QUIZ_START]", error)
     return NextResponse.json(
       { error: "Internal server error" },

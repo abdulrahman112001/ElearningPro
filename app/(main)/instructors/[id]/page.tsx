@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -38,6 +38,7 @@ export async function generateMetadata({
 export default async function InstructorPage({ params }: InstructorPageProps) {
   const t = await getTranslations("instructors")
   const tCourses = await getTranslations("courses")
+  const locale = await getLocale()
 
   const instructor = await db.user.findUnique({
     where: { id: params.id, role: "INSTRUCTOR" },
@@ -245,7 +246,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            <span>{formatDuration(totalDuration)}</span>
+                            <span>{formatDuration(totalDuration, locale)}</span>
                           </div>
                         </div>
 
@@ -257,7 +258,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
                             </span>
                           ) : (
                             <span className="font-bold text-primary">
-                              {formatPrice(course.price || 0)}
+                              {formatPrice(course.price || 0, "EGP", locale)}
                             </span>
                           )}
                           <Button size="sm" variant="outline">

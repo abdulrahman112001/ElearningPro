@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,16 +21,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const courseSchema = z.object({
-  title: z.string().min(5, "العنوان يجب أن يكون 5 أحرف على الأقل"),
-  titleAr: z.string().optional(),
-  description: z.string().min(50, "الوصف يجب أن يكون 50 حرف على الأقل"),
-  categoryId: z.string().min(1, "يرجى اختيار التصنيف"),
-  level: z.string().min(1, "يرجى اختيار المستوى"),
-  language: z.string().min(1, "يرجى اختيار اللغة"),
-});
+const makeCourseSchema = (t: (key: string) => string) =>
+  z.object({
+    title: z.string().min(5, t("validation.titleMin")),
+    titleAr: z.string().optional(),
+    description: z.string().min(50, t("validation.descriptionMin")),
+    categoryId: z.string().min(1, t("validation.categoryRequired")),
+    level: z.string().min(1, t("validation.levelRequired")),
+    language: z.string().min(1, t("validation.languageRequired")),
+  });
 
-type CourseFormData = z.infer<typeof courseSchema>;
+type CourseFormData = z.infer<ReturnType<typeof makeCourseSchema>>;
 
 interface CreateCoursePageProps {
   categories: { id: string; nameEn: string; nameAr?: string | null }[];
@@ -38,7 +39,10 @@ interface CreateCoursePageProps {
 
 export function CreateCourseForm({ categories }: CreateCoursePageProps) {
   const t = useTranslations("instructor");
+  const tc = useTranslations("createCourse");
+  const locale = useLocale();
   const router = useRouter();
+  const courseSchema = useMemo(() => makeCourseSchema(tc), [tc]);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -62,10 +66,10 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
       if (!response.ok) throw new Error();
 
       const course = await response.json();
-      toast.success("تم إنشاء الكورس بنجاح");
+      toast.success(tc("createSuccess"));
       router.push(`/instructor/courses/${course.id}/edit`);
     } catch (error) {
-      toast.error("حدث خطأ أثناء إنشاء الكورس");
+      toast.error(tc("createError"));
     } finally {
       setIsLoading(false);
     }
@@ -84,10 +88,10 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="title">{t("courseTitle")} (English)</Label>
+              <Label htmlFor="title">{tc("titleEnLabel")}</Label>
               <Input
                 id="title"
-                placeholder="e.g. Complete Web Development Course"
+                placeholder={tc("titleEnPlaceholder")}
                 {...register("title")}
                 error={errors.title?.message}
                 disabled={isLoading}
@@ -96,10 +100,10 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
 
             {/* Arabic Title */}
             <div className="space-y-2">
-              <Label htmlFor="titleAr">{t("courseTitle")} ({t("arabic")})</Label>
+              <Label htmlFor="titleAr">{tc("titleArLabel")}</Label>
               <Input
                 id="titleAr"
-                placeholder="مثال: دورة تطوير الويب الشاملة"
+                placeholder={tc("titleArPlaceholder")}
                 {...register("titleAr")}
                 disabled={isLoading}
               />
@@ -130,7 +134,7 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
                 <SelectContent>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.nameAr || category.nameEn}
+                      {locale === "ar" ? category.nameAr || category.nameEn : category.nameEn}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -109,7 +109,11 @@
     "selectRating": "Select your rating",
     "submitReview": "Submit Review",
     "writeReview": "Write a Review",
-    "yourProgress": "Your Progress"
+    "yourProgress": "Your Progress",
+    "enrollSuccess": "Enrolled successfully",
+    "enrollError": "Something went wrong while enrolling",
+    "wishlistError": "Could not update your wishlist",
+    "removeFromWishlist": "Remove from wishlist"
   },
   "navigation": {
     "home": "Home",
@@ -314,7 +318,11 @@
     "purchaseHistory": "Purchase History",
     "pending": "Pending",
     "failed": "Failed",
-    "refunded": "Refunded"
+    "refunded": "Refunded",
+    "instructor": "Instructor",
+    "hours": "hours",
+    "reviewCourse": "Review course",
+    "completedLesson": "Completed lesson"
   },
   "instructor": {
     "earnings": "Earnings",
@@ -622,7 +630,9 @@
     "quizDescriptionPlaceholder": "A short description of the quiz...",
     "selectCorrectAnswer": "Select the correct answer",
     "selectFile": "Select File",
-    "uploadVideoHint": "Upload a video file or enter a link"
+    "uploadVideoHint": "Upload a video file or enter a link",
+    "earningsByCourse": "Earnings by Course",
+    "courseSubmittedForReview": "Course submitted for review. It will be published once an admin approves it."
   },
   "admin": {
     "dashboard": "Admin Dashboard",
@@ -939,7 +949,9 @@
     "totalInstructors": "Total Instructors",
     "unread": "Unread",
     "failed": "Failed",
-    "refunded": "Refunded"
+    "refunded": "Refunded",
+    "manageInstructors": "Manage instructors and applications",
+    "noPendingInstructors": "No instructors waiting for approval"
   },
   "subscription": {
     "title": "Subscription Plans",
@@ -1040,7 +1052,10 @@
     "joiningClass": "Joining class...",
     "noConnection": "No connection",
     "ready": "Ready",
-    "selectDuration": "Select duration"
+    "selectDuration": "Select duration",
+    "notStartedYet": "The class has not started yet. Please wait for the instructor.",
+    "scheduledFor": "Scheduled for",
+    "classHasEnded": "This class has ended."
   },
   "payment": {
     "checkout": "Checkout",
@@ -1095,7 +1110,18 @@
     "instructor": "Instructor",
     "linkCopied": "Link copied",
     "shareText": "I completed the course {course}",
-    "shareTitle": "Certificate of Completion"
+    "shareTitle": "Certificate of Completion",
+    "myCertificate": "My Certificate",
+    "validCertificate": "Valid Certificate",
+    "invalidCertificate": "Invalid Certificate",
+    "certificateDetails": "Certificate Details",
+    "holder": "Holder",
+    "course": "Course",
+    "verifiedAuthentic": "This certificate is verified as authentic and issued by the platform",
+    "viewCourse": "View Course",
+    "certificateNotFoundMessage": "We could not find a certificate with this number. Check the number and try again.",
+    "searchedFor": "You searched for",
+    "backToHome": "Back to Home"
   },
   "common": {
     "search": "Search",
@@ -1132,7 +1158,12 @@
     "english": "English",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode",
-    "copied": "Copied"
+    "copied": "Copied",
+    "pagination": "Pagination",
+    "goToPreviousPage": "Go to previous page",
+    "goToNextPage": "Go to next page",
+    "morePages": "More pages",
+    "loadingCourses": "Loading courses..."
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",
@@ -1152,7 +1183,25 @@
   },
   "home": {
     "topInstructors": {
-      "subtitle": "Learn from the best experts in their fields"
+      "subtitle": "Learn from the best experts in their fields",
+      "items": {
+        "item1": {
+          "name": "Ahmed Mohamed",
+          "headline": "Professional Web Developer"
+        },
+        "item2": {
+          "name": "Sara Ahmed",
+          "headline": "React & Next.js Expert"
+        },
+        "item3": {
+          "name": "Mohamed Ali",
+          "headline": "UI/UX Designer"
+        },
+        "item4": {
+          "name": "Khaled Ibrahim",
+          "headline": "AI Expert"
+        }
+      }
     },
     "cta": {
       "badge": "Start Your Learning Journey Today",
@@ -1162,7 +1211,36 @@
     "testimonials": {
       "badge": "Real Success Stories",
       "title": "What Our Students Say",
-      "subtitle": "Real reviews from students who achieved their goals through our platform"
+      "subtitle": "Real reviews from students who achieved their goals through our platform",
+      "items": {
+        "item1": {
+          "name": "Mohamed Ahmed",
+          "role": "Web Developer",
+          "content": "An amazing platform! I learned so much here and landed my dream job thanks to the courses available."
+        },
+        "item2": {
+          "name": "Fatma Ali",
+          "role": "Graphic Designer",
+          "content": "The courses are excellently organized and the instructors are professionals. I highly recommend it to anyone who wants to develop their skills."
+        },
+        "item3": {
+          "name": "Ahmed Khaled",
+          "role": "University Student",
+          "content": "The best learning platform I've ever used! High-quality content and very reasonable prices."
+        }
+      }
+    },
+    "categoriesSection": {
+      "items": {
+        "programming": "Programming",
+        "design": "Design",
+        "business": "Business",
+        "mobile": "Mobile Development",
+        "aiMl": "AI & ML",
+        "marketing": "Marketing",
+        "photography": "Photography",
+        "music": "Music"
+      }
     }
   },
   "footer": {
@@ -1292,7 +1370,10 @@
     "pdf": "PDF file",
     "attachment": "Attachment",
     "locked": "Locked",
-    "preview": "Preview"
+    "preview": "Preview",
+    "learning": "Learning",
+    "noLessons": "No lessons yet",
+    "noLessonsDesc": "No lessons have been published in this course yet."
   },
   "categories": {
     "title": "Categories",
@@ -1450,6 +1531,446 @@
     "paymentSuccess": "Payment successful",
     "remove": "Remove",
     "securePayment": "Secure, encrypted payment",
-    "total": "Total"
+    "total": "Total",
+    "checkout": "Checkout",
+    "successTitle": "Purchase successful!",
+    "successMessage": "You are now enrolled in the course. You can start learning right away.",
+    "startLearning": "Start Learning",
+    "myCoursesBtn": "My Courses",
+    "browseMore": "Browse more courses",
+    "paymentMethodUnavailable": "This payment method is not available yet. Please choose another one."
+  },
+  "studentProfile": {
+    "headlinePlaceholder": "e.g. Web developer | Student"
+  },
+  "contactPage": {
+    "title": "Contact Us",
+    "subtitle": "We're here to help! Send us a message and we'll get back to you as soon as possible",
+    "successToast": "Your message was sent successfully! We'll get in touch with you soon",
+    "followUs": "Follow us on",
+    "info": {
+      "email": {
+        "title": "Email",
+        "description": "Message us anytime"
+      },
+      "phone": {
+        "title": "Phone",
+        "description": "Available 9 AM - 9 PM"
+      },
+      "address": {
+        "title": "Address",
+        "value": "Cairo, Egypt",
+        "description": "Headquarters"
+      },
+      "hours": {
+        "title": "Working Hours",
+        "value": "9:00 AM - 9:00 PM",
+        "description": "Saturday - Thursday"
+      }
+    },
+    "social": {
+      "twitter": "Twitter",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "youtube": "YouTube"
+    },
+    "subjects": {
+      "general": "General inquiry",
+      "technical": "Technical support",
+      "billing": "Billing inquiry",
+      "partnership": "Partnership or collaboration",
+      "instructor": "Join as an instructor",
+      "feedback": "Suggestions and feedback"
+    },
+    "form": {
+      "title": "Send Us a Message",
+      "description": "Fill out the form below and we'll reply within 24 hours",
+      "name": "Full Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email",
+      "subject": "Subject",
+      "subjectPlaceholder": "Choose a subject",
+      "message": "Message",
+      "messagePlaceholder": "Write your message here...",
+      "sending": "Sending...",
+      "send": "Send Message"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "items": {
+        "refund": {
+          "q": "How can I get a refund?",
+          "a": "You can request a refund within 7 days of purchase through the support page or by contacting us directly."
+        },
+        "certificates": {
+          "q": "Are the certificates accredited?",
+          "a": "Yes, all our certificates are accredited and can be verified via a unique link for each certificate."
+        },
+        "becomeInstructor": {
+          "q": "How do I become an instructor on the platform?",
+          "a": "You can apply through the \"Become an Instructor\" page and we'll contact you within 48 hours."
+        },
+        "download": {
+          "q": "Can I download the videos?",
+          "a": "Yes, premium plan subscribers can download videos for offline viewing."
+        }
+      }
+    }
+  },
+  "subscriptionCheckout": {
+    "badge": "Premium Subscription",
+    "title": "Get Unlimited Access",
+    "subtitle": "Subscribe now and get access to all courses and exclusive features",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save": "Save {percent}%",
+    "monthlyPlan": "Monthly Subscription",
+    "yearlyPlan": "Yearly Subscription",
+    "fullAccess": "Full access to all features",
+    "currency": "EGP",
+    "perMonth": "month",
+    "perYear": "year",
+    "discount": "{percent}% off",
+    "yearlySavings": "Save {amount} EGP per year!",
+    "features": {
+      "unlimitedAccess": "Unlimited access to all courses",
+      "certificates": "Accredited certificate for every course",
+      "support": "24/7 technical support",
+      "offlineDownload": "Download videos for offline viewing",
+      "earlyAccess": "Early access to new courses",
+      "exclusiveDiscounts": "Exclusive discounts on premium courses",
+      "community": "Private subscribers community",
+      "expertSessions": "Weekly sessions with experts"
+    },
+    "processing": "Processing...",
+    "subscribeNow": "Subscribe Now",
+    "comingSoon": "Subscriptions are coming soon! The payment gateway will be activated shortly",
+    "moneyBack": "7-day money-back guarantee",
+    "trustedBy": "Trusted by more than 10,000+ students",
+    "stats": {
+      "courses": "Courses",
+      "instructors": "Expert instructors",
+      "rating": "Rating"
+    }
+  },
+  "quizEditor": {
+    "saveFailed": "Failed to save",
+    "titlePlaceholder": "Quiz title",
+    "questionPlaceholder": "Enter question..."
+  },
+  "quizClient": {
+    "oneMinuteLeft": "One minute left!",
+    "startError": "An error occurred while starting the quiz",
+    "submitError": "An error occurred while submitting the quiz",
+    "questionsLabel": "Questions",
+    "passingScoreLabel": "Passing score",
+    "minutesLabel": "Minutes",
+    "previousAttempts": "Previous attempts",
+    "instructionsTitle": "Quiz instructions",
+    "instructions": {
+      "readCarefully": "Read each question carefully before answering",
+      "navigateFreely": "You can move freely between questions",
+      "flagForReview": "You can flag questions to review later",
+      "timeLimit": "You have {minutes} minutes to complete the quiz",
+      "reviewBeforeSubmit": "Make sure to review your answers before submitting"
+    },
+    "questionProgress": "Question {current} of {total}",
+    "goToQuestion": "Go to question {number}",
+    "pointsCount": "{count, plural, one {# point} other {# points}}",
+    "flagForReview": "Flag for review",
+    "answeredProgress": "{answered} of {total} answered",
+    "confirmSubmitTitle": "Confirm quiz submission",
+    "unansweredWarning": "Warning: you haven't answered {count, plural, one {# question} other {# questions}}",
+    "confirmSubmitDescription": "Are you sure you want to submit the quiz? You can't change your answers after submitting."
+  },
+  "createCourse": {
+    "validation": {
+      "titleMin": "Title must be at least 5 characters",
+      "descriptionMin": "Description must be at least 50 characters",
+      "categoryRequired": "Please select a category",
+      "levelRequired": "Please select a level",
+      "languageRequired": "Please select a language"
+    },
+    "createSuccess": "Course created successfully",
+    "createError": "An error occurred while creating the course",
+    "titleEnLabel": "Course Title (English)",
+    "titleArLabel": "Course Title (Arabic)",
+    "titleEnPlaceholder": "e.g. Complete Web Development Course",
+    "titleArPlaceholder": "e.g. دورة تطوير الويب الشاملة"
+  },
+  "courseEditor": {
+    "confirmDeleteTitle": "Confirm deletion",
+    "backToCourses": "Back to courses",
+    "chapterOptions": "Chapter options",
+    "lessonOptions": "Lesson options"
+  },
+  "liveRoom": {
+    "liveBadge": "LIVE",
+    "joinFailed": "Failed to join the live class",
+    "endFailed": "Failed to end the class",
+    "showChat": "Show chat",
+    "hideChat": "Hide chat"
+  },
+  "videoPlayer": {
+    "continueTo": "Continue to: {title}?",
+    "noVideo": "No video available for this lesson",
+    "saving": "Saving...",
+    "play": "Play",
+    "pause": "Pause",
+    "skipForward": "Skip forward 10 seconds",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "playbackSpeed": "Playback speed",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen"
+  },
+  "settingsForms": {
+    "notifications": {
+      "saved": "Notification settings saved",
+      "saveError": "An error occurred while saving",
+      "emailSection": "Email Notifications",
+      "emailNotifications": "Enable email notifications",
+      "emailNotificationsDesc": "Receive all notifications by email",
+      "courseUpdates": "Course updates",
+      "courseUpdatesDesc": "Get notified when courses you're enrolled in are updated",
+      "newCourses": "New courses",
+      "newCoursesDesc": "Get notified when new courses are added in your favorite topics",
+      "learningReminders": "Learning Reminders",
+      "completionReminders": "Course completion reminders",
+      "completionRemindersDesc": "Reminders to finish the courses you've started",
+      "liveClassReminders": "Live class reminders",
+      "liveClassRemindersDesc": "Reminders before a live class starts",
+      "marketing": "Marketing",
+      "promotions": "Offers and discounts",
+      "promotionsDesc": "Receive notifications about special offers and discounts",
+      "save": "Save Settings"
+    },
+    "password": {
+      "currentPasswordRequired": "Current password is required",
+      "passwordMin8": "Password must be at least 8 characters",
+      "confirmPasswordRequired": "Password confirmation is required",
+      "passwordsMismatch": "Passwords do not match",
+      "changeError": "An error occurred while changing the password",
+      "currentPasswordPlaceholder": "Enter your current password",
+      "newPasswordPlaceholder": "Enter your new password",
+      "confirmPasswordPlaceholder": "Re-enter your new password"
+    },
+    "profile": {
+      "nameMin": "Name must be at least 2 characters",
+      "invalidEmail": "Invalid email address",
+      "bioMax": "Bio must not exceed 500 characters",
+      "updated": "Profile updated successfully",
+      "updateError": "An error occurred while updating",
+      "photoFormats": "JPG, PNG or GIF. Max size 2MB",
+      "bioPlaceholder": "Write a short bio about yourself..."
+    }
+  },
+  "studentLive": {
+    "noUpcomingClasses": "No upcoming classes",
+    "noUpcomingClassesDescription": "No live classes have been scheduled yet",
+    "noPastClasses": "No past classes",
+    "noPastClassesDescription": "You haven't attended any live classes yet"
+  },
+  "studentPurchases": {
+    "statusCompleted": "Completed",
+    "viewCourse": "View course"
+  },
+  "messagesUi": {
+    "backToList": "Back to list",
+    "send": "Send"
+  },
+  "forgotPassword": {
+    "linkSent": "Password reset link sent",
+    "checkEmailTitle": "Check your email",
+    "checkEmailDescription": "We've sent a password reset link to your email. Please check your inbox and spam folder.",
+    "resend": "Resend",
+    "backToLogin": "Back to login",
+    "description": "Enter your email and we'll send you a link to reset your password"
+  },
+  "resetPassword": {
+    "successToast": "Password changed successfully",
+    "invalidLinkTitle": "Invalid link",
+    "invalidLinkDescription": "The password reset link is invalid or has expired. Please request a new link.",
+    "requestNewLink": "Request a new link",
+    "backToLogin": "Back to login",
+    "successTitle": "Password changed",
+    "successDescription": "Your password has been changed successfully. You can now sign in with your new password.",
+    "description": "Enter your new password"
+  },
+  "a11y": {
+    "moreActions": "More actions",
+    "viewReview": "View review",
+    "viewDetails": "View details",
+    "copyLink": "Copy link",
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "openCourseContent": "Open course content",
+    "closeCourseContent": "Close course content",
+    "toggleTheme": "Toggle theme",
+    "switchLanguage": "Switch to Arabic",
+    "userMenu": "User menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "rateStars": "{count, plural, one {Rate # star} other {Rate # stars}}"
+  },
+  "adminCourse": {
+    "back": "Back to courses",
+    "instructor": "Instructor",
+    "price": "Price",
+    "category": "Category",
+    "lessons": "Lessons",
+    "students": "Students",
+    "description": "Description",
+    "content": "Course content",
+    "noContent": "This course has no content yet.",
+    "draft": "Draft",
+    "viewPublic": "View course page",
+    "statuses": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "Pending review",
+      "PUBLISHED": "Published",
+      "REJECTED": "Rejected",
+      "ARCHIVED": "Archived"
+    }
+  },
+  "staticPages": {
+    "stillHaveQuestions": "Have a question we didn't answer?",
+    "contactUs": "Contact us",
+    "about": {
+      "title": "About Us",
+      "intro": "An Arabic-first learning platform that connects expert instructors with students looking for practical, structured learning.",
+      "sections": {
+        "s1": {
+          "heading": "Our mission",
+          "body": "We believe good education should be available to everyone, in a language they understand. That is why we offer practical courses taught by experienced instructors."
+        },
+        "s2": {
+          "heading": "What we offer",
+          "body": "Recorded courses organised into chapters and lessons, quizzes to check understanding, live classes, and verifiable certificates of completion."
+        },
+        "s3": {
+          "heading": "For instructors",
+          "body": "Any expert can apply to teach. Every course is reviewed by the admin team before it is published, to keep content quality high."
+        },
+        "s4": {
+          "heading": "For students",
+          "body": "Learn at your own pace, track your progress in every course, and earn a certificate when you finish the lessons and pass the quizzes."
+        }
+      }
+    },
+    "help": {
+      "title": "Help Center",
+      "intro": "Quick answers to what students and instructors need most.",
+      "sections": {
+        "s1": {
+          "heading": "Account and sign-in",
+          "body": "If you forgot your password, use the \"Forgot password\" page to receive a reset link by email. You can change your password later from Settings."
+        },
+        "s2": {
+          "heading": "Enrolling in courses",
+          "body": "Free courses open immediately when you enroll. Paid courses open once the payment is completed successfully."
+        },
+        "s3": {
+          "heading": "Quizzes and certificates",
+          "body": "Quizzes are graded automatically. A certificate is issued after you complete every lesson and pass all of the course's quizzes."
+        },
+        "s4": {
+          "heading": "For instructors",
+          "body": "Create the course from the instructor dashboard, add chapters and lessons, then press \"Publish\". If your account is not approved yet, the course goes to admin review first."
+        }
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "intro": "The questions we are asked most often.",
+      "sections": {
+        "s1": {
+          "heading": "Do I keep a course after buying it?",
+          "body": "Yes. The course stays in your account and you can come back to it at any time."
+        },
+        "s2": {
+          "heading": "Which payment methods are available?",
+          "body": "Card payments are available today. More methods are coming and will appear on the checkout page once enabled."
+        },
+        "s3": {
+          "heading": "How do I use a coupon?",
+          "body": "Enter the coupon code on the checkout page before completing the purchase; the discount is applied to the final price."
+        },
+        "s4": {
+          "heading": "How do I get my certificate?",
+          "body": "Complete all lessons and pass the course's quizzes. Your certificate then appears under \"My Certificates\"."
+        },
+        "s5": {
+          "heading": "How can I verify a certificate?",
+          "body": "Open the verification page and enter the certificate number printed on it."
+        },
+        "s6": {
+          "heading": "How do I become an instructor?",
+          "body": "Sign up as an instructor. The admin team reviews your application and your courses before they are published."
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "intro": "By using the platform you agree to the following terms.",
+      "sections": {
+        "s1": {
+          "heading": "Your account",
+          "body": "You are responsible for keeping your sign-in details private and for all activity on your account."
+        },
+        "s2": {
+          "heading": "Content",
+          "body": "Course content belongs to its owners. Copying or republishing it without permission is not allowed."
+        },
+        "s3": {
+          "heading": "Payments",
+          "body": "Prices are shown before payment, and a course is unlocked once the payment provider confirms the payment."
+        },
+        "s4": {
+          "heading": "Acceptable use",
+          "body": "Abusing the platform, circumventing its systems or harassing other users is not allowed."
+        },
+        "s5": {
+          "heading": "Suspension",
+          "body": "The admin team may suspend any account that violates these terms."
+        },
+        "s6": {
+          "heading": "Changes",
+          "body": "We may update these terms from time to time and will announce important changes on the platform."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "This page explains what data we collect and how we use it.",
+      "sections": {
+        "s1": {
+          "heading": "Data we collect",
+          "body": "Your name, email and the profile details you add, plus your course progress and quiz results."
+        },
+        "s2": {
+          "heading": "How we use it",
+          "body": "To run your account, track your progress, issue certificates and contact you about your account and courses."
+        },
+        "s3": {
+          "heading": "Payments",
+          "body": "Card details are processed directly by the payment provider; we do not store card numbers on our servers."
+        },
+        "s4": {
+          "heading": "Sharing",
+          "body": "We do not sell your data. Instructors only see the names of students enrolled in their own courses."
+        },
+        "s5": {
+          "heading": "Security",
+          "body": "We use hashed passwords and secure connections, and restrict data access by role."
+        },
+        "s6": {
+          "heading": "Your rights",
+          "body": "You can edit your data in Settings, or contact us to request deletion of your account."
+        }
+      }
+    }
   }
 }

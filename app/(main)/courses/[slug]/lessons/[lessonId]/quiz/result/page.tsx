@@ -48,7 +48,7 @@ export default async function QuizResultPage({
   const t = await getTranslations("quiz")
 
   if (!searchParams.attemptId) {
-    redirect(`/courses/${params.slug}/lessons/${params.lessonId}`)
+    redirect(`/courses/${params.slug}/learn/${params.lessonId}`)
   }
 
   // Get attempt with details

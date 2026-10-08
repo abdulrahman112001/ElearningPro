@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { z } from "zod"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Option structure matching Prisma schema
 const optionSchema = z.object({
@@ -90,7 +91,7 @@ export async function POST(
       )
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const validatedData = quizSchema.parse(body)
 
     // Create quiz with questions
@@ -123,6 +124,8 @@ export async function POST(
 
     return NextResponse.json(quiz, { status: 201 })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Create quiz error:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -162,9 +165,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Course not found" }, { status: 404 })
     }
 
-    // Get existing quiz
+    // Get existing quiz. The lesson must belong to the course whose
+    // ownership was just verified, otherwise any instructor could edit any
+    // quiz by pairing their own course id with a foreign lesson id.
     const existingQuiz = await db.quiz.findFirst({
-      where: { lessonId },
+      where: { lessonId, lesson: { chapter: { courseId } } },
     })
 
     if (!existingQuiz) {
@@ -174,7 +179,7 @@ export async function PATCH(
       )
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const validatedData = quizSchema.parse(body)
 
     // Delete existing questions
@@ -212,6 +217,8 @@ export async function PATCH(
 
     return NextResponse.json(quiz)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update quiz error:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -251,9 +258,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Course not found" }, { status: 404 })
     }
 
-    // Get existing quiz
+    // Get existing quiz. The lesson must belong to the course whose
+    // ownership was just verified, otherwise any instructor could edit any
+    // quiz by pairing their own course id with a foreign lesson id.
     const existingQuiz = await db.quiz.findFirst({
-      where: { lessonId },
+      where: { lessonId, lesson: { chapter: { courseId } } },
     })
 
     if (!existingQuiz) {
@@ -267,6 +276,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Delete quiz error:", error)
     return NextResponse.json(
       { error: "Failed to delete quiz" },

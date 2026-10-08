@@ -15,7 +15,7 @@ export default async function InstructorMessagesPage() {
   const t = await getTranslations("instructor")
 
   if (!session?.user?.id) {
-    redirect("/auth/signin")
+    redirect("/login")
   }
 
   return (

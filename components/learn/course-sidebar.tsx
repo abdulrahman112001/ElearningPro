@@ -13,6 +13,7 @@ import {
   X,
   Menu,
 } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
@@ -51,6 +52,7 @@ export function CourseSidebar({
   currentLessonId,
   userId,
 }: CourseSidebarProps) {
+  const ta = useTranslations("a11y")
   const pathname = usePathname()
   const [expandedChapters, setExpandedChapters] = useState<string[]>([])
   const [progressData, setProgressData] = useState<Record<string, boolean>>({})
@@ -121,6 +123,7 @@ export function CourseSidebar({
             size="icon"
             className="lg:hidden"
             onClick={() => setIsMobileOpen(false)}
+            aria-label={ta("closeCourseContent")}
           >
             <X className="h-5 w-5" />
           </Button>
@@ -226,6 +229,7 @@ export function CourseSidebar({
         size="icon"
         className="fixed top-4 start-4 z-50 lg:hidden"
         onClick={() => setIsMobileOpen(true)}
+        aria-label={ta("openCourseContent")}
       >
         <Menu className="h-5 w-5" />
       </Button>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import slugify from "slugify"
@@ -12,8 +13,10 @@ export async function GET(request: Request) {
     const price = searchParams.get("price")
     const search = searchParams.get("search")
     const sort = searchParams.get("sort") || "newest"
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "12")
+    // Clamp pagination so ?page=0, negative or non-numeric values cannot
+    // reach Prisma (which rejects a negative skip with a 500).
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1)
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "12") || 12))
 
     const where: any = {
       status: "PUBLISHED",
@@ -24,6 +27,9 @@ export async function GET(request: Request) {
     }
 
     if (level) {
+      if (!["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"].includes(level)) {
+        return NextResponse.json({ error: "Invalid level" }, { status: 400 })
+      }
       where.level = level
     }
 
@@ -92,6 +98,8 @@ export async function GET(request: Request) {
       currentPage: page,
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error fetching courses:", error)
     return NextResponse.json(
       { error: "Failed to fetch courses" },

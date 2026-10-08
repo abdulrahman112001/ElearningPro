@@ -89,6 +89,7 @@ export function InstructorsTable({
 }: InstructorsTableProps) {
   const t = useTranslations("admin")
   const common = useTranslations("common")
+  const ta = useTranslations("a11y")
   const router = useRouter()
   const searchParams = useSearchParams()
   const locale = useLocale()
@@ -311,6 +312,7 @@ export function InstructorsTable({
                           variant="ghost"
                           size="icon"
                           disabled={loading === instructor.id}
+                          aria-label={ta("moreActions")}
                         >
                           {loading === instructor.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

@@ -145,10 +145,10 @@ export default function InstructorSettingsPage() {
 
       const data = await res.json()
       setProfile({ ...profile, image: data.url })
-      toast.success(tSettings("photoUploaded") || "تم رفع الصورة بنجاح")
+      toast.success(tSettings("photoUploaded"))
     } catch (error: any) {
       toast.error(
-        error.message || tSettings("uploadFailed") || "فشل رفع الصورة"
+        error.message || tSettings("uploadFailed")
       )
     } finally {
       setIsUploading(false)
@@ -176,10 +176,10 @@ export default function InstructorSettingsPage() {
         },
       })
 
-      toast.success(tSettings("profileUpdated") || "تم تحديث الملف الشخصي")
+      toast.success(tSettings("profileUpdated"))
       router.refresh()
     } catch (error) {
-      toast.error(tSettings("updateFailed") || "فشل التحديث")
+      toast.error(tSettings("updateFailed"))
     } finally {
       setIsLoading(false)
     }
@@ -197,10 +197,10 @@ export default function InstructorSettingsPage() {
       if (!response.ok) throw new Error("Failed to update notifications")
 
       toast.success(
-        tSettings("notificationsUpdated") || "تم تحديث إعدادات الإشعارات"
+        tSettings("notificationsUpdated")
       )
     } catch (error) {
-      toast.error(tSettings("updateFailed") || "فشل التحديث")
+      toast.error(tSettings("updateFailed"))
     } finally {
       setIsLoading(false)
     }
@@ -212,19 +212,18 @@ export default function InstructorSettingsPage() {
       !passwords.newPassword ||
       !passwords.confirmPassword
     ) {
-      toast.error(tSettings("allFieldsRequired") || "جميع الحقول مطلوبة")
+      toast.error(tSettings("allFieldsRequired"))
       return
     }
 
     if (passwords.newPassword !== passwords.confirmPassword) {
-      toast.error(tSettings("passwordsDontMatch") || "كلمات المرور غير متطابقة")
+      toast.error(tSettings("passwordsDontMatch"))
       return
     }
 
     if (passwords.newPassword.length < 6) {
       toast.error(
-        tSettings("passwordTooShort") ||
-          "كلمة المرور يجب أن تكون 6 أحرف على الأقل"
+        tSettings("passwordTooShort")
       )
       return
     }
@@ -243,7 +242,7 @@ export default function InstructorSettingsPage() {
       }
 
       toast.success(
-        tSettings("passwordUpdated") || "تم تحديث كلمة المرور بنجاح"
+        tSettings("passwordUpdated")
       )
       setPasswords({
         currentPassword: "",
@@ -251,7 +250,7 @@ export default function InstructorSettingsPage() {
         confirmPassword: "",
       })
     } catch (error: any) {
-      toast.error(error.message || tSettings("updateFailed") || "فشل التحديث")
+      toast.error(error.message || tSettings("updateFailed"))
     } finally {
       setIsPasswordLoading(false)
     }
@@ -271,7 +270,7 @@ export default function InstructorSettingsPage() {
       <div>
         <h1 className="text-2xl font-bold">{t("settings")}</h1>
         <p className="text-muted-foreground">
-          {t("settingsDescription") || "إدارة إعدادات حسابك"}
+          {t("settingsDescription")}
         </p>
       </div>
 
@@ -279,19 +278,19 @@ export default function InstructorSettingsPage() {
         <TabsList>
           <TabsTrigger value="profile" className="gap-2">
             <User className="h-4 w-4" />
-            {tSettings("profile") || "الملف الشخصي"}
+            {tSettings("profile")}
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2">
             <Bell className="h-4 w-4" />
-            {tSettings("notifications") || "الإشعارات"}
+            {tSettings("notifications")}
           </TabsTrigger>
           <TabsTrigger value="payment" className="gap-2">
             <CreditCard className="h-4 w-4" />
-            {tSettings("payment") || "الدفع"}
+            {tSettings("payment")}
           </TabsTrigger>
           <TabsTrigger value="security" className="gap-2">
             <Shield className="h-4 w-4" />
-            {tSettings("security") || "الأمان"}
+            {tSettings("security")}
           </TabsTrigger>
         </TabsList>
 
@@ -300,11 +299,10 @@ export default function InstructorSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {tSettings("basicInfo") || "المعلومات الأساسية"}
+                {tSettings("basicInfo")}
               </CardTitle>
               <CardDescription>
-                {tSettings("basicInfoDescription") ||
-                  "هذه المعلومات ستظهر في صفحتك العامة"}
+                {tSettings("basicInfoDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -337,14 +335,14 @@ export default function InstructorSettingsPage() {
                     disabled={isUploading}
                   >
                     <Camera className="h-4 w-4 me-2" />
-                    {tSettings("changePhoto") || "تغيير الصورة"}
+                    {tSettings("changePhoto")}
                   </Button>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{tSettings("name") || "الاسم"}</Label>
+                  <Label>{tSettings("name")}</Label>
                   <Input
                     value={profile.name}
                     onChange={(e) =>
@@ -353,33 +351,33 @@ export default function InstructorSettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{tSettings("email") || "البريد الإلكتروني"}</Label>
+                  <Label>{tSettings("email")}</Label>
                   <Input value={profile.email} disabled className="bg-muted" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>{tSettings("headline") || "العنوان المهني"}</Label>
+                <Label>{tSettings("headline")}</Label>
                 <Input
                   value={profile.headline}
                   onChange={(e) =>
                     setProfile({ ...profile, headline: e.target.value })
                   }
                   placeholder={
-                    tSettings("headlinePlaceholder") || "مثال: مطور ويب محترف"
+                    tSettings("headlinePlaceholder")
                   }
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>{tSettings("bio") || "نبذة عنك"}</Label>
+                <Label>{tSettings("bio")}</Label>
                 <Textarea
                   value={profile.bio}
                   onChange={(e) =>
                     setProfile({ ...profile, bio: e.target.value })
                   }
                   placeholder={
-                    tSettings("bioPlaceholder") || "اكتب نبذة مختصرة عنك..."
+                    tSettings("bioPlaceholder")
                   }
                   rows={4}
                 />
@@ -387,7 +385,7 @@ export default function InstructorSettingsPage() {
 
               <Button onClick={handleProfileSave} disabled={isLoading}>
                 {isLoading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                {tSettings("saveChanges") || "حفظ التغييرات"}
+                {tSettings("saveChanges")}
               </Button>
             </CardContent>
           </Card>
@@ -396,7 +394,7 @@ export default function InstructorSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {tSettings("socialLinks") || "الروابط الاجتماعية"}
+                {tSettings("socialLinks")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -404,7 +402,7 @@ export default function InstructorSettingsPage() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Globe className="h-4 w-4" />
-                    {tSettings("website") || "الموقع الإلكتروني"}
+                    {tSettings("website")}
                   </Label>
                   <Input
                     value={profile.website}
@@ -454,22 +452,20 @@ export default function InstructorSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {tSettings("emailNotifications") || "إشعارات البريد"}
+                {tSettings("emailNotifications")}
               </CardTitle>
               <CardDescription>
-                {tSettings("emailNotificationsDescription") ||
-                  "اختر الإشعارات التي تريد استلامها عبر البريد"}
+                {tSettings("emailNotificationsDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
-                    {tSettings("newStudentEnrollment") || "تسجيل طالب جديد"}
+                    {tSettings("newStudentEnrollment")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {tSettings("newStudentEnrollmentDesc") ||
-                      "عندما يسجل طالب في أحد كورساتك"}
+                    {tSettings("newStudentEnrollmentDesc")}
                   </p>
                 </div>
                 <Switch
@@ -483,11 +479,10 @@ export default function InstructorSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
-                    {tSettings("newReview") || "تقييم جديد"}
+                    {tSettings("newReview")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {tSettings("newReviewDesc") ||
-                      "عندما يضيف طالب تقييماً لكورسك"}
+                    {tSettings("newReviewDesc")}
                   </p>
                 </div>
                 <Switch
@@ -501,10 +496,10 @@ export default function InstructorSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
-                    {tSettings("newMessage") || "رسالة جديدة"}
+                    {tSettings("newMessage")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {tSettings("newMessageDesc") || "عندما تستلم رسالة من طالب"}
+                    {tSettings("newMessageDesc")}
                   </p>
                 </div>
                 <Switch
@@ -518,11 +513,10 @@ export default function InstructorSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
-                    {tSettings("weeklyReport") || "التقرير الأسبوعي"}
+                    {tSettings("weeklyReport")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {tSettings("weeklyReportDesc") ||
-                      "ملخص أسبوعي لأداء كورساتك"}
+                    {tSettings("weeklyReportDesc")}
                   </p>
                 </div>
                 <Switch
@@ -535,7 +529,7 @@ export default function InstructorSettingsPage() {
 
               <Button onClick={handleNotificationsSave} disabled={isLoading}>
                 {isLoading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                {tSettings("saveChanges") || "حفظ التغييرات"}
+                {tSettings("saveChanges")}
               </Button>
             </CardContent>
           </Card>
@@ -546,11 +540,10 @@ export default function InstructorSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {tSettings("paymentMethods") || "طرق الدفع"}
+                {tSettings("paymentMethods")}
               </CardTitle>
               <CardDescription>
-                {tSettings("paymentMethodsDescription") ||
-                  "إدارة طرق استلام الأرباح"}
+                {tSettings("paymentMethodsDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -569,13 +562,13 @@ export default function InstructorSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {tSettings("changePassword") || "تغيير كلمة المرور"}
+                {tSettings("changePassword")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>
-                  {tSettings("currentPassword") || "كلمة المرور الحالية"}
+                  {tSettings("currentPassword")}
                 </Label>
                 <Input
                   type="password"
@@ -590,7 +583,7 @@ export default function InstructorSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {tSettings("newPassword") || "كلمة المرور الجديدة"}
+                  {tSettings("newPassword")}
                 </Label>
                 <Input
                   type="password"
@@ -602,7 +595,7 @@ export default function InstructorSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {tSettings("confirmPassword") || "تأكيد كلمة المرور"}
+                  {tSettings("confirmPassword")}
                 </Label>
                 <Input
                   type="password"
@@ -622,7 +615,7 @@ export default function InstructorSettingsPage() {
                 {isPasswordLoading && (
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 )}
-                {tSettings("updatePassword") || "تحديث كلمة المرور"}
+                {tSettings("updatePassword")}
               </Button>
             </CardContent>
           </Card>
@@ -630,16 +623,15 @@ export default function InstructorSettingsPage() {
           <Card className="mt-6">
             <CardHeader>
               <CardTitle className="text-destructive">
-                {tSettings("dangerZone") || "منطقة الخطر"}
+                {tSettings("dangerZone")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                {tSettings("deleteAccountWarning") ||
-                  "حذف حسابك سيؤدي لحذف جميع بياناتك وكورساتك بشكل نهائي"}
+                {tSettings("deleteAccountWarning")}
               </p>
               <Button variant="destructive">
-                {tSettings("deleteAccount") || "حذف الحساب"}
+                {tSettings("deleteAccount")}
               </Button>
             </CardContent>
           </Card>

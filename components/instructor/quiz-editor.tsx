@@ -62,6 +62,7 @@ export function QuizEditor({
 }: QuizEditorProps) {
   const t = useTranslations("instructor")
   const tQuiz = useTranslations("quiz")
+  const tq = useTranslations("quizEditor")
   const [isLoading, setIsLoading] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -175,12 +176,12 @@ export function QuizEditor({
 
     // Validate
     if (!formData.title.trim()) {
-      toast.error(t("titleRequired") || "العنوان مطلوب")
+      toast.error(t("titleRequired"))
       return
     }
 
     if (questions.length === 0) {
-      toast.error(t("addAtLeastOneQuestion") || "أضف سؤال واحد على الأقل")
+      toast.error(t("addAtLeastOneQuestion"))
       return
     }
 
@@ -190,7 +191,7 @@ export function QuizEditor({
       if (!q.question.trim()) {
         toast.error(
           `${t("question")} ${i + 1}: ${
-            t("questionRequired") || "السؤال مطلوب"
+            t("questionRequired")
           }`
         )
         return
@@ -201,7 +202,7 @@ export function QuizEditor({
       ) {
         toast.error(
           `${t("question")} ${i + 1}: ${
-            t("addAtLeastTwoOptions") || "أضف خيارين على الأقل"
+            t("addAtLeastTwoOptions")
           }`
         )
         return
@@ -210,7 +211,7 @@ export function QuizEditor({
       if (!q.options.some((o) => o.isCorrect)) {
         toast.error(
           `${t("question")} ${i + 1}: ${
-            t("selectCorrectAnswer") || "حدد الإجابة الصحيحة"
+            t("selectCorrectAnswer")
           }`
         )
         return
@@ -248,17 +249,17 @@ export function QuizEditor({
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to save quiz")
+        throw new Error(data.error || tq("saveFailed"))
       }
 
       toast.success(
         existingQuiz
-          ? t("quizUpdated") || "تم تحديث الاختبار"
-          : t("quizCreated") || "تم إنشاء الاختبار"
+          ? t("quizUpdated")
+          : t("quizCreated")
       )
       onSave()
     } catch (error: any) {
-      toast.error(error.message || t("saveFailed") || "فشل الحفظ")
+      toast.error(error.message || tq("saveFailed"))
     } finally {
       setIsLoading(false)
     }
@@ -272,47 +273,47 @@ export function QuizEditor({
       {/* Quiz Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>{t("quizSettings") || "إعدادات الاختبار"}</CardTitle>
+          <CardTitle>{t("quizSettings")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t("titleEn") || "العنوان (إنجليزي)"}</Label>
+              <Label>{t("titleEn")}</Label>
               <Input
                 value={formData.title}
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
-                placeholder="Quiz Title"
+                placeholder={tq("titlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>{t("titleAr") || "العنوان (عربي)"}</Label>
+              <Label>{t("titleAr")}</Label>
               <Input
                 value={formData.titleAr}
                 onChange={(e) =>
                   setFormData({ ...formData, titleAr: e.target.value })
                 }
                 dir="rtl"
-                placeholder="عنوان الاختبار"
+                placeholder={tq("titlePlaceholder")}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>{t("description") || "الوصف"}</Label>
+            <Label>{t("description")}</Label>
             <Textarea
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              placeholder={t("quizDescriptionPlaceholder") || "وصف الاختبار..."}
+              placeholder={t("quizDescriptionPlaceholder")}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t("passingScore") || "درجة النجاح (%)"}</Label>
+              <Label>{t("passingScore")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -327,7 +328,7 @@ export function QuizEditor({
               />
             </div>
             <div className="space-y-2">
-              <Label>{t("timeLimit") || "الوقت (دقائق)"}</Label>
+              <Label>{t("timeLimit")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -349,7 +350,7 @@ export function QuizEditor({
                 setFormData({ ...formData, shuffleQuestions: v })
               }
             />
-            <Label>{t("shuffleQuestions") || "خلط الأسئلة عشوائياً"}</Label>
+            <Label>{t("shuffleQuestions")}</Label>
           </div>
         </CardContent>
       </Card>
@@ -357,7 +358,7 @@ export function QuizEditor({
       {/* Questions */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{t("questions") || "الأسئلة"}</CardTitle>
+          <CardTitle>{t("questions")}</CardTitle>
           <Button
             type="button"
             variant="outline"
@@ -365,13 +366,13 @@ export function QuizEditor({
             onClick={addQuestion}
           >
             <Plus className="h-4 w-4 me-2" />
-            {t("addQuestion") || "إضافة سؤال"}
+            {t("addQuestion")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           {questions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>{t("noQuestions") || "لا توجد أسئلة. أضف سؤالاً للبدء."}</p>
+              <p>{t("noQuestions")}</p>
             </div>
           ) : (
             questions.map((question, qIndex) => (
@@ -388,6 +389,7 @@ export function QuizEditor({
                     variant="ghost"
                     size="sm"
                     onClick={() => removeQuestion(qIndex)}
+                    aria-label={tQuiz("deleteQuestion")}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -395,7 +397,7 @@ export function QuizEditor({
                 <CardContent className="space-y-4 pt-0">
                   {/* Question Type */}
                   <div className="space-y-2">
-                    <Label>{t("questionType") || "نوع السؤال"}</Label>
+                    <Label>{t("questionType")}</Label>
                     <Select
                       value={question.type}
                       onValueChange={(v: any) =>
@@ -407,10 +409,10 @@ export function QuizEditor({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="MULTIPLE_CHOICE">
-                          {tQuiz("multipleChoice") || "اختيار من متعدد"}
+                          {tQuiz("multipleChoice")}
                         </SelectItem>
                         <SelectItem value="TRUE_FALSE">
-                          {tQuiz("trueFalse") || "صح / خطأ"}
+                          {tQuiz("trueFalse")}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -419,24 +421,24 @@ export function QuizEditor({
                   {/* Question Text */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t("questionEn") || "السؤال (إنجليزي)"}</Label>
+                      <Label>{t("questionEn")}</Label>
                       <Textarea
                         value={question.question}
                         onChange={(e) =>
                           updateQuestion(qIndex, "question", e.target.value)
                         }
-                        placeholder="Enter question..."
+                        placeholder={tq("questionPlaceholder")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t("questionAr") || "السؤال (عربي)"}</Label>
+                      <Label>{t("questionAr")}</Label>
                       <Textarea
                         value={question.questionAr}
                         onChange={(e) =>
                           updateQuestion(qIndex, "questionAr", e.target.value)
                         }
                         dir="rtl"
-                        placeholder="أدخل السؤال..."
+                        placeholder={tq("questionPlaceholder")}
                       />
                     </div>
                   </div>
@@ -444,7 +446,7 @@ export function QuizEditor({
                   {/* Options for Multiple Choice */}
                   {question.type === "MULTIPLE_CHOICE" && (
                     <div className="space-y-3">
-                      <Label>{t("options") || "الخيارات"}</Label>
+                      <Label>{t("options")}</Label>
                       {question.options.map((option, oIndex) => (
                         <div
                           key={option.id}
@@ -460,7 +462,9 @@ export function QuizEditor({
                             onClick={() =>
                               updateOption(qIndex, oIndex, "isCorrect", true)
                             }
-                            title={t("markAsCorrect") || "تحديد كإجابة صحيحة"}
+                            title={t("markAsCorrect")}
+                            aria-label={t("markAsCorrect")}
+                            aria-pressed={option.isCorrect}
                           >
                             <CheckCircle className="h-4 w-4" />
                           </button>
@@ -474,7 +478,7 @@ export function QuizEditor({
                                 e.target.value
                               )
                             }
-                            placeholder={`${t("option") || "الخيار"} ${
+                            placeholder={`${t("option")} ${
                               oIndex + 1
                             } (EN)`}
                             className="flex-1"
@@ -489,7 +493,7 @@ export function QuizEditor({
                                 e.target.value
                               )
                             }
-                            placeholder={`${t("option") || "الخيار"} ${
+                            placeholder={`${t("option")} ${
                               oIndex + 1
                             } (AR)`}
                             dir="rtl"
@@ -503,7 +507,7 @@ export function QuizEditor({
                   {/* Options for True/False */}
                   {question.type === "TRUE_FALSE" && (
                     <div className="space-y-2">
-                      <Label>{t("correctAnswer") || "الإجابة الصحيحة"}</Label>
+                      <Label>{t("correctAnswer")}</Label>
                       <Select
                         value={question.options
                           .findIndex((o) => o.isCorrect)
@@ -523,10 +527,10 @@ export function QuizEditor({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="0">
-                            {tQuiz("true") || "صح"}
+                            {tQuiz("true")}
                           </SelectItem>
                           <SelectItem value="1">
-                            {tQuiz("false") || "خطأ"}
+                            {tQuiz("false")}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -535,7 +539,7 @@ export function QuizEditor({
 
                   {/* Points */}
                   <div className="space-y-2 w-32">
-                    <Label>{t("points") || "النقاط"}</Label>
+                    <Label>{t("points")}</Label>
                     <Input
                       type="number"
                       min={1}
@@ -559,11 +563,11 @@ export function QuizEditor({
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-4 border-t">
         <Button type="button" variant="outline" onClick={onCancel}>
-          {t("cancel") || "إلغاء"}
+          {t("cancel")}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-          {existingQuiz ? t("update") || "تحديث" : t("create") || "إنشاء"}
+          {existingQuiz ? t("update") : t("create")}
         </Button>
       </div>
     </form>

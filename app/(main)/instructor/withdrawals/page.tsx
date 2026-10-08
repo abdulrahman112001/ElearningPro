@@ -28,7 +28,7 @@ export default async function InstructorWithdrawalsPage() {
   const t = await getTranslations("instructor")
 
   if (!session?.user?.id) {
-    redirect("/auth/signin")
+    redirect("/login")
   }
 
   // Get instructor profile with earnings

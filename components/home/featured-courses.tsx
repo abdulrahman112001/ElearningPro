@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { motion } from "framer-motion"
 import { Star, Clock, Users, Code2, Atom, Palette, BrainCircuit } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -84,6 +84,7 @@ const featuredCourses = [
 
 export function FeaturedCourses() {
   const t = useTranslations()
+  const locale = useLocale()
 
   return (
     <section className="py-16 md:py-24">
@@ -168,15 +169,15 @@ export function FeaturedCourses() {
                       {course.discountPrice ? (
                         <>
                           <span className="text-lg font-bold text-primary">
-                            {formatPrice(course.discountPrice)}
+                            {formatPrice(course.discountPrice, "EGP", locale)}
                           </span>
                           <span className="text-sm text-muted-foreground line-through">
-                            {formatPrice(course.price)}
+                            {formatPrice(course.price, "EGP", locale)}
                           </span>
                         </>
                       ) : (
                         <span className="text-lg font-bold">
-                          {formatPrice(course.price)}
+                          {formatPrice(course.price, "EGP", locale)}
                         </span>
                       )}
                     </div>

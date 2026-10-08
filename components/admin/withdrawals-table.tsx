@@ -66,6 +66,7 @@ export function WithdrawalsTable({
   pagination,
 }: WithdrawalsTableProps) {
   const t = useTranslations("admin")
+  const ta = useTranslations("a11y")
   const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -243,6 +244,7 @@ export function WithdrawalsTable({
                           setSelectedWithdrawal(withdrawal)
                           setAction(null)
                         }}
+                        aria-label={ta("viewDetails")}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { generateToken } from "@/lib/livekit"
@@ -93,6 +94,8 @@ export async function POST(
       isHost,
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Join live class error:", error)
     return NextResponse.json(
       { error: "Failed to join live class" },

@@ -55,6 +55,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { ChapterEditor } from "./chapter-editor"
 import { LessonEditor } from "./lesson-editor"
 import { QuizEditor } from "./quiz-editor"
@@ -134,6 +144,13 @@ interface CourseEditorProps {
 
 export function CourseEditor({ course, categories }: CourseEditorProps) {
   const t = useTranslations("instructor")
+  const tEditor = useTranslations("courseEditor")
+  const tCommon = useTranslations("common")
+  const [pendingDelete, setPendingDelete] = useState<
+    | { type: "chapter"; chapterId: string }
+    | { type: "lesson"; chapterId: string; lessonId: string }
+    | null
+  >(null)
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("details")
@@ -233,7 +250,12 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
         return
       }
 
-      toast.success(t("coursePublished"))
+      const published = await response.json()
+      toast.success(
+        published.status === "PENDING_REVIEW"
+          ? t("courseSubmittedForReview")
+          : t("coursePublished")
+      )
       router.refresh()
     } catch (error) {
       toast.error(t("publishFailed"))
@@ -297,8 +319,6 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
   }
 
   const handleDeleteChapter = async (chapterId: string) => {
-    if (!confirm(t("confirmDeleteChapter"))) return
-
     try {
       const response = await fetch(
         `/api/instructor/courses/${course.id}/chapters/${chapterId}`,
@@ -394,8 +414,6 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
   }
 
   const handleDeleteLesson = async (chapterId: string, lessonId: string) => {
-    if (!confirm(t("confirmDeleteLesson"))) return
-
     try {
       const response = await fetch(
         `/api/instructor/courses/${course.id}/chapters/${chapterId}/lessons/${lessonId}`,
@@ -414,6 +432,17 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
       toast.success(t("lessonDeleted"))
     } catch (error) {
       toast.error(t("deleteFailed"))
+    }
+  }
+
+  const confirmPendingDelete = () => {
+    const target = pendingDelete
+    setPendingDelete(null)
+    if (!target) return
+    if (target.type === "chapter") {
+      handleDeleteChapter(target.chapterId)
+    } else {
+      handleDeleteLesson(target.chapterId, target.lessonId)
     }
   }
 
@@ -437,7 +466,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.errorAr || data.error || "Upload failed")
+        throw new Error(data.errorAr || data.error || t("uploadFailed"))
       }
 
       const data = await response.json()
@@ -450,10 +479,10 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
         body: JSON.stringify({ thumbnail: data.url }),
       })
 
-      toast.success(t("thumbnailUploaded") || "تم رفع الصورة بنجاح")
+      toast.success(t("thumbnailUploaded"))
       router.refresh()
     } catch (error: any) {
-      toast.error(error.message || t("uploadFailed") || "فشل رفع الصورة")
+      toast.error(error.message || t("uploadFailed"))
     } finally {
       setIsUploadingThumbnail(false)
     }
@@ -467,10 +496,10 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ promoVideo: previewVideo }),
       })
-      toast.success(t("videoSaved") || "تم حفظ الفيديو")
+      toast.success(t("videoSaved"))
       router.refresh()
     } catch (error) {
-      toast.error(t("saveFailed") || "فشل الحفظ")
+      toast.error(t("saveFailed"))
     }
   }
 
@@ -498,7 +527,12 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            aria-label={tEditor("backToCourses")}
+          >
             <Link href="/instructor/courses">
               <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
             </Link>
@@ -801,7 +835,11 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
 
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={tEditor("chapterOptions")}
+                            >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -813,7 +851,12 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                               {t("edit")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleDeleteChapter(chapter.id)}
+                              onClick={() =>
+                                setPendingDelete({
+                                  type: "chapter",
+                                  chapterId: chapter.id,
+                                })
+                              }
                               className="text-destructive"
                             >
                               <Trash2 className="ms-2 h-4 w-4" />
@@ -866,7 +909,11 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
 
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={tEditor("lessonOptions")}
+                                  >
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
@@ -892,12 +939,16 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                                       }
                                     >
                                       <FileQuestion className="me-2 h-4 w-4" />
-                                      {t("editQuiz") || "تعديل الاختبار"}
+                                      {t("editQuiz")}
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuItem
                                     onClick={() =>
-                                      handleDeleteLesson(chapter.id, lesson.id)
+                                      setPendingDelete({
+                                        type: "lesson",
+                                        chapterId: chapter.id,
+                                        lessonId: lesson.id,
+                                      })
                                     }
                                     className="text-destructive"
                                   >
@@ -997,10 +1048,10 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                     {isUploadingThumbnail ? (
                       <>
                         <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                        {t("uploading") || "جاري الرفع..."}
+                        {t("uploading")}
                       </>
                     ) : (
-                      t("uploadImage") || "رفع صورة"
+                      t("uploadImage")
                     )}
                   </Button>
                 </div>
@@ -1017,7 +1068,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                       onChange={(e) => setPreviewVideo(e.target.value)}
                     />
                     <Button onClick={handlePreviewVideoSave}>
-                      {t("save") || "حفظ"}
+                      {t("save")}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -1083,7 +1134,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
       <Dialog open={!!editingQuiz} onOpenChange={() => setEditingQuiz(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>{t("editQuiz") || "تعديل الاختبار"}</DialogTitle>
+            <DialogTitle>{t("editQuiz")}</DialogTitle>
           </DialogHeader>
           {editingQuiz && (
             <QuizEditor
@@ -1098,6 +1149,34 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tEditor("confirmDeleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete?.type === "lesson"
+                ? t("confirmDeleteLesson")
+                : t("confirmDeleteChapter")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmPendingDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {tCommon("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

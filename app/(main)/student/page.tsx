@@ -280,7 +280,7 @@ export default async function StudentDashboard() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">
-                      {t("completedLesson")} "{progress.lesson.titleEn}"
+                      {t("completedLesson")} &ldquo;{progress.lesson.titleEn}&rdquo;
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {progress.lesson.chapter.course.titleEn}

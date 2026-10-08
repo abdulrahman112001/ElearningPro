@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Update lesson
 export async function PATCH(
@@ -34,7 +35,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const {
       title,
       titleAr,
@@ -67,6 +68,8 @@ export async function PATCH(
 
     return NextResponse.json(updatedLesson)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update lesson error:", error)
     return NextResponse.json(
       { error: "Failed to update lesson" },
@@ -129,6 +132,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Delete lesson error:", error)
     return NextResponse.json(
       { error: "Failed to delete lesson" },

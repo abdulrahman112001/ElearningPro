@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { Card, CardContent } from "@/components/ui/card"
@@ -26,6 +26,7 @@ export default async function StudentWishlistPage() {
   }
 
   const t = await getTranslations("student")
+  const locale = await getLocale()
   const tCourses = await getTranslations("courses")
 
   // Get user's wishlist
@@ -161,7 +162,7 @@ export default async function StudentWishlistPage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
-                      <span>{formatDuration(totalDuration)}</span>
+                      <span>{formatDuration(totalDuration, locale)}</span>
                     </div>
                   </div>
 
@@ -173,7 +174,7 @@ export default async function StudentWishlistPage() {
                         </span>
                       ) : (
                         <span className="font-bold text-primary">
-                          {formatPrice(course.discountPrice || course.price)}
+                          {formatPrice(course.discountPrice || course.price, "EGP", locale)}
                         </span>
                       )}
                     </div>

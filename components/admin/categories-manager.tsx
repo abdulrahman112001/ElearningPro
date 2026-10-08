@@ -72,6 +72,7 @@ interface CategoriesManagerProps {
 
 export function CategoriesManager({ categories }: CategoriesManagerProps) {
   const t = useTranslations("admin")
+  const tc = useTranslations("common")
   const router = useRouter()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -222,6 +223,7 @@ export function CategoriesManager({ categories }: CategoriesManagerProps) {
                     size="icon"
                     variant="ghost"
                     onClick={() => openEditDialog(category)}
+                    aria-label={tc("edit")}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -230,6 +232,7 @@ export function CategoriesManager({ categories }: CategoriesManagerProps) {
                     variant="ghost"
                     onClick={() => setDeleteCategory(category)}
                     disabled={category._count.courses > 0}
+                    aria-label={tc("delete")}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -281,6 +284,7 @@ export function CategoriesManager({ categories }: CategoriesManagerProps) {
                                   variant="ghost"
                                   className="h-6 w-6"
                                   onClick={() => openEditDialog(fullChild)}
+                                  aria-label={tc("edit")}
                                 >
                                   <Pencil className="h-3 w-3" />
                                 </Button>
@@ -290,6 +294,7 @@ export function CategoriesManager({ categories }: CategoriesManagerProps) {
                                   className="h-6 w-6"
                                   onClick={() => setDeleteCategory(fullChild)}
                                   disabled={fullChild._count.courses > 0}
+                                  aria-label={tc("delete")}
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>

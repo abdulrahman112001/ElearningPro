@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { createRoom, generateToken } from "@/lib/livekit"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Create live class
 export async function POST(request: Request) {
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const {
       courseId,
       title,
@@ -26,6 +27,10 @@ export async function POST(request: Request) {
       scheduledAt,
       duration, // in minutes
     } = body
+
+    if (scheduledAt && Number.isNaN(new Date(scheduledAt).getTime())) {
+      return NextResponse.json({ error: "Invalid scheduled time" }, { status: 400 })
+    }
 
     if (!title || !scheduledAt) {
       return NextResponse.json(
@@ -66,6 +71,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(liveClass, { status: 201 })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Create live class error:", error)
     return NextResponse.json(
       { error: "Failed to create live class" },
@@ -91,9 +98,23 @@ export async function GET(request: Request) {
 
     if (session.user.role === "INSTRUCTOR") {
       where.instructorId = session.user.id
+    } else if (session.user.role !== "ADMIN") {
+      // Students only see classes of courses they are enrolled in, plus
+      // public classes that are not attached to any course.
+      const enrollments = await db.enrollment.findMany({
+        where: { userId: session.user.id },
+        select: { courseId: true },
+      })
+      where.OR = [
+        { courseId: { in: enrollments.map((e) => e.courseId) } },
+        { courseId: null },
+      ]
     }
 
     if (status) {
+      if (!["SCHEDULED", "LIVE", "ENDED", "CANCELLED"].includes(status)) {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 })
+      }
       where.status = status
     }
 
@@ -130,6 +151,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json(liveClasses)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get live classes error:", error)
     return NextResponse.json(
       { error: "Failed to get live classes" },

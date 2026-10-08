@@ -14,39 +14,37 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import toast from "react-hot-toast"
 
 const plans = {
   monthly: {
     id: "monthly",
     price: 99,
     originalPrice: 149,
-    period: "شهرياً",
-    periodEn: "Monthly",
     discount: 33,
   },
   yearly: {
     id: "yearly",
     price: 799,
     originalPrice: 1188,
-    period: "سنوياً",
-    periodEn: "Yearly",
     discount: 33,
     savings: 389,
   },
 }
 
 const features = [
-  "وصول غير محدود لجميع الكورسات",
-  "شهادات معتمدة لكل كورس",
-  "دعم فني على مدار الساعة",
-  "تحميل الفيديوهات للمشاهدة أوفلاين",
-  "وصول مبكر للكورسات الجديدة",
-  "خصومات حصرية على الكورسات المميزة",
-  "مجتمع خاص للمشتركين",
-  "جلسات أسبوعية مع الخبراء",
-]
+  "unlimitedAccess",
+  "certificates",
+  "support",
+  "offlineDownload",
+  "earlyAccess",
+  "exclusiveDiscounts",
+  "community",
+  "expertSessions",
+] as const
 
 export default function SubscriptionPage() {
+  const t = useTranslations("subscriptionCheckout")
   const searchParams = useSearchParams()
   const router = useRouter()
   const planParam = searchParams?.get("plan") || "monthly"
@@ -63,7 +61,7 @@ export default function SubscriptionPage() {
     // For now, just simulate
     setTimeout(() => {
       setIsLoading(false)
-      alert("سيتم تفعيل بوابة الدفع قريباً!")
+      toast(t("comingSoon"))
     }, 1000)
   }
 
@@ -74,11 +72,11 @@ export default function SubscriptionPage() {
         <div className="text-center mb-12">
           <Badge className="mb-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
             <Crown className="h-3 w-3 ms-1" />
-            اشتراك بريميوم
+            {t("badge")}
           </Badge>
-          <h1 className="text-4xl font-bold mb-4">احصل على وصول غير محدود</h1>
+          <h1 className="text-4xl font-bold mb-4">{t("title")}</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            اشترك الآن واحصل على وصول لجميع الكورسات والميزات الحصرية
+            {t("subtitle")}
           </p>
         </div>
 
@@ -93,7 +91,7 @@ export default function SubscriptionPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              شهري
+              {t("monthly")}
             </button>
             <button
               onClick={() => setSelectedPlan("yearly")}
@@ -103,12 +101,12 @@ export default function SubscriptionPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              سنوي
+              {t("yearly")}
               <Badge
                 variant="secondary"
                 className="bg-green-100 text-green-700 text-xs"
               >
-                وفر 33%
+                {t("save", { percent: 33 })}
               </Badge>
             </button>
           </div>
@@ -121,9 +119,9 @@ export default function SubscriptionPage() {
               <Zap className="h-8 w-8 text-white" />
             </div>
             <CardTitle className="text-2xl">
-              اشتراك {selectedPlan === "monthly" ? "شهري" : "سنوي"}
+              {t(selectedPlan === "monthly" ? "monthlyPlan" : "yearlyPlan")}
             </CardTitle>
-            <CardDescription>وصول كامل لجميع الميزات</CardDescription>
+            <CardDescription>{t("fullAccess")}</CardDescription>
           </CardHeader>
 
           <CardContent className="text-center">
@@ -132,35 +130,35 @@ export default function SubscriptionPage() {
               <div className="flex items-center justify-center gap-2 mb-1">
                 <span className="text-5xl font-bold">{currentPlan.price}</span>
                 <div className="text-end">
-                  <div className="text-lg font-medium">ج.م</div>
+                  <div className="text-lg font-medium">{t("currency")}</div>
                   <div className="text-sm text-muted-foreground">
-                    /{currentPlan.period}
+                    /{t(selectedPlan === "monthly" ? "perMonth" : "perYear")}
                   </div>
                 </div>
               </div>
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <span className="line-through">
-                  {currentPlan.originalPrice} ج.م
+                  {currentPlan.originalPrice} {t("currency")}
                 </span>
                 <Badge variant="destructive" className="text-xs">
-                  خصم {currentPlan.discount}%
+                  {t("discount", { percent: currentPlan.discount })}
                 </Badge>
               </div>
               {selectedPlan === "yearly" && (
                 <p className="text-sm text-green-600 mt-2">
-                  توفير {plans.yearly.savings} ج.م سنوياً!
+                  {t("yearlySavings", { amount: plans.yearly.savings })}
                 </p>
               )}
             </div>
 
             {/* Features */}
             <div className="text-end space-y-3 mb-6">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-3">
+              {features.map((feature) => (
+                <div key={feature} className="flex items-center gap-3">
                   <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
                     <Check className="h-3 w-3 text-green-600" />
                   </div>
-                  <span className="text-sm">{feature}</span>
+                  <span className="text-sm">{t(`features.${feature}`)}</span>
                 </div>
               ))}
             </div>
@@ -174,10 +172,10 @@ export default function SubscriptionPage() {
               disabled={isLoading}
             >
               {isLoading ? (
-                "جاري المعالجة..."
+                t("processing")
               ) : (
                 <>
-                  اشترك الآن
+                  {t("subscribeNow")}
                   <ArrowRight className="h-5 w-5" />
                 </>
               )}
@@ -185,7 +183,7 @@ export default function SubscriptionPage() {
 
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4" />
-              <span>ضمان استرداد الأموال خلال 7 أيام</span>
+              <span>{t("moneyBack")}</span>
             </div>
           </CardFooter>
         </Card>
@@ -193,20 +191,20 @@ export default function SubscriptionPage() {
         {/* FAQ or Trust Badges */}
         <div className="mt-12 text-center">
           <p className="text-muted-foreground mb-4">
-            يثق بنا أكثر من 10,000+ طالب
+            {t("trustedBy")}
           </p>
           <div className="flex justify-center gap-8 text-muted-foreground">
             <div className="text-center">
               <div className="text-2xl font-bold text-foreground">100+</div>
-              <div className="text-sm">كورس</div>
+              <div className="text-sm">{t("stats.courses")}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-foreground">50+</div>
-              <div className="text-sm">معلم خبير</div>
+              <div className="text-sm">{t("stats.instructors")}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-foreground">4.8</div>
-              <div className="text-sm">تقييم</div>
+              <div className="text-sm">{t("stats.rating")}</div>
             </div>
           </div>
         </div>

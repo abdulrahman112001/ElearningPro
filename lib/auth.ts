@@ -7,6 +7,12 @@ import GitHub from "next-auth/providers/github"
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { UserRole } from "@prisma/client"
+import { isLocked, recordFailure, resetLimit } from "@/lib/rate-limit"
+
+// Brute-force protection: 10 failed passwords per account per 15 minutes.
+const LOGIN_SCOPE = "login-failures"
+const LOGIN_MAX_FAILURES = 10
+const LOGIN_WINDOW_MS = 15 * 60 * 1000
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db) as Adapter,
@@ -39,11 +45,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("Invalid credentials")
         }
 
-        const user = await db.user.findUnique({
-          where: { email: credentials.email as string },
+        const email = (credentials.email as string).trim().toLowerCase()
+
+        if (isLocked(LOGIN_SCOPE, email, LOGIN_MAX_FAILURES)) {
+          throw new Error("Too many failed attempts. Try again later.")
+        }
+
+        const user = await db.user.findFirst({
+          where: { email: { equals: email, mode: "insensitive" } },
         })
 
         if (!user || !user.password) {
+          recordFailure(LOGIN_SCOPE, email, LOGIN_WINDOW_MS)
           throw new Error("Invalid credentials")
         }
 
@@ -53,8 +66,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         )
 
         if (!isPasswordValid) {
+          recordFailure(LOGIN_SCOPE, email, LOGIN_WINDOW_MS)
           throw new Error("Invalid credentials")
         }
+
+        resetLimit(LOGIN_SCOPE, email)
 
         if (user.isBlocked) {
           throw new Error("Your account has been blocked")
@@ -82,6 +98,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id as string
         token.role = (user as any).role || UserRole.STUDENT
+      } else if (token.id) {
+        // Re-check the account on every request so that blocking a user or
+        // changing their role takes effect immediately, not when the JWT
+        // expires. Returning null ends the session.
+        const current = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, isBlocked: true },
+        })
+        if (!current || current.isBlocked) return null
+        token.role = current.role
       }
 
       if (trigger === "update" && session) {

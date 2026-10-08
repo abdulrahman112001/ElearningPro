@@ -2,6 +2,12 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
+import { isLocked, recordFailure, resetLimit, tooManyRequests } from "@/lib/rate-limit"
+
+const SCOPE = "change-password-failures"
+const MAX_FAILURES = 5
+const WINDOW_MS = 15 * 60 * 1000
 
 // Change password
 export async function POST(request: Request) {
@@ -12,7 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { currentPassword, newPassword, confirmPassword } = body
 
     // Validation
@@ -56,9 +62,14 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verify current password
+    // Verify current password (throttled: a stolen session must not be
+    // usable to brute-force the real password)
+    if (isLocked(SCOPE, session.user.id, MAX_FAILURES)) {
+      return tooManyRequests(Date.now() + WINDOW_MS)
+    }
     const isValid = await bcrypt.compare(currentPassword, user.password)
     if (!isValid) {
+      recordFailure(SCOPE, session.user.id, WINDOW_MS)
       return NextResponse.json(
         {
           error: "Current password is incorrect",
@@ -67,6 +78,8 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    resetLimit(SCOPE, session.user.id)
 
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10)
@@ -82,6 +95,8 @@ export async function POST(request: Request) {
       message: "Password updated successfully",
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Change password error:", error)
     return NextResponse.json(
       { error: "Failed to change password" },
@@ -89,3 +104,6 @@ export async function POST(request: Request) {
     )
   }
 }
+
+// The settings form historically sent PATCH; accept both.
+export const PATCH = POST

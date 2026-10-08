@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiErrorResponse } from "@/lib/api-error"
 import crypto from "crypto";
 import { db } from "@/lib/db";
 
@@ -40,6 +41,8 @@ export async function GET(request: Request) {
       { status: 200 }
     );
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Validate reset token error:", error);
     return NextResponse.json(
       { error: "Something went wrong" },

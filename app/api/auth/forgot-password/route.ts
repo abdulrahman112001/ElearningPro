@@ -3,6 +3,14 @@ import crypto from "crypto";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit";
+import { readJson, apiErrorResponse } from "@/lib/api-error"
+
+// Identical answer whether or not the account exists, so the endpoint
+// cannot be used to discover registered emails.
+const GENERIC_RESPONSE = {
+  message: "إذا كان البريد الإلكتروني مسجلاً، ستصلك رسالة لإعادة تعيين كلمة المرور",
+  messageEn: "If this email is registered, you will receive a password reset link",
+};
 
 export async function POST(request: Request) {
   try {
@@ -17,8 +25,9 @@ export async function POST(request: Request) {
       return tooManyRequests(limit.resetAt);
     }
 
-    const body = await request.json();
-    const { email } = body;
+    const body = await readJson(request);
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
     if (!email) {
       return NextResponse.json(
@@ -28,16 +37,13 @@ export async function POST(request: Request) {
     }
 
     // Find user by email
-    const user = await db.user.findUnique({
-      where: { email },
+    const user = await db.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
     });
 
     // Always return success to prevent email enumeration
     if (!user) {
-      return NextResponse.json(
-        { message: "إذا كان البريد الإلكتروني موجوداً، ستتلقى رسالة إعادة تعيين" },
-        { status: 200 }
-      );
+      return NextResponse.json(GENERIC_RESPONSE, { status: 200 });
     }
 
     // Generate reset token
@@ -86,11 +92,10 @@ export async function POST(request: Request) {
       // Don't expose email sending errors to user
     }
 
-    return NextResponse.json(
-      { message: "تم إرسال رابط إعادة تعيين كلمة المرور" },
-      { status: 200 }
-    );
+    return NextResponse.json(GENERIC_RESPONSE, { status: 200 });
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Forgot password error:", error);
     return NextResponse.json(
       { error: "حدث خطأ ما" },

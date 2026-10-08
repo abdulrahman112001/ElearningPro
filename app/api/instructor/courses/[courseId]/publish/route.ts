@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 
@@ -76,14 +77,23 @@ export async function POST(
       })
     })
 
-    // Update course status
+    // Only instructors approved by an admin publish directly. Everyone else
+    // (e.g. a fresh self-registered instructor) goes to the admin review
+    // queue; the admin "approve" action then sets PUBLISHED.
+    const profile = await db.instructorProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { isApproved: true },
+    })
+    const canPublishDirectly =
+      session.user.role === "ADMIN" || profile?.isApproved === true
+
     const updatedCourse = await db.course.update({
       where: { id: params.courseId },
       data: {
-        status: "PUBLISHED",
+        status: canPublishDirectly ? "PUBLISHED" : "PENDING_REVIEW",
         totalDuration,
         totalLessons,
-        publishedAt: new Date(),
+        ...(canPublishDirectly && { publishedAt: new Date() }),
       },
     })
 
@@ -100,6 +110,8 @@ export async function POST(
 
     return NextResponse.json(updatedCourse)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Publish course error:", error)
     return NextResponse.json(
       { error: "Failed to publish course" },

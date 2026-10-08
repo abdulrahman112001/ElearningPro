@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 const DEFAULT_SETTINGS = {
   siteName: "E-Learning Platform",
@@ -44,6 +45,8 @@ export async function GET() {
 
     return NextResponse.json(settings)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get settings error:", error)
     return NextResponse.json(
       { error: "Failed to get settings" },
@@ -61,7 +64,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
 
     // Validate required fields
     if (!body || typeof body !== "object") {
@@ -84,6 +87,8 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update settings error:", error)
     return NextResponse.json(
       { error: "Failed to update settings" },

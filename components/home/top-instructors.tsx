@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Star, BookOpen, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,48 +9,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SectionHeader } from "@/components/home/section-header";
 import { getInitials } from "@/lib/utils";
 
-// Mock data
+// Mock data (display text lives in messages under home.topInstructors.items.<key>)
 const topInstructors = [
-  {
-    id: "1",
-    name: "أحمد محمد",
-    headline: "مطور ويب محترف",
-    image: "",
-    totalCourses: 15,
-    totalStudents: 25000,
-    rating: 4.9,
-  },
-  {
-    id: "2",
-    name: "سارة أحمد",
-    headline: "خبيرة React و Next.js",
-    image: "",
-    totalCourses: 8,
-    totalStudents: 15000,
-    rating: 4.8,
-  },
-  {
-    id: "3",
-    name: "محمد علي",
-    headline: "مصمم UI/UX",
-    image: "",
-    totalCourses: 12,
-    totalStudents: 18000,
-    rating: 4.7,
-  },
-  {
-    id: "4",
-    name: "خالد إبراهيم",
-    headline: "خبير ذكاء اصطناعي",
-    image: "",
-    totalCourses: 6,
-    totalStudents: 12000,
-    rating: 4.9,
-  },
+  { id: "1", key: "item1", image: "", totalCourses: 15, totalStudents: 25000, rating: 4.9 },
+  { id: "2", key: "item2", image: "", totalCourses: 8, totalStudents: 15000, rating: 4.8 },
+  { id: "3", key: "item3", image: "", totalCourses: 12, totalStudents: 18000, rating: 4.7 },
+  { id: "4", key: "item4", image: "", totalCourses: 6, totalStudents: 12000, rating: 4.9 },
 ];
 
 export function TopInstructors() {
   const t = useTranslations();
+  const locale = useLocale();
 
   return (
     <section className="py-16 md:py-24">
@@ -62,7 +31,13 @@ export function TopInstructors() {
         />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {topInstructors.map((instructor, index) => (
+          {topInstructors.map((item, index) => {
+            const instructor = {
+              ...item,
+              name: t(`home.topInstructors.items.${item.key}.name`),
+              headline: t(`home.topInstructors.items.${item.key}.headline`),
+            };
+            return (
             <motion.div
               key={instructor.id}
               initial={{ opacity: 0, y: 20 }}
@@ -99,14 +74,17 @@ export function TopInstructors() {
                       </div>
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        {instructor.totalStudents.toLocaleString()}
+                        {instructor.totalStudents.toLocaleString(
+                          locale === "ar" ? "ar-EG" : "en-US"
+                        )}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </Link>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

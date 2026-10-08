@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { useTranslations } from "next-intl"
 import { Loader2, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,24 +18,30 @@ import {
 } from "@/components/ui/form"
 import toast from "react-hot-toast"
 
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "كلمة المرور الحالية مطلوبة"),
-    newPassword: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
-    confirmPassword: z.string().min(1, "تأكيد كلمة المرور مطلوب"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "كلمات المرور غير متطابقة",
-    path: ["confirmPassword"],
-  })
+const makePasswordSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      currentPassword: z.string().min(1, t("currentPasswordRequired")),
+      newPassword: z.string().min(8, t("passwordMin8")),
+      confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("passwordsMismatch"),
+      path: ["confirmPassword"],
+    })
 
-type PasswordFormValues = z.infer<typeof passwordSchema>
+type PasswordFormValues = z.infer<ReturnType<typeof makePasswordSchema>>
 
 export function PasswordForm() {
+  const t = useTranslations("settingsForms.password")
+  const ts = useTranslations("settings")
+  const ta = useTranslations("auth")
   const [isLoading, setIsLoading] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const passwordSchema = useMemo(() => makePasswordSchema(t), [t])
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
@@ -49,7 +56,7 @@ export function PasswordForm() {
     setIsLoading(true)
     try {
       const response = await fetch("/api/user/password", {
-        method: "PATCH",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currentPassword: data.currentPassword,
@@ -59,13 +66,13 @@ export function PasswordForm() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.message || "Failed to update password")
+        throw new Error(error.message || t("changeError"))
       }
 
-      toast.success("تم تغيير كلمة المرور بنجاح")
+      toast.success(ts("passwordUpdated"))
       form.reset()
     } catch (error: any) {
-      toast.error(error.message || "حدث خطأ أثناء تغيير كلمة المرور")
+      toast.error(error.message || t("changeError"))
     } finally {
       setIsLoading(false)
     }
@@ -82,12 +89,12 @@ export function PasswordForm() {
           name="currentPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>كلمة المرور الحالية</FormLabel>
+              <FormLabel>{ts("currentPassword")}</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
                     type={showCurrentPassword ? "text" : "password"}
-                    placeholder="أدخل كلمة المرور الحالية"
+                    placeholder={t("currentPasswordPlaceholder")}
                     {...field}
                   />
                   <Button
@@ -96,6 +103,11 @@ export function PasswordForm() {
                     size="sm"
                     className="absolute end-0 top-0 h-full px-3"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    aria-label={
+                      showCurrentPassword
+                        ? ta("hidePassword")
+                        : ta("showPassword")
+                    }
                   >
                     {showCurrentPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -115,12 +127,12 @@ export function PasswordForm() {
           name="newPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>كلمة المرور الجديدة</FormLabel>
+              <FormLabel>{ts("newPassword")}</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
                     type={showNewPassword ? "text" : "password"}
-                    placeholder="أدخل كلمة المرور الجديدة"
+                    placeholder={t("newPasswordPlaceholder")}
                     {...field}
                   />
                   <Button
@@ -129,6 +141,9 @@ export function PasswordForm() {
                     size="sm"
                     className="absolute end-0 top-0 h-full px-3"
                     onClick={() => setShowNewPassword(!showNewPassword)}
+                    aria-label={
+                      showNewPassword ? ta("hidePassword") : ta("showPassword")
+                    }
                   >
                     {showNewPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -148,12 +163,12 @@ export function PasswordForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>تأكيد كلمة المرور</FormLabel>
+              <FormLabel>{ts("confirmPassword")}</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="أعد إدخال كلمة المرور الجديدة"
+                    placeholder={t("confirmPasswordPlaceholder")}
                     {...field}
                   />
                   <Button
@@ -162,6 +177,11 @@ export function PasswordForm() {
                     size="sm"
                     className="absolute end-0 top-0 h-full px-3"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={
+                      showConfirmPassword
+                        ? ta("hidePassword")
+                        : ta("showPassword")
+                    }
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -178,7 +198,7 @@ export function PasswordForm() {
 
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="h-4 w-4 ms-2 animate-spin" />}
-          تغيير كلمة المرور
+          {ts("changePassword")}
         </Button>
       </form>
     </Form>

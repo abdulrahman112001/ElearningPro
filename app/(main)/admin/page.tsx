@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PendingReviewActions } from "@/components/admin/pending-review-actions"
 
 export async function generateMetadata() {
   const t = await getTranslations("admin")
@@ -235,22 +236,9 @@ export default async function AdminDashboard() {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-green-600"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-destructive"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
+                      <PendingReviewActions kind="course" id={course.id} />
                       <Button size="icon" variant="ghost" asChild>
-                        <Link href={`/admin/courses/${course.id}`}>
+                        <Link href={`/admin/courses/${course.id}`} aria-label={t("review")}>
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -301,20 +289,7 @@ export default async function AdminDashboard() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-green-600"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-destructive"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
+                      <PendingReviewActions kind="instructor" id={instructor.id} />
                     </div>
                   </div>
                 ))}

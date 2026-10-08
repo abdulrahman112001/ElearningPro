@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { lessonId, watchedDuration, completed } = body
 
     if (!lessonId) {
@@ -52,7 +53,38 @@ export async function POST(request: Request) {
       )
     }
 
-    // Update or create lesson progress
+    // A lesson with a quiz is completed by passing the quiz (quiz/submit
+    // marks it), not by a client claim. Otherwise the whole course, and its
+    // certificate, could be "completed" with a few API calls.
+    if (completed === true) {
+      const quiz = await db.quiz.findUnique({
+        where: { lessonId },
+        select: { id: true },
+      })
+      if (quiz) {
+        const passedAttempt = await db.quizAttempt.findFirst({
+          where: { quizId: quiz.id, userId: session.user.id, passed: true },
+          select: { id: true },
+        })
+        if (!passedAttempt) {
+          return NextResponse.json(
+            {
+              error: "Pass the lesson quiz to complete this lesson",
+              errorAr: "يجب اجتياز اختبار الدرس لإكماله",
+            },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
+    const watched =
+      typeof watchedDuration === "number" && watchedDuration > 0
+        ? Math.floor(watchedDuration)
+        : 0
+
+    // Update or create lesson progress. Periodic watch-time saves do not send
+    // `completed`, so they must never un-complete a finished lesson.
     const progress = await db.progress.upsert({
       where: {
         userId_lessonId: {
@@ -61,14 +93,15 @@ export async function POST(request: Request) {
         },
       },
       update: {
-        watchedTime: watchedDuration || 0,
-        isCompleted: completed || false,
+        watchedTime: watched,
+        ...(completed === true && { isCompleted: true, completedAt: new Date() }),
       },
       create: {
         userId: session.user.id,
         lessonId,
-        watchedTime: watchedDuration || 0,
-        isCompleted: completed || false,
+        watchedTime: watched,
+        isCompleted: completed === true,
+        ...(completed === true && { completedAt: new Date() }),
       },
     })
 
@@ -77,6 +110,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, progress })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Progress update error:", error)
     return NextResponse.json(
       { error: "Failed to update progress" },

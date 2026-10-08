@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get lessons
 export async function GET(
@@ -35,6 +36,8 @@ export async function GET(
 
     return NextResponse.json(lessons)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get lessons error:", error)
     return NextResponse.json(
       { error: "Failed to get lessons" },
@@ -69,7 +72,7 @@ export async function POST(
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const {
       title,
       titleAr,
@@ -116,6 +119,8 @@ export async function POST(
 
     return NextResponse.json(lesson, { status: 201 })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Create lesson error:", error)
     return NextResponse.json(
       { error: "Failed to create lesson" },
@@ -150,21 +155,33 @@ export async function PUT(
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { lessons } = body // Array of { id, position }
 
-    // Update positions in transaction
-    await db.$transaction(
+    if (
+      !Array.isArray(lessons) ||
+      !lessons.every((l: any) => typeof l?.id === "string" && Number.isInteger(l?.position))
+    ) {
+      return NextResponse.json({ error: "lessons must be an array of { id, position }" }, { status: 400 })
+    }
+
+    // Scope every update to this chapter so foreign lesson ids match nothing.
+    const results = await db.$transaction(
       lessons.map((l: { id: string; position: number }) =>
-        db.lesson.update({
-          where: { id: l.id },
+        db.lesson.updateMany({
+          where: { id: l.id, chapterId: chapter.id },
           data: { position: l.position },
         })
       )
     )
+    if (results.some((r) => r.count !== 1)) {
+      return NextResponse.json({ error: "Lesson not found in this chapter" }, { status: 404 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Reorder lessons error:", error)
     return NextResponse.json(
       { error: "Failed to reorder lessons" },

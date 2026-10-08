@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get notification settings
 export async function GET() {
@@ -20,6 +21,8 @@ export async function GET() {
       emailWeeklyReport: false,
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get notifications error:", error)
     return NextResponse.json(
       { error: "Failed to get notifications" },
@@ -37,7 +40,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const {
       emailNewStudent,
       emailNewReview,
@@ -59,6 +62,8 @@ export async function PATCH(request: Request) {
       },
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update notifications error:", error)
     return NextResponse.json(
       { error: "Failed to update notifications" },

@@ -519,7 +519,7 @@ model Purchase {
     amount          Float
     currency        String          @default("USD")
     provider        PaymentProvider
-    providerId      String? // Transaction ID from provider
+    providerId      String?         @unique // Transaction ID from provider (unique => webhook idempotency)
     status          PaymentStatus   @default(PENDING)
     couponId        String?
     discountAmount  Float           @default(0)
@@ -535,7 +535,6 @@ model Purchase {
 
     @@index([userId])
     @@index([courseId])
-    @@index([providerId])
 }
 
 model Subscription {

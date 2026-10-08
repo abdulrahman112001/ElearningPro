@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 
@@ -33,6 +34,8 @@ export async function GET() {
 
     return NextResponse.json(purchases)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("[STUDENT_PURCHASES_GET]", error)
     return NextResponse.json(
       { error: "Internal Server Error" },

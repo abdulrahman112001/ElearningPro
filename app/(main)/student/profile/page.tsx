@@ -32,6 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 export default function StudentProfilePage() {
   const t = useTranslations("student")
   const tSettings = useTranslations("settings")
+  const tProfile = useTranslations("studentProfile")
   const { data: session, update } = useSession()
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -99,10 +100,10 @@ export default function StudentProfilePage() {
 
       const data = await res.json()
       setProfile({ ...profile, image: data.url })
-      toast.success(tSettings("photoUploaded") || "تم رفع الصورة بنجاح")
+      toast.success(tSettings("photoUploaded"))
     } catch (error: any) {
       toast.error(
-        error.message || tSettings("uploadFailed") || "فشل رفع الصورة"
+        error.message || tSettings("uploadFailed")
       )
     } finally {
       setIsUploading(false)
@@ -124,9 +125,9 @@ export default function StudentProfilePage() {
       }
 
       await update({ name: profile.name, image: profile.image })
-      toast.success(tSettings("profileUpdated") || "تم تحديث الملف الشخصي")
+      toast.success(tSettings("profileUpdated"))
     } catch (error: any) {
-      toast.error(error.message)
+      toast.error(error.message || tSettings("updateFailed"))
     } finally {
       setIsLoading(false)
     }
@@ -145,7 +146,7 @@ export default function StudentProfilePage() {
       <div>
         <h1 className="text-2xl font-bold">{t("profile")}</h1>
         <p className="text-muted-foreground">
-          {tSettings("profileDescription") || "إدارة معلومات حسابك الشخصي"}
+          {tSettings("profileDescription")}
         </p>
       </div>
 
@@ -154,7 +155,7 @@ export default function StudentProfilePage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {tSettings("profilePhoto") || "صورة الملف الشخصي"}
+              {tSettings("profilePhoto")}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
@@ -168,6 +169,7 @@ export default function StudentProfilePage() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
+                aria-label={tSettings("changePhoto")}
                 className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 {isUploading ? (
@@ -185,7 +187,7 @@ export default function StudentProfilePage() {
               />
             </div>
             <p className="text-sm text-muted-foreground mt-4 text-center">
-              {tSettings("photoHint") || "انقر لتغيير الصورة"}
+              {tSettings("photoHint")}
             </p>
           </CardContent>
         </Card>
@@ -194,17 +196,16 @@ export default function StudentProfilePage() {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>
-              {tSettings("personalInfo") || "المعلومات الشخصية"}
+              {tSettings("personalInfo")}
             </CardTitle>
             <CardDescription>
-              {tSettings("personalInfoDescription") ||
-                "تحديث معلوماتك الأساسية"}
+              {tSettings("personalInfoDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>{tSettings("fullName") || "الاسم الكامل"}</Label>
+                <Label>{tSettings("fullName")}</Label>
                 <div className="relative">
                   <User className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -213,12 +214,12 @@ export default function StudentProfilePage() {
                       setProfile({ ...profile, name: e.target.value })
                     }
                     className="ps-9"
-                    placeholder={tSettings("namePlaceholder") || "أدخل اسمك"}
+                    placeholder={tSettings("namePlaceholder")}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>{tSettings("email") || "البريد الإلكتروني"}</Label>
+                <Label>{tSettings("email")}</Label>
                 <div className="relative">
                   <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -231,27 +232,27 @@ export default function StudentProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label>{tSettings("headline") || "العنوان المهني"}</Label>
+              <Label>{tSettings("headline")}</Label>
               <Input
                 value={profile.headline}
                 onChange={(e) =>
                   setProfile({ ...profile, headline: e.target.value })
                 }
                 placeholder={
-                  tSettings("headlinePlaceholder") || "مثال: مطور ويب | طالب"
+                  tProfile("headlinePlaceholder")
                 }
               />
             </div>
 
             <div className="space-y-2">
-              <Label>{tSettings("bio") || "نبذة عنك"}</Label>
+              <Label>{tSettings("bio")}</Label>
               <Textarea
                 value={profile.bio}
                 onChange={(e) =>
                   setProfile({ ...profile, bio: e.target.value })
                 }
                 placeholder={
-                  tSettings("bioPlaceholder") || "اكتب نبذة مختصرة عن نفسك..."
+                  tSettings("bioPlaceholder")
                 }
                 rows={4}
               />
@@ -264,17 +265,16 @@ export default function StudentProfilePage() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {tSettings("socialLinks") || "روابط التواصل الاجتماعي"}
+            {tSettings("socialLinks")}
           </CardTitle>
           <CardDescription>
-            {tSettings("socialLinksDescription") ||
-              "أضف روابط حساباتك على مواقع التواصل"}
+            {tSettings("socialLinksDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>{tSettings("website") || "الموقع الإلكتروني"}</Label>
+              <Label>{tSettings("website")}</Label>
               <div className="relative">
                 <Globe className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -345,7 +345,7 @@ export default function StudentProfilePage() {
           ) : (
             <Save className="h-4 w-4 me-2" />
           )}
-          {tSettings("saveChanges") || "حفظ التغييرات"}
+          {tSettings("saveChanges")}
         </Button>
       </div>
     </div>

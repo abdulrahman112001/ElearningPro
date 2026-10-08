@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // POST - Create a review
 export async function POST(
@@ -17,14 +18,18 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
+    const body = await readJson(request);
     const { rating, comment } = body;
 
-    if (!rating || rating < 1 || rating > 5) {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return NextResponse.json(
-        { error: "Rating must be between 1 and 5" },
+        { error: "Rating must be a whole number between 1 and 5" },
         { status: 400 }
       );
+    }
+
+    if (comment !== undefined && comment !== null && typeof comment !== "string") {
+      return NextResponse.json({ error: "Comment must be text" }, { status: 400 });
     }
 
     // Check if user is enrolled
@@ -82,6 +87,8 @@ export async function POST(
 
     return NextResponse.json(review, { status: 201 });
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error creating review:", error);
     return NextResponse.json(
       { error: "Failed to create review" },
@@ -131,6 +138,8 @@ export async function GET(
       pages: Math.ceil(total / limit),
     });
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error fetching reviews:", error);
     return NextResponse.json(
       { error: "Failed to fetch reviews" },

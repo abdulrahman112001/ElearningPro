@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get chapters
 export async function GET(
@@ -37,6 +38,8 @@ export async function GET(
 
     return NextResponse.json(chapters)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get chapters error:", error)
     return NextResponse.json(
       { error: "Failed to get chapters" },
@@ -68,7 +71,7 @@ export async function POST(
       return NextResponse.json({ error: "Course not found" }, { status: 404 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { title, titleAr, position } = body
 
     if (!title) {
@@ -96,6 +99,8 @@ export async function POST(
 
     return NextResponse.json(chapter, { status: 201 })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Create chapter error:", error)
     return NextResponse.json(
       { error: "Failed to create chapter" },
@@ -127,21 +132,34 @@ export async function PUT(
       return NextResponse.json({ error: "Course not found" }, { status: 404 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { chapters } = body // Array of { id, position }
 
-    // Update positions in transaction
-    await db.$transaction(
+    if (
+      !Array.isArray(chapters) ||
+      !chapters.every((ch: any) => typeof ch?.id === "string" && Number.isInteger(ch?.position))
+    ) {
+      return NextResponse.json({ error: "chapters must be an array of { id, position }" }, { status: 400 })
+    }
+
+    // Scope every update to this course: ids of chapters that belong to
+    // another course (or another instructor) match nothing.
+    const results = await db.$transaction(
       chapters.map((ch: { id: string; position: number }) =>
-        db.chapter.update({
-          where: { id: ch.id },
+        db.chapter.updateMany({
+          where: { id: ch.id, courseId: course.id },
           data: { position: ch.position },
         })
       )
     )
+    if (results.some((r) => r.count !== 1)) {
+      return NextResponse.json({ error: "Chapter not found in this course" }, { status: 404 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Reorder chapters error:", error)
     return NextResponse.json(
       { error: "Failed to reorder chapters" },

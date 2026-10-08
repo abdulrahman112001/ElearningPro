@@ -88,6 +88,8 @@ interface UsersTableProps {
 
 export function UsersTable({ users, pagination }: UsersTableProps) {
   const t = useTranslations("admin")
+  const tc = useTranslations("common")
+  const ta = useTranslations("a11y")
   const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -179,7 +181,7 @@ export function UsersTable({ users, pagination }: UsersTableProps) {
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             className="max-w-sm"
           />
-          <Button onClick={handleSearch}>
+          <Button onClick={handleSearch} aria-label={tc("search")}>
             <Search className="h-4 w-4" />
           </Button>
         </div>
@@ -270,7 +272,11 @@ export function UsersTable({ users, pagination }: UsersTableProps) {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={ta("moreActions")}
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>

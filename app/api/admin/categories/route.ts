@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get categories (Admin only)
 export async function GET() {
@@ -57,6 +58,8 @@ export async function GET() {
 
     return NextResponse.json(formatted)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get categories error:", error)
     return NextResponse.json(
       { error: "Failed to get categories" },
@@ -78,7 +81,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { name, slug, description, icon, parentId } = body
 
     if (!name || !slug) {
@@ -149,6 +152,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(formatted)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Create category error:", error)
     return NextResponse.json(
       { error: "Failed to create category" },

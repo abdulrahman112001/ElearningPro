@@ -19,6 +19,16 @@ import { Loader2, Users, MessageCircle, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import "@livekit/components-styles"
 
 interface LiveRoomProps {
@@ -29,12 +39,14 @@ interface LiveRoomProps {
 
 export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
   const t = useTranslations("live")
+  const tRoom = useTranslations("liveRoom")
   const router = useRouter()
   const [token, setToken] = useState<string | null>(null)
   const [wsUrl, setWsUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showChat, setShowChat] = useState(true)
+  const [showEndDialog, setShowEndDialog] = useState(false)
 
   useEffect(() => {
     joinRoom()
@@ -52,7 +64,7 @@ export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to join")
+        throw new Error(data.error || tRoom("joinFailed"))
       }
 
       const data = await response.json()
@@ -67,21 +79,20 @@ export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
   }
 
   const handleEndClass = async () => {
-    if (!confirm(t("confirmEndClass"))) return
-
+    setShowEndDialog(false)
     try {
       const response = await fetch(`/api/live/${classId}/end`, {
         method: "POST",
       })
 
       if (!response.ok) {
-        throw new Error("Failed to end class")
+        throw new Error(tRoom("endFailed"))
       }
 
       toast.success(t("classEnded"))
       router.push("/instructor/live")
     } catch (err: any) {
-      toast.error(err.message)
+      toast.error(err.message || tRoom("endFailed"))
     }
   }
 
@@ -130,7 +141,7 @@ export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
       <div className="bg-background/95 backdrop-blur border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Badge variant="destructive" className="animate-pulse">
-            ● LIVE
+            ● {tRoom("liveBadge")}
           </Badge>
           <h1 className="font-semibold">{classTitle}</h1>
         </div>
@@ -140,12 +151,14 @@ export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
             variant="ghost"
             size="icon"
             onClick={() => setShowChat(!showChat)}
+            aria-label={showChat ? tRoom("hideChat") : tRoom("showChat")}
+            aria-pressed={showChat}
           >
             <MessageCircle className="h-5 w-5" />
           </Button>
 
           {isHost && (
-            <Button variant="destructive" onClick={handleEndClass}>
+            <Button variant="destructive" onClick={() => setShowEndDialog(true)}>
               {t("endClass")}
             </Button>
           )}
@@ -179,6 +192,25 @@ export function LiveRoom({ classId, classTitle, isHost }: LiveRoomProps) {
 
         <RoomAudioRenderer />
       </LiveKitRoom>
+
+      {/* End class confirmation */}
+      <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("endClass")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("confirmEndClass")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleEndClass}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("endClass")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

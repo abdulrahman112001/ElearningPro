@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { reconcileCounters } from "@/lib/reconcile-counters"
+import { apiErrorResponse } from "@/lib/api-error"
 
 // Recomputes denormalized counters (Course.totalStudents/averageRating/
 // totalReviews, InstructorProfile earnings, Coupon.usedCount) from their
@@ -31,6 +32,8 @@ export async function GET(request: Request) {
   try {
     return await handle(request)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Reconcile counters error:", error)
     return NextResponse.json(
       { error: "Failed to reconcile counters" },
@@ -43,6 +46,8 @@ export async function POST(request: Request) {
   try {
     return await handle(request)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Reconcile counters error:", error)
     return NextResponse.json(
       { error: "Failed to reconcile counters" },

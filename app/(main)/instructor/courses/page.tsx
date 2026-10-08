@@ -33,6 +33,7 @@ export async function generateMetadata() {
 export default async function InstructorCoursesPage() {
   const session = await auth()
   const t = await getTranslations("instructor")
+  const ta = await getTranslations("a11y")
 
   if (!session?.user?.id) return null
 
@@ -127,6 +128,7 @@ export default async function InstructorCoursesPage() {
                         variant="secondary"
                         size="icon"
                         className="h-8 w-8"
+                        aria-label={ta("moreActions")}
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>

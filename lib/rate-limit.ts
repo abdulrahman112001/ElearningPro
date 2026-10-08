@@ -67,11 +67,43 @@ export function rateLimit(options: RateLimitOptions): RateLimitResult {
   return { success: true, remaining: limit - state.count, resetAt: state.resetAt }
 }
 
-/** Extract a best-effort client IP from a request. */
+/**
+ * Failure counter that does not consume a slot on success: true while
+ * `identifier` has reached `limit` failures in the current window.
+ */
+export function isLocked(scope: string, identifier: string, limit: number): boolean {
+  const state = buckets.get(`${scope}:${identifier}`)
+  return !!state && state.resetAt > Date.now() && state.count >= limit
+}
+
+/** Records one failure for `identifier` (see isLocked). */
+export function recordFailure(scope: string, identifier: string, windowMs: number): void {
+  rateLimit({ scope, identifier, limit: Number.MAX_SAFE_INTEGER, windowMs })
+}
+
+/** Clears the counter, e.g. after a successful login. */
+export function resetLimit(scope: string, identifier: string): void {
+  buckets.delete(`${scope}:${identifier}`)
+}
+
+/**
+ * Whether proxy headers can be believed. Vercel (and any proxy that
+ * overwrites X-Forwarded-For / X-Real-IP) sets them itself. Anywhere else a
+ * client can send arbitrary values and get a fresh rate-limit bucket on every
+ * request. Set TRUST_PROXY=true when running behind such a proxy.
+ */
+function proxyHeadersTrusted(): boolean {
+  return process.env.TRUST_PROXY === "true" || process.env.VERCEL === "1"
+}
+
+/** Client IP, ignoring spoofable headers unless a trusted proxy sets them. */
 export function getClientIp(request: Request): string {
+  if (!proxyHeadersTrusted()) return "unknown"
+  const realIp = request.headers.get("x-real-ip")
+  if (realIp) return realIp.trim()
   const forwarded = request.headers.get("x-forwarded-for")
   if (forwarded) return forwarded.split(",")[0].trim()
-  return request.headers.get("x-real-ip") || "unknown"
+  return "unknown"
 }
 
 /** Build a standard 429 response. */

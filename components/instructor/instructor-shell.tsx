@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
+import { DashboardMobileNav } from "@/components/layout/dashboard-mobile-nav"
 import {
   LayoutDashboard,
   BookOpen,
@@ -44,7 +45,18 @@ export function InstructorShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <div className="flex">
+      <div className="flex flex-col lg:flex-row">
+        {/* Section tabs (mobile) */}
+        <DashboardMobileNav
+          label={t("instructorPanel")}
+          links={sidebarLinks.map((link) => ({
+            href: link.href,
+            label: t(link.title),
+            icon: link.icon,
+            active: isActive(link.href),
+          }))}
+        />
+
         {/* Sidebar */}
         <aside className="hidden lg:flex flex-col w-64 border-l bg-background min-h-[calc(100vh-4rem)] sticky top-16">
           <div className="p-6 border-b">
@@ -77,7 +89,7 @@ export function InstructorShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 min-w-0 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   )

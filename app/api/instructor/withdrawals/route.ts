@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Request withdrawal
 export async function POST(request: Request) {
@@ -15,10 +16,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { amount, method, paymentDetails } = body
 
-    if (!amount || amount <= 0) {
+    if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 })
     }
 
@@ -112,6 +113,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(withdrawal, { status: 201 })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Create withdrawal error:", error)
     return NextResponse.json(
       { error: "Failed to create withdrawal" },
@@ -129,13 +132,19 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Withdrawals contain payout details: only instructors (their own) and
+    // admins (all) may list them.
+    if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10") || 10))
 
     const where: any = {}
 
-    if (session.user.role === "INSTRUCTOR") {
+    if (session.user.role !== "ADMIN") {
       where.userId = session.user.id
     }
 
@@ -168,6 +177,8 @@ export async function GET(request: Request) {
       },
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get withdrawals error:", error)
     return NextResponse.json(
       { error: "Failed to get withdrawals" },

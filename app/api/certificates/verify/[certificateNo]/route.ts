@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { db } from "@/lib/db"
 import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit"
 
@@ -62,6 +63,8 @@ export async function GET(
       },
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Verify certificate error:", error)
     return NextResponse.json(
       { valid: false, error: "Verification failed" },

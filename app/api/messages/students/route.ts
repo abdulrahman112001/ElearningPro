@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth"
+import { apiErrorResponse } from "@/lib/api-error"
 import { db } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -19,11 +20,12 @@ export async function GET(request: NextRequest) {
       where: { userId },
     })
 
-    if (instructorProfile) {
+    if (instructorProfile || session.user.role === "INSTRUCTOR") {
       // Get unique students from enrollments in instructor's courses
       const whereClause: any = {
         course: {
-          instructorId: instructorProfile.id,
+          // Course.instructorId references User.id, not InstructorProfile.id
+          instructorId: userId,
         },
       }
 
@@ -110,6 +112,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ students: students.slice(0, 50) })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error fetching students:", error)
     return NextResponse.json(
       { error: "Failed to fetch students" },

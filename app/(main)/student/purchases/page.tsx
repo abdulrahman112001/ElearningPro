@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { format } from "date-fns"
-import { ar } from "date-fns/locale"
+import { ar, enUS } from "date-fns/locale"
 import {
   ShoppingBag,
   Calendar,
@@ -42,6 +42,12 @@ interface Purchase {
 
 export default function StudentPurchasesPage() {
   const t = useTranslations("student")
+  const tp = useTranslations("studentPurchases")
+  const locale = useLocale()
+  const pickCourseTitle = (course: Purchase["course"]) =>
+    (locale === "ar"
+      ? course.titleAr || course.titleEn
+      : course.titleEn || course.titleAr) || ""
   const [purchases, setPurchases] = useState<Purchase[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -68,32 +74,36 @@ export default function StudentPurchasesPage() {
         return (
           <Badge className="bg-green-500">
             <CheckCircle className="w-3 h-3 me-1" />
-            {t("completed") || "مكتمل"}
+            {tp("statusCompleted")}
           </Badge>
         )
       case "PENDING":
         return (
           <Badge variant="secondary">
             <Clock className="w-3 h-3 me-1" />
-            {t("pending") || "قيد الانتظار"}
+            {t("pending")}
           </Badge>
         )
       case "FAILED":
         return (
           <Badge variant="destructive">
             <XCircle className="w-3 h-3 me-1" />
-            {t("failed") || "فشل"}
+            {t("failed")}
           </Badge>
         )
       case "REFUNDED":
-        return <Badge variant="outline">{t("refunded") || "مسترد"}</Badge>
+        return <Badge variant="outline">{t("refunded")}</Badge>
       default:
         return null
     }
   }
 
-  const formatPrice = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("ar-EG", {
+  const formatPrice = (
+    amount: number,
+    currency: string,
+    locale: string = "ar"
+  ) => {
+    return new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", {
       style: "currency",
       currency: currency || "EGP",
     }).format(amount)
@@ -112,7 +122,7 @@ export default function StudentPurchasesPage() {
       <div>
         <h1 className="text-2xl font-bold">{t("purchases")}</h1>
         <p className="text-muted-foreground">
-          {t("purchasesDescription") || "سجل مشترياتك ومعاملاتك المالية"}
+          {t("purchasesDescription")}
         </p>
       </div>
 
@@ -121,10 +131,10 @@ export default function StudentPurchasesPage() {
           <CardContent className="py-12 text-center">
             <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-semibold mb-2">
-              {t("noPurchases") || "لا توجد مشتريات"}
+              {t("noPurchases")}
             </h3>
             <p className="text-muted-foreground text-sm mb-4">
-              {t("noPurchasesDescription") || "لم تقم بشراء أي كورسات بعد"}
+              {t("noPurchasesDescription")}
             </p>
             <Button asChild>
               <Link href="/courses">{t("browseCourses")}</Link>
@@ -143,7 +153,7 @@ export default function StudentPurchasesPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {t("totalPurchases") || "إجمالي المشتريات"}
+                      {t("totalPurchases")}
                     </p>
                     <p className="text-2xl font-bold">{purchases.length}</p>
                   </div>
@@ -158,7 +168,7 @@ export default function StudentPurchasesPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {t("completedPurchases") || "مكتملة"}
+                      {t("completedPurchases")}
                     </p>
                     <p className="text-2xl font-bold">
                       {purchases.filter((p) => p.status === "COMPLETED").length}
@@ -175,14 +185,15 @@ export default function StudentPurchasesPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {t("totalSpent") || "إجمالي المدفوع"}
+                      {t("totalSpent")}
                     </p>
                     <p className="text-2xl font-bold">
                       {formatPrice(
                         purchases
                           .filter((p) => p.status === "COMPLETED")
                           .reduce((sum, p) => sum + p.amount, 0),
-                        "EGP"
+                        "EGP",
+                        locale
                       )}
                     </p>
                   </div>
@@ -194,7 +205,7 @@ export default function StudentPurchasesPage() {
           {/* Purchases List */}
           <Card>
             <CardHeader>
-              <CardTitle>{t("purchaseHistory") || "سجل المشتريات"}</CardTitle>
+              <CardTitle>{t("purchaseHistory")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="divide-y">
@@ -207,11 +218,7 @@ export default function StudentPurchasesPage() {
                       {purchase.course.thumbnail ? (
                         <Image
                           src={purchase.course.thumbnail}
-                          alt={
-                            purchase.course.titleAr ||
-                            purchase.course.titleEn ||
-                            ""
-                          }
+                          alt={pickCourseTitle(purchase.course)}
                           fill
                           className="object-cover"
                         />
@@ -227,7 +234,7 @@ export default function StudentPurchasesPage() {
                         href={`/courses/${purchase.course.slug}`}
                         className="font-medium hover:text-primary line-clamp-1"
                       >
-                        {purchase.course.titleAr || purchase.course.titleEn}
+                        {pickCourseTitle(purchase.course)}
                       </Link>
                       <p className="text-sm text-muted-foreground">
                         {purchase.course.instructor.name}
@@ -235,21 +242,26 @@ export default function StudentPurchasesPage() {
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
                         {format(new Date(purchase.createdAt), "dd MMM yyyy", {
-                          locale: ar,
+                          locale: locale === "ar" ? ar : enUS,
                         })}
                       </div>
                     </div>
 
                     <div className="text-end">
                       <p className="font-semibold">
-                        {formatPrice(purchase.amount, purchase.currency)}
+                        {formatPrice(purchase.amount, purchase.currency, locale)}
                       </p>
                       <div className="mt-1">
                         {getStatusBadge(purchase.status)}
                       </div>
                     </div>
 
-                    <Button variant="ghost" size="icon" asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      aria-label={tp("viewCourse")}
+                    >
                       <Link href={`/courses/${purchase.course.slug}`}>
                         <ExternalLink className="h-4 w-4" />
                       </Link>

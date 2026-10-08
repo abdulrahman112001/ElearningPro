@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Update chapter
 export async function PATCH(
@@ -29,7 +30,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { title, titleAr, description, descriptionAr, isPublished } = body
 
     const updatedChapter = await db.chapter.update({
@@ -45,6 +46,8 @@ export async function PATCH(
 
     return NextResponse.json(updatedChapter)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update chapter error:", error)
     return NextResponse.json(
       { error: "Failed to update chapter" },
@@ -102,6 +105,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Delete chapter error:", error)
     return NextResponse.json(
       { error: "Failed to delete chapter" },

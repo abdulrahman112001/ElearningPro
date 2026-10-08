@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 export async function PATCH(
   request: Request,
@@ -17,7 +18,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
 
     const notification = await db.notification.update({
       where: { id: params.notificationId },
@@ -34,6 +35,8 @@ export async function PATCH(
 
     return NextResponse.json(notification)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update notification error:", error)
     return NextResponse.json(
       { error: "Failed to update notification" },
@@ -61,6 +64,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Delete notification error:", error)
     return NextResponse.json(
       { error: "Failed to delete notification" },

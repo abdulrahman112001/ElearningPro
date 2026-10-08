@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { LiveRoom } from "@/components/live/live-room"
@@ -12,6 +12,7 @@ interface LivePageProps {
 
 export async function generateMetadata({ params }: LivePageProps) {
   const t = await getTranslations("live")
+  const locale = await getLocale()
   return {
     title: t("liveClass"),
   }
@@ -72,14 +73,12 @@ export default async function LivePage({ params }: LivePageProps) {
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold mb-4">
-            {liveClass.titleAr || liveClass.title}
+            {locale === "en" ? liveClass.title : liveClass.titleAr || liveClass.title}
           </h1>
-          <p className="text-muted-foreground mb-6">
-            The class hasn't started yet. Please wait for the instructor.
-          </p>
+          <p className="text-muted-foreground mb-6">{t("notStartedYet")}</p>
           <p className="text-sm">
-            Scheduled for:{" "}
-            {new Date(liveClass.scheduledAt).toLocaleString("ar-EG")}
+            {t("scheduledFor")}:{" "}
+            {new Date(liveClass.scheduledAt).toLocaleString(locale === "en" ? "en-US" : "ar-EG")}
           </p>
         </div>
       </div>
@@ -91,9 +90,9 @@ export default async function LivePage({ params }: LivePageProps) {
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold mb-4">
-            {liveClass.titleAr || liveClass.title}
+            {locale === "en" ? liveClass.title : liveClass.titleAr || liveClass.title}
           </h1>
-          <p className="text-muted-foreground">This class has ended.</p>
+          <p className="text-muted-foreground">{t("classHasEnded")}</p>
         </div>
       </div>
     )

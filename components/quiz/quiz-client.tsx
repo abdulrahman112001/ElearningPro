@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -71,6 +72,12 @@ export function QuizClient({
   attemptsCount,
 }: QuizClientProps) {
   const router = useRouter()
+  const t = useTranslations("quizClient")
+  const tQuiz = useTranslations("quiz")
+  const tc = useTranslations("common")
+  const locale = useLocale()
+  const isAr = locale === "ar"
+  const quizTitle = isAr ? quiz.titleAr || quiz.title : quiz.title || quiz.titleAr
   const [isStarted, setIsStarted] = useState(!!existingAttemptId)
   const [attemptId, setAttemptId] = useState(existingAttemptId)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -106,7 +113,7 @@ export function QuizClient({
         }
         if (prev === 60 && !showTimeWarning) {
           setShowTimeWarning(true)
-          toast.error("باقي دقيقة واحدة!")
+          toast.error(t("oneMinuteLeft"))
         }
         return prev - 1
       })
@@ -135,7 +142,7 @@ export function QuizClient({
       setAttemptId(data.attemptId)
       setIsStarted(true)
     } catch (error) {
-      toast.error("حدث خطأ أثناء بدء الاختبار")
+      toast.error(t("startError"))
     }
   }
 
@@ -180,7 +187,7 @@ export function QuizClient({
         `/courses/${courseSlug}/lessons/${lessonId}/quiz/result?attemptId=${data.attemptId}`
       )
     } catch (error) {
-      toast.error("حدث خطأ أثناء تسليم الاختبار")
+      toast.error(t("submitError"))
       setIsSubmitting(false)
     }
   }, [attemptId, answers, courseSlug, lessonId, router, isSubmitting])
@@ -191,7 +198,7 @@ export function QuizClient({
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">
-              {quiz.titleAr || quiz.title}
+              {quizTitle}
             </CardTitle>
             {quiz.description && (
               <p className="text-muted-foreground mt-2">{quiz.description}</p>
@@ -201,22 +208,22 @@ export function QuizClient({
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-muted rounded-lg text-center">
                 <div className="text-2xl font-bold">{questions.length}</div>
-                <div className="text-sm text-muted-foreground">سؤال</div>
+                <div className="text-sm text-muted-foreground">{t("questionsLabel")}</div>
               </div>
               <div className="p-4 bg-muted rounded-lg text-center">
                 <div className="text-2xl font-bold">{quiz.passingScore}%</div>
-                <div className="text-sm text-muted-foreground">درجة النجاح</div>
+                <div className="text-sm text-muted-foreground">{t("passingScoreLabel")}</div>
               </div>
               {quiz.timeLimit && (
                 <div className="p-4 bg-muted rounded-lg text-center">
                   <div className="text-2xl font-bold">{quiz.timeLimit}</div>
-                  <div className="text-sm text-muted-foreground">دقيقة</div>
+                  <div className="text-sm text-muted-foreground">{t("minutesLabel")}</div>
                 </div>
               )}
               <div className="p-4 bg-muted rounded-lg text-center">
                 <div className="text-2xl font-bold">{attemptsCount}</div>
                 <div className="text-sm text-muted-foreground">
-                  محاولة سابقة
+                  {t("previousAttempts")}
                 </div>
               </div>
             </div>
@@ -224,21 +231,21 @@ export function QuizClient({
             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
               <h4 className="font-medium flex items-center gap-2 mb-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                تعليمات الاختبار
+                {t("instructionsTitle")}
               </h4>
               <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>اقرأ كل سؤال بعناية قبل الإجابة</li>
-                <li>يمكنك التنقل بين الأسئلة بحرية</li>
-                <li>يمكنك وضع علامة على الأسئلة للمراجعة لاحقاً</li>
+                <li>{t("instructions.readCarefully")}</li>
+                <li>{t("instructions.navigateFreely")}</li>
+                <li>{t("instructions.flagForReview")}</li>
                 {quiz.timeLimit && (
-                  <li>لديك {quiz.timeLimit} دقيقة لإكمال الاختبار</li>
+                  <li>{t("instructions.timeLimit", { minutes: quiz.timeLimit })}</li>
                 )}
-                <li>تأكد من مراجعة إجاباتك قبل التسليم</li>
+                <li>{t("instructions.reviewBeforeSubmit")}</li>
               </ul>
             </div>
 
             <Button onClick={startQuiz} className="w-full" size="lg">
-              بدء الاختبار
+              {tQuiz("startQuiz")}
             </Button>
           </CardContent>
         </Card>
@@ -251,9 +258,9 @@ export function QuizClient({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold">{quiz.titleAr || quiz.title}</h1>
+          <h1 className="text-xl font-bold">{quizTitle}</h1>
           <p className="text-sm text-muted-foreground">
-            السؤال {currentQuestionIndex + 1} من {questions.length}
+            {t("questionProgress", { current: currentQuestionIndex + 1, total: questions.length })}
           </p>
         </div>
         {timeRemaining !== null && (
@@ -287,6 +294,8 @@ export function QuizClient({
               flaggedQuestions.has(q.id) ? "ring-2 ring-yellow-500" : ""
             }`}
             onClick={() => setCurrentQuestionIndex(index)}
+            aria-label={t("goToQuestion", { number: index + 1 })}
+            aria-current={currentQuestionIndex === index ? "step" : undefined}
           >
             {index + 1}
           </Button>
@@ -299,10 +308,12 @@ export function QuizClient({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <Badge variant="outline" className="mb-2">
-                {currentQuestion.points} نقطة
+                {t("pointsCount", { count: currentQuestion.points })}
               </Badge>
               <CardTitle className="text-lg">
-                {currentQuestion.questionAr || currentQuestion.question}
+                {isAr
+                  ? currentQuestion.questionAr || currentQuestion.question
+                  : currentQuestion.question || currentQuestion.questionAr}
               </CardTitle>
             </div>
             <Button
@@ -311,7 +322,9 @@ export function QuizClient({
               }
               size="icon"
               onClick={() => toggleFlag(currentQuestion.id)}
-              title="وضع علامة للمراجعة"
+              title={t("flagForReview")}
+              aria-label={t("flagForReview")}
+              aria-pressed={flaggedQuestions.has(currentQuestion.id)}
             >
               <Flag className="h-5 w-5" />
             </Button>
@@ -339,7 +352,7 @@ export function QuizClient({
                       onCheckedChange={() => {}}
                     />
                     <Label className="flex-1 cursor-pointer">
-                      {option.textAr || option.text}
+                      {isAr ? option.textAr || option.text : option.text || option.textAr}
                     </Label>
                   </div>
                 )
@@ -359,7 +372,7 @@ export function QuizClient({
                 >
                   <RadioGroupItem value={option.id} id={option.id} />
                   <Label htmlFor={option.id} className="flex-1 cursor-pointer">
-                    {option.textAr || option.text}
+                    {isAr ? option.textAr || option.text : option.text || option.textAr}
                   </Label>
                 </div>
               ))}
@@ -376,11 +389,11 @@ export function QuizClient({
           disabled={currentQuestionIndex === 0}
         >
           <ChevronRight className="h-4 w-4 ms-2" />
-          السابق
+          {tc("previous")}
         </Button>
 
         <div className="text-sm text-muted-foreground">
-          {answeredCount} من {questions.length} تم الإجابة عليها
+          {t("answeredProgress", { answered: answeredCount, total: questions.length })}
         </div>
 
         {currentQuestionIndex === questions.length - 1 ? (
@@ -391,11 +404,11 @@ export function QuizClient({
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin ms-2" />
             ) : null}
-            تسليم الاختبار
+            {tQuiz("submitQuiz")}
           </Button>
         ) : (
           <Button onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}>
-            التالي
+            {tc("next")}
             <ChevronLeft className="h-4 w-4 me-2" />
           </Button>
         )}
@@ -405,21 +418,21 @@ export function QuizClient({
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد تسليم الاختبار</AlertDialogTitle>
+            <AlertDialogTitle>{t("confirmSubmitTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
               {answeredCount < questions.length ? (
                 <span className="text-yellow-600">
-                  تنبيه: لم تجب على {questions.length - answeredCount} سؤال
+                  {t("unansweredWarning", { count: questions.length - answeredCount })}
                 </span>
               ) : (
-                "هل أنت متأكد من تسليم الاختبار؟ لا يمكنك تغيير إجاباتك بعد التسليم."
+                t("confirmSubmitDescription")
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>مراجعة الإجابات</AlertDialogCancel>
+            <AlertDialogCancel>{tQuiz("reviewAnswers")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleSubmit}>
-              تسليم الاختبار
+              {tQuiz("submitQuiz")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

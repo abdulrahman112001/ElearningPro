@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -32,9 +32,12 @@ export default async function InstructorStudentsPage({
 }) {
   const session = await auth()
   const t = await getTranslations("instructor")
+  const locale = await getLocale()
+  const pickTitle = (c: { titleAr: string | null; titleEn: string | null }) =>
+    locale === "ar" ? c.titleAr || c.titleEn : c.titleEn || c.titleAr
 
   if (!session?.user?.id) {
-    redirect("/auth/signin")
+    redirect("/login")
   }
 
   // Get instructor's courses
@@ -151,7 +154,7 @@ export default async function InstructorStudentsPage({
         <div>
           <h1 className="text-2xl font-bold">{t("students")}</h1>
           <p className="text-muted-foreground">
-            {t("studentsDescription") || "إدارة ومتابعة طلابك"}
+            {t("studentsDescription")}
           </p>
         </div>
       </div>
@@ -173,7 +176,7 @@ export default async function InstructorStudentsPage({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("totalEnrollments") || "إجمالي التسجيلات"}
+              {t("totalEnrollments")}
             </CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -203,7 +206,7 @@ export default async function InstructorStudentsPage({
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 name="search"
-                placeholder={t("searchStudents") || "ابحث عن طالب..."}
+                placeholder={t("searchStudents")}
                 defaultValue={searchParams.search}
                 className="ps-10"
               />
@@ -213,10 +216,10 @@ export default async function InstructorStudentsPage({
               defaultValue={searchParams.course || ""}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="">{t("allCourses") || "جميع الكورسات"}</option>
+              <option value="">{t("allCourses")}</option>
               {instructorCourses.map((course) => (
                 <option key={course.id} value={course.id}>
-                  {course.titleAr || course.titleEn}
+                  {pickTitle(course)}
                 </option>
               ))}
             </select>
@@ -224,7 +227,7 @@ export default async function InstructorStudentsPage({
               type="submit"
               className="h-10 px-4 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
             >
-              {t("search") || "بحث"}
+              {t("search")}
             </button>
           </form>
         </CardContent>
@@ -237,22 +240,22 @@ export default async function InstructorStudentsPage({
             <div className="text-center py-12">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">
-                {t("noStudents") || "لا يوجد طلاب"}
+                {t("noStudents")}
               </h3>
               <p className="text-muted-foreground">
-                {t("noStudentsDescription") || "لم يسجل أي طالب في كورساتك بعد"}
+                {t("noStudentsDescription")}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("student") || "الطالب"}</TableHead>
-                  <TableHead>{t("email") || "البريد الإلكتروني"}</TableHead>
+                  <TableHead>{t("student")}</TableHead>
+                  <TableHead>{t("email")}</TableHead>
                   <TableHead>
-                    {t("enrolledCourses") || "الكورسات المسجلة"}
+                    {t("enrolledCourses")}
                   </TableHead>
-                  <TableHead>{t("enrolledAt") || "تاريخ التسجيل"}</TableHead>
+                  <TableHead>{t("enrolledAt")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -267,7 +270,7 @@ export default async function InstructorStudentsPage({
                           </AvatarFallback>
                         </Avatar>
                         <span className="font-medium">
-                          {student.user.name || t("anonymous") || "مجهول"}
+                          {student.user.name || t("anonymous")}
                         </span>
                       </div>
                     </TableCell>
@@ -288,7 +291,7 @@ export default async function InstructorStudentsPage({
                             variant="secondary"
                             className="text-xs"
                           >
-                            {course.titleAr || course.titleEn}
+                            {pickTitle(course)}
                           </Badge>
                         ))}
                         {student.enrolledCourses.length > 2 && (
@@ -300,7 +303,7 @@ export default async function InstructorStudentsPage({
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(student.lastEnrolled).toLocaleDateString(
-                        "ar-EG",
+                        locale === "ar" ? "ar-EG" : "en-US",
                         {
                           year: "numeric",
                           month: "short",

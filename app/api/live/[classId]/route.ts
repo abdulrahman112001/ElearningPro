@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { createRoom, generateToken, deleteRoom } from "@/lib/livekit"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get live class details
 export async function GET(
@@ -48,8 +49,27 @@ export async function GET(
       )
     }
 
+    // Course-bound classes are visible to the host, admins and enrolled
+    // students only. Answer 404 so the class's existence is not revealed.
+    const isHost = liveClass.instructorId === session.user.id
+    if (liveClass.courseId && !isHost && session.user.role !== "ADMIN") {
+      const enrollment = await db.enrollment.findUnique({
+        where: {
+          userId_courseId: { userId: session.user.id, courseId: liveClass.courseId },
+        },
+      })
+      if (!enrollment) {
+        return NextResponse.json(
+          { error: "Live class not found" },
+          { status: 404 }
+        )
+      }
+    }
+
     return NextResponse.json(liveClass)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get live class error:", error)
     return NextResponse.json(
       { error: "Failed to get live class" },
@@ -84,7 +104,7 @@ export async function PATCH(
       )
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const {
       title,
       titleAr,
@@ -108,6 +128,8 @@ export async function PATCH(
 
     return NextResponse.json(updatedClass)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Update live class error:", error)
     return NextResponse.json(
       { error: "Failed to update live class" },
@@ -147,6 +169,8 @@ export async function DELETE(
       try {
         await deleteRoom(liveClass.roomName)
       } catch (e) {
+    const handled = apiErrorResponse(e)
+    if (handled) return handled
         // Room might not exist
       }
     }
@@ -157,6 +181,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Delete live class error:", error)
     return NextResponse.json(
       { error: "Failed to delete live class" },

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import slugify from "slugify"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // POST - Create a new course (instructor only)
 export async function POST(request: Request) {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { title, titleAr, description, categoryId, level, language } = body
 
     if (!title || !description || !categoryId || !level || !language) {
@@ -53,6 +54,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(course, { status: 201 })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error creating course:", error)
     return NextResponse.json(
       { error: "Failed to create course" },
@@ -91,6 +94,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json(courses)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Error fetching instructor courses:", error)
     return NextResponse.json(
       { error: "Failed to fetch courses" },

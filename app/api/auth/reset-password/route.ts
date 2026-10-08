@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = await readJson(request);
     const { token, password } = body;
 
     if (!token || !password) {
@@ -71,6 +72,8 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Reset password error:", error);
     return NextResponse.json(
       { error: "Something went wrong" },

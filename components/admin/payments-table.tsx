@@ -107,6 +107,7 @@ export function PaymentsTable({
 }: PaymentsTableProps) {
   const t = useTranslations("admin")
   const common = useTranslations("common")
+  const ta = useTranslations("a11y")
   const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams() as URLSearchParams
@@ -197,7 +198,11 @@ export function PaymentsTable({
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
-          <Button onClick={handleSearch} variant="secondary">
+          <Button
+            onClick={handleSearch}
+            variant="secondary"
+            aria-label={common("search")}
+          >
             <Search className="h-4 w-4" />
           </Button>
         </div>
@@ -309,7 +314,11 @@ export function PaymentsTable({
                 <TableCell className="text-end">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={ta("moreActions")}
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>

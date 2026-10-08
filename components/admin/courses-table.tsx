@@ -96,6 +96,8 @@ interface CoursesTableProps {
 
 export function CoursesTable({ courses, pagination }: CoursesTableProps) {
   const t = useTranslations("admin")
+  const tc = useTranslations("common")
+  const ta = useTranslations("a11y")
   const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -191,7 +193,7 @@ export function CoursesTable({ courses, pagination }: CoursesTableProps) {
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             className="max-w-sm"
           />
-          <Button onClick={handleSearch}>
+          <Button onClick={handleSearch} aria-label={tc("search")}>
             <Search className="h-4 w-4" />
           </Button>
         </div>
@@ -315,7 +317,11 @@ export function CoursesTable({ courses, pagination }: CoursesTableProps) {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={ta("moreActions")}
+                        >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

@@ -20,7 +20,7 @@ export default async function InstructorReviewsPage() {
   const t = await getTranslations("instructor")
 
   if (!session?.user?.id) {
-    redirect("/auth/signin")
+    redirect("/login")
   }
 
   // Get all reviews for instructor's courses

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -15,6 +16,7 @@ interface NotificationSettingsProps {
 
 export function NotificationSettings({ userId }: NotificationSettingsProps) {
   const router = useRouter()
+  const t = useTranslations("settingsForms.notifications")
   const [isLoading, setIsLoading] = useState(false)
 
   const [settings, setSettings] = useState({
@@ -43,10 +45,10 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
         throw new Error("Failed to update notifications")
       }
 
-      toast.success("تم حفظ إعدادات الإشعارات")
+      toast.success(t("saved"))
       router.refresh()
     } catch (error) {
-      toast.error("حدث خطأ أثناء الحفظ")
+      toast.error(t("saveError"))
     } finally {
       setIsLoading(false)
     }
@@ -56,15 +58,15 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
     <div className="space-y-6">
       {/* Email Notifications */}
       <div>
-        <h3 className="font-medium mb-4">إشعارات البريد الإلكتروني</h3>
+        <h3 className="font-medium mb-4">{t("emailSection")}</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="emailNotifications" className="font-normal">
-                تفعيل إشعارات البريد
+                {t("emailNotifications")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                استلم جميع الإشعارات عبر البريد الإلكتروني
+                {t("emailNotificationsDesc")}
               </p>
             </div>
             <Switch
@@ -77,10 +79,10 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="courseUpdates" className="font-normal">
-                تحديثات الكورسات
+                {t("courseUpdates")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                إشعارات عند تحديث كورساتك المسجل بها
+                {t("courseUpdatesDesc")}
               </p>
             </div>
             <Switch
@@ -93,10 +95,10 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="newCourses" className="font-normal">
-                كورسات جديدة
+                {t("newCourses")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                إشعارات عند إضافة كورسات جديدة في مجالاتك المفضلة
+                {t("newCoursesDesc")}
               </p>
             </div>
             <Switch
@@ -112,15 +114,15 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
 
       {/* Learning Reminders */}
       <div>
-        <h3 className="font-medium mb-4">تذكيرات التعلم</h3>
+        <h3 className="font-medium mb-4">{t("learningReminders")}</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="completionReminders" className="font-normal">
-                تذكيرات إكمال الكورسات
+                {t("completionReminders")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                تذكيرات لإكمال الكورسات التي بدأتها
+                {t("completionRemindersDesc")}
               </p>
             </div>
             <Switch
@@ -133,10 +135,10 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="liveClassReminders" className="font-normal">
-                تذكيرات البث المباشر
+                {t("liveClassReminders")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                تذكيرات قبل بدء البث المباشر
+                {t("liveClassRemindersDesc")}
               </p>
             </div>
             <Switch
@@ -152,15 +154,15 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
 
       {/* Marketing */}
       <div>
-        <h3 className="font-medium mb-4">التسويق</h3>
+        <h3 className="font-medium mb-4">{t("marketing")}</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="promotions" className="font-normal">
-                العروض والخصومات
+                {t("promotions")}
               </Label>
               <p className="text-sm text-muted-foreground">
-                استلم إشعارات عن العروض الخاصة والخصومات
+                {t("promotionsDesc")}
               </p>
             </div>
             <Switch
@@ -174,7 +176,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
 
       <Button onClick={handleSave} disabled={isLoading}>
         {isLoading && <Loader2 className="h-4 w-4 ms-2 animate-spin" />}
-        حفظ الإعدادات
+        {t("save")}
       </Button>
     </div>
   )

@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import {
+  computeCertificateGrade,
+  generateCertificateNumber,
+  hasPassedAllQuizzes,
+} from "@/lib/certificates"
 
 // Generate certificate for completed course
 export async function POST(
@@ -51,6 +57,13 @@ export async function POST(
       )
     }
 
+    if (!(await hasPassedAllQuizzes(session.user.id, courseId))) {
+      return NextResponse.json(
+        { error: "All course quizzes must be passed", errorAr: "يجب اجتياز جميع اختبارات الدورة" },
+        { status: 400 }
+      )
+    }
+
     // Check if certificate already exists
     const existingCertificate = await db.certificate.findUnique({
       where: {
@@ -68,37 +81,7 @@ export async function POST(
     // Generate unique certificate number
     const certificateNo = generateCertificateNumber()
 
-    // Calculate grade (average of quiz scores or just completion)
-    const quizAttempts = await db.quizAttempt.findMany({
-      where: {
-        userId: session.user.id,
-        quiz: {
-          lesson: {
-            chapter: {
-              courseId,
-            },
-          },
-        },
-      },
-      orderBy: { score: "desc" },
-    })
-
-    // Get best score per quiz
-    const quizScores: Record<string, number> = {}
-    for (const attempt of quizAttempts) {
-      if (
-        !quizScores[attempt.quizId] ||
-        attempt.score > quizScores[attempt.quizId]
-      ) {
-        quizScores[attempt.quizId] = attempt.score
-      }
-    }
-
-    const scores = Object.values(quizScores)
-    const grade =
-      scores.length > 0
-        ? scores.reduce((a, b) => a + b, 0) / scores.length
-        : 100 // Default to 100 if no quizzes
+    const grade = await computeCertificateGrade(session.user.id, courseId)
 
     // Create certificate
     const certificate = await db.certificate.create({
@@ -125,6 +108,8 @@ export async function POST(
 
     return NextResponse.json(certificate, { status: 201 })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Generate certificate error:", error)
     return NextResponse.json(
       { error: "Failed to generate certificate" },
@@ -181,6 +166,8 @@ export async function GET(
 
     return NextResponse.json(certificate)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get certificate error:", error)
     return NextResponse.json(
       { error: "Failed to get certificate" },
@@ -189,9 +176,3 @@ export async function GET(
   }
 }
 
-function generateCertificateNumber(): string {
-  const prefix = "CERT"
-  const timestamp = Date.now().toString(36).toUpperCase()
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-  return `${prefix}-${timestamp}-${random}`
-}

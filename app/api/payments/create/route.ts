@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2023-10-16",
@@ -15,8 +16,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { courseId, paymentMethod, couponCode } = body
+
+    if (typeof courseId !== "string" || !courseId) {
+      return NextResponse.json({ error: "courseId is required" }, { status: 400 })
+    }
+    if (!["stripe", "paypal", "paymob", "tap"].includes(paymentMethod)) {
+      return NextResponse.json({ error: "Invalid payment method" }, { status: 400 })
+    }
+    if (couponCode !== undefined && couponCode !== null && typeof couponCode !== "string") {
+      return NextResponse.json({ error: "Invalid coupon code" }, { status: 400 })
+    }
 
     // Fetch course
     const course = await db.course.findUnique({
@@ -114,6 +125,35 @@ export async function POST(request: Request) {
       discountAmount: Number(couponDiscount.toFixed(2)),
     }
 
+    // Nothing to charge (e.g. a 100% coupon): enroll directly. Payment
+    // providers reject zero-amount charges.
+    if (finalPrice <= 0) {
+      await db.$transaction(async (tx) => {
+        await tx.purchase.create({
+          data: {
+            userId: session.user.id,
+            courseId,
+            amount: 0,
+            currency: "EGP",
+            provider: "STRIPE",
+            status: "COMPLETED",
+            couponId: coupon?.id ?? null,
+            discountAmount: breakdown.discountAmount,
+            instructorShare: 0,
+            platformShare: 0,
+          },
+        })
+        await tx.enrollment.create({ data: { userId: session.user.id, courseId } })
+        if (coupon) {
+          await tx.coupon.update({
+            where: { id: coupon.id },
+            data: { usedCount: { increment: 1 } },
+          })
+        }
+      })
+      return NextResponse.json({ enrolled: true }, { status: 201 })
+    }
+
     // Handle different payment methods
     switch (paymentMethod) {
       case "stripe":
@@ -159,6 +199,8 @@ export async function POST(request: Request) {
         )
     }
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Payment error:", error)
     return NextResponse.json({ error: "Payment failed" }, { status: 500 })
   }
@@ -214,10 +256,10 @@ async function handlePayPalPayment(
 ) {
   // PayPal integration would go here
   // For now, return a placeholder
-  return NextResponse.json({
-    error: "PayPal integration coming soon",
-    status: 501,
-  })
+  return NextResponse.json(
+    { error: "PayPal integration coming soon" },
+    { status: 501 }
+  )
 }
 
 async function handlePaymobPayment(
@@ -229,10 +271,10 @@ async function handlePaymobPayment(
 ) {
   // Paymob (Egypt) integration would go here
   // For now, return a placeholder
-  return NextResponse.json({
-    error: "Paymob integration coming soon",
-    status: 501,
-  })
+  return NextResponse.json(
+    { error: "Paymob integration coming soon" },
+    { status: 501 }
+  )
 }
 
 async function handleTapPayment(
@@ -244,8 +286,8 @@ async function handleTapPayment(
 ) {
   // Tap (Gulf) integration would go here
   // For now, return a placeholder
-  return NextResponse.json({
-    error: "Tap integration coming soon",
-    status: 501,
-  })
+  return NextResponse.json(
+    { error: "Tap integration coming soon" },
+    { status: 501 }
+  )
 }

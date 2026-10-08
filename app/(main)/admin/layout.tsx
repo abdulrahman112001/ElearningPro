@@ -19,12 +19,12 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <div className="flex">
-        {/* Sidebar */}
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar (desktop) + section tabs (mobile) */}
         <AdminSidebar />
 
         {/* Main Content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 min-w-0 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   )

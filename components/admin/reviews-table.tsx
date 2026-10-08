@@ -92,6 +92,7 @@ export function ReviewsTable({
 }: ReviewsTableProps) {
   const t = useTranslations("admin")
   const common = useTranslations("common")
+  const ta = useTranslations("a11y")
   const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams() as URLSearchParams
@@ -195,7 +196,11 @@ export function ReviewsTable({
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
-          <Button onClick={handleSearch} variant="secondary">
+          <Button
+            onClick={handleSearch}
+            variant="secondary"
+            aria-label={common("search")}
+          >
             <Search className="h-4 w-4" />
           </Button>
         </div>
@@ -285,6 +290,7 @@ export function ReviewsTable({
                       variant="ghost"
                       size="icon"
                       onClick={() => setViewReview(review)}
+                      aria-label={ta("viewReview")}
                     >
                       <MessageSquareText className="h-4 w-4" />
                     </Button>
@@ -293,6 +299,7 @@ export function ReviewsTable({
                       size="icon"
                       className="text-destructive"
                       onClick={() => setDeleteTarget(review)}
+                      aria-label={common("delete")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

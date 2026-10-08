@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
+import { DashboardMobileNav } from "@/components/layout/dashboard-mobile-nav"
 import {
   LayoutDashboard,
   Users,
@@ -98,6 +99,16 @@ export function AdminSidebar() {
   }
 
   return (
+    <>
+    <DashboardMobileNav
+      label={t("adminPanel")}
+      links={sidebarLinks.map((link) => ({
+        href: link.href,
+        label: t(link.title),
+        icon: link.icon,
+        active: isActive(link.href),
+      }))}
+    />
     <aside className="hidden lg:flex flex-col w-64 border-l bg-background min-h-[calc(100vh-4rem)] sticky top-16">
       <div className="p-6 border-b">
         <h2 className="text-lg font-semibold">{t("adminPanel")}</h2>
@@ -127,5 +138,6 @@ export function AdminSidebar() {
         </ul>
       </nav>
     </aside>
+    </>
   )
 }

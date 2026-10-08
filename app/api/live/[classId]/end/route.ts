@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { deleteRoom } from "@/lib/livekit"
@@ -37,6 +38,8 @@ export async function POST(
     try {
       await deleteRoom(liveClass.roomName)
     } catch (e) {
+    const handled = apiErrorResponse(e)
+    if (handled) return handled
       console.error("Failed to delete room:", e)
     }
 
@@ -57,6 +60,8 @@ export async function POST(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("End live class error:", error)
     return NextResponse.json(
       { error: "Failed to end live class" },

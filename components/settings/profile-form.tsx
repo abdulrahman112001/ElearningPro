@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { useTranslations } from "next-intl"
 import { Loader2, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,13 +22,14 @@ import {
 import toast from "react-hot-toast"
 import { getInitials } from "@/lib/utils"
 
-const profileSchema = z.object({
-  name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
-  email: z.string().email("البريد الإلكتروني غير صالح"),
-  bio: z.string().max(500, "النبذة يجب ألا تتجاوز 500 حرف").optional(),
-})
+const makeProfileSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(2, t("nameMin")),
+    email: z.string().email(t("invalidEmail")),
+    bio: z.string().max(500, t("bioMax")).optional(),
+  })
 
-type ProfileFormValues = z.infer<typeof profileSchema>
+type ProfileFormValues = z.infer<ReturnType<typeof makeProfileSchema>>
 
 interface ProfileFormProps {
   user: {
@@ -41,7 +43,11 @@ interface ProfileFormProps {
 
 export function ProfileForm({ user }: ProfileFormProps) {
   const router = useRouter()
+  const t = useTranslations("settingsForms.profile")
+  const ts = useTranslations("settings")
   const [isLoading, setIsLoading] = useState(false)
+
+  const profileSchema = useMemo(() => makeProfileSchema(t), [t])
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -65,10 +71,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
         throw new Error("Failed to update profile")
       }
 
-      toast.success("تم تحديث الملف الشخصي بنجاح")
+      toast.success(t("updated"))
       router.refresh()
     } catch (error) {
-      toast.error("حدث خطأ أثناء التحديث")
+      toast.error(t("updateError"))
     } finally {
       setIsLoading(false)
     }
@@ -88,10 +94,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
           <div>
             <Button type="button" variant="outline" size="sm">
               <Upload className="h-4 w-4 ms-2" />
-              تغيير الصورة
+              {ts("changePhoto")}
             </Button>
             <p className="text-xs text-muted-foreground mt-1">
-              JPG, PNG أو GIF. الحد الأقصى 2MB
+              {t("photoFormats")}
             </p>
           </div>
         </div>
@@ -102,9 +108,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الاسم الكامل</FormLabel>
+                <FormLabel>{ts("fullName")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="أدخل اسمك" {...field} />
+                  <Input placeholder={ts("namePlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -116,7 +122,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>البريد الإلكتروني</FormLabel>
+                <FormLabel>{ts("email")}</FormLabel>
                 <FormControl>
                   <Input type="email" disabled {...field} />
                 </FormControl>
@@ -131,10 +137,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
           name="bio"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>نبذة عنك</FormLabel>
+              <FormLabel>{ts("bio")}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="اكتب نبذة مختصرة عن نفسك..."
+                  placeholder={t("bioPlaceholder")}
                   className="resize-none"
                   rows={4}
                   {...field}
@@ -147,7 +153,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="h-4 w-4 ms-2 animate-spin" />}
-          حفظ التغييرات
+          {ts("saveChanges")}
         </Button>
       </form>
     </Form>

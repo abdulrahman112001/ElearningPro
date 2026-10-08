@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Review course (Admin only)
 export async function PATCH(
@@ -18,7 +19,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const body = await request.json()
+    const body = await readJson(request)
     const { action, reason } = body
 
     if (!["approve", "reject", "feature", "unfeature"].includes(action)) {
@@ -93,6 +94,8 @@ export async function PATCH(
 
     return NextResponse.json(updatedCourse)
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Review course error:", error)
     return NextResponse.json(
       { error: "Failed to review course" },

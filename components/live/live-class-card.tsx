@@ -65,6 +65,7 @@ export function LiveClassCard({
   isInstructor = false,
 }: LiveClassCardProps) {
   const t = useTranslations("live")
+  const ta = useTranslations("a11y")
   const locale = useLocale()
   const router = useRouter()
   const dateLocale = locale === "ar" ? ar : enUS
@@ -138,7 +139,12 @@ export function LiveClassCard({
           {isInstructor && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label={ta("moreActions")}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

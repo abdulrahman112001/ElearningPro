@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 
@@ -70,6 +71,8 @@ export async function GET(request: Request) {
       },
     })
   } catch (error) {
+    const handled = apiErrorResponse(error)
+    if (handled) return handled
     console.error("Get users error:", error)
     return NextResponse.json({ error: "Failed to get users" }, { status: 500 })
   }

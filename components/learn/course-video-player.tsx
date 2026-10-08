@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import ReactPlayer from "react-player"
+import { useLocale, useTranslations } from "next-intl"
 import toast from "react-hot-toast"
 import {
   Play,
@@ -55,6 +56,9 @@ export function VideoPlayer({
   nextLesson,
 }: VideoPlayerProps) {
   const router = useRouter()
+  const t = useTranslations("videoPlayer")
+  const tLearn = useTranslations("learn")
+  const locale = useLocale()
   const playerRef = useRef<ReactPlayer>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -123,15 +127,33 @@ export function VideoPlayer({
   const markAsComplete = async () => {
     setIsCompleted(true)
     await saveProgress(duration, true)
-    toast.success("Lesson completed!")
+    toast.success(tLearn("lessonCompleted"))
 
     // Show next lesson prompt after 2 seconds
     if (nextLesson) {
+      const nextTitle =
+        locale === "ar"
+          ? nextLesson.titleAr || nextLesson.titleEn
+          : nextLesson.titleEn || nextLesson.titleAr
       setTimeout(() => {
-        const proceed = confirm(`Continue to: ${nextLesson.titleEn}?`)
-        if (proceed) {
-          router.push(`/courses/${courseSlug}/learn/${nextLesson.id}`)
-        }
+        toast(
+          (tt) => (
+            <span className="flex items-center gap-3">
+              <span>{t("continueTo", { title: nextTitle ?? "" })}</span>
+              <button
+                type="button"
+                className="shrink-0 rounded-md bg-primary px-3 py-1 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                onClick={() => {
+                  toast.dismiss(tt.id)
+                  router.push(`/courses/${courseSlug}/learn/${nextLesson.id}`)
+                }}
+              >
+                {tLearn("nextLesson")}
+              </button>
+            </span>
+          ),
+          { duration: 10000 }
+        )
       }, 2000)
     }
   }
@@ -177,7 +199,7 @@ export function VideoPlayer({
   if (!lesson.videoUrl) {
     return (
       <div className="aspect-video bg-black flex items-center justify-center">
-        <p className="text-white">No video available for this lesson</p>
+        <p className="text-white">{t("noVideo")}</p>
       </div>
     )
   }
@@ -235,7 +257,7 @@ export function VideoPlayer({
         {isCompleted && (
           <div className="absolute top-4 end-4 bg-green-600 text-white px-3 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium">
             <CheckCircle className="h-4 w-4" />
-            Completed
+            {tLearn("completed")}
           </div>
         )}
 
@@ -243,15 +265,17 @@ export function VideoPlayer({
         {isSavingProgress && (
           <div className="absolute top-4 start-4 bg-black/60 text-white px-3 py-1.5 rounded-full flex items-center gap-2 text-sm">
             <Loader2 className="h-3 w-3 animate-spin" />
-            Saving...
+            {t("saving")}
           </div>
         )}
 
         {/* Center Play Button */}
         {!playing && (
           <button
+            type="button"
             onClick={togglePlay}
             className="absolute inset-0 flex items-center justify-center"
+            aria-label={t("play")}
           >
             <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors">
               <Play className="h-10 w-10 text-black ms-1" />
@@ -281,6 +305,7 @@ export function VideoPlayer({
                 size="icon"
                 onClick={togglePlay}
                 className="text-white hover:bg-white/20"
+                aria-label={playing ? t("pause") : t("play")}
               >
                 {playing ? (
                   <Pause className="h-5 w-5" />
@@ -297,6 +322,7 @@ export function VideoPlayer({
                   playerRef.current?.seekTo(played + 10 / duration)
                 }
                 className="text-white hover:bg-white/20"
+                aria-label={t("skipForward")}
               >
                 <SkipForward className="h-5 w-5" />
               </Button>
@@ -308,6 +334,7 @@ export function VideoPlayer({
                   size="icon"
                   onClick={toggleMute}
                   className="text-white hover:bg-white/20"
+                  aria-label={muted || volume === 0 ? t("unmute") : t("mute")}
                 >
                   {muted || volume === 0 ? (
                     <VolumeX className="h-5 w-5" />
@@ -340,6 +367,7 @@ export function VideoPlayer({
                     variant="ghost"
                     size="icon"
                     className="text-white hover:bg-white/20"
+                    aria-label={t("playbackSpeed")}
                   >
                     <Settings className="h-5 w-5" />
                   </Button>
@@ -363,6 +391,7 @@ export function VideoPlayer({
                 size="icon"
                 onClick={toggleFullscreen}
                 className="text-white hover:bg-white/20"
+                aria-label={isFullscreen ? t("exitFullscreen") : t("fullscreen")}
               >
                 <Maximize className="h-5 w-5" />
               </Button>
