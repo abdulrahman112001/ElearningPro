@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 import { NextRequest, NextResponse } from "next/server"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
@@ -140,6 +141,15 @@ export async function POST(
           },
         },
       },
+    })
+
+    await logActivity({
+      actorId: userId,
+      actorRole: session.user.role,
+      action: "message.sent",
+      entityType: "user",
+      entityId: partnerId,
+      summary: content.trim().slice(0, 200),
     })
 
     return NextResponse.json(message)

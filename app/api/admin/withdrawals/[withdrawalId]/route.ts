@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { WithdrawalStatus } from "@prisma/client"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 import { ApiError, readJson, apiErrorResponse } from "@/lib/api-error"
 
 /**
@@ -109,6 +110,15 @@ export async function PATCH(
       })
 
       return tx.withdrawal.findUniqueOrThrow({ where: { id: withdrawal.id } })
+    })
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "withdrawal.processed",
+      entityType: "withdrawal",
+      entityId: updatedWithdrawal.id,
+      summary: `Withdrawal of ${updatedWithdrawal.amount} marked ${status}`,
     })
 
     return NextResponse.json(updatedWithdrawal)

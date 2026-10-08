@@ -2,68 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =====================================================================
+   Design tokens
+   ---------------------------------------------------------------------
+   Calm, premium SaaS palette: cool slate neutrals + one indigo brand
+   colour, with emerald (success), amber (warning), sky (info) and rose
+   (danger) as semantic accents. Values are bare HSL channels so they can
+   be used with Tailwind opacity modifiers, e.g. `bg-primary/10`.
+   ===================================================================== */
 @layer base {
   :root {
-    --background: 240 33% 99%;
-    --foreground: 240 25% 8%;
+    /* Surfaces */
+    --background: 220 23% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 240 25% 8%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 25% 8%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Brand */
     --primary: 243 75% 59%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 25% 95.5%;
-    --secondary-foreground: 240 20% 15%;
-    --muted: 240 25% 95.5%;
-    --muted-foreground: 240 8% 46%;
-    --accent: 243 70% 96%;
-    --accent-foreground: 243 70% 34%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --success: 152 69% 35%;
-    --success-foreground: 210 40% 98%;
+
+    /* Neutrals */
+    --secondary: 220 16% 95%;
+    --secondary-foreground: 222 40% 16%;
+    --muted: 220 16% 95%;
+    --muted-foreground: 216 14% 43%;
+    --accent: 238 60% 96.5%;
+    --accent-foreground: 243 60% 38%;
+
+    /* Semantic */
+    --destructive: 347 77% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 161 84% 30%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-    --border: 240 20% 90%;
-    --input: 240 20% 90%;
+    --warning-foreground: 26 83% 14%;
+    --info: 200 90% 40%;
+    --info-foreground: 0 0% 100%;
+
+    /* Lines & focus */
+    --border: 220 14% 90%;
+    --input: 220 14% 86%;
     --ring: 243 75% 59%;
+
+    /* Shape: cards use --radius (rounded-lg), controls use rounded-md (0.5rem) */
     --radius: 0.75rem;
+
+    /* Shadows are tinted with this colour (see tailwind boxShadow) */
+    --shadow-color: 222 40% 20%;
+
+    /* Charts */
     --chart-1: 243 75% 59%;
     --chart-2: 173 58% 39%;
-    --chart-3: 291 64% 58%;
+    --chart-3: 262 70% 62%;
     --chart-4: 38 92% 50%;
-    --chart-5: 27 87% 67%;
+    --chart-5: 347 77% 56%;
   }
 
   .dark {
-    --background: 240 22% 7%;
-    --foreground: 0 0% 98%;
-    --card: 240 20% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 20% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 243 85% 68%;
-    --primary-foreground: 240 25% 8%;
-    --secondary: 240 15% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 15% 15%;
-    --muted-foreground: 240 8% 66%;
-    --accent: 243 40% 20%;
-    --accent-foreground: 243 85% 88%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --success: 152 60% 45%;
-    --success-foreground: 210 40% 98%;
-    --warning: 38 92% 55%;
-    --warning-foreground: 210 40% 98%;
-    --border: 240 15% 18%;
-    --input: 240 15% 18%;
-    --ring: 243 85% 68%;
-    --chart-1: 243 85% 68%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 291 70% 66%;
-    --chart-4: 38 92% 55%;
-    --chart-5: 340 75% 55%;
+    --background: 224 32% 6%;
+    --foreground: 214 32% 96%;
+    --card: 224 26% 9%;
+    --card-foreground: 214 32% 96%;
+    --popover: 224 26% 10%;
+    --popover-foreground: 214 32% 96%;
+
+    --primary: 243 85% 69%;
+    --primary-foreground: 240 30% 8%;
+
+    --secondary: 223 20% 14%;
+    --secondary-foreground: 214 32% 94%;
+    --muted: 223 20% 13%;
+    --muted-foreground: 217 14% 64%;
+    --accent: 240 28% 17%;
+    --accent-foreground: 240 90% 88%;
+
+    --destructive: 350 80% 62%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 158 64% 46%;
+    --success-foreground: 160 80% 7%;
+    --warning: 38 92% 56%;
+    --warning-foreground: 26 83% 10%;
+    --info: 199 89% 58%;
+    --info-foreground: 200 80% 8%;
+
+    --border: 223 18% 16%;
+    --input: 223 18% 21%;
+    --ring: 243 85% 69%;
+
+    --shadow-color: 0 0% 0%;
+
+    --chart-1: 243 85% 69%;
+    --chart-2: 168 60% 46%;
+    --chart-3: 262 80% 72%;
+    --chart-4: 38 92% 56%;
+    --chart-5: 347 80% 64%;
   }
 }
 
@@ -71,17 +106,70 @@
   * {
     @apply border-border;
   }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+
+  /* Numbers inside tables line up */
+  table {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* RTL Support */
-[dir="rtl"] {
-  text-align: right;
+/* =====================================================================
+   Type scale — use these instead of ad-hoc text sizes so every page
+   reads the same. No negative letter-spacing: it breaks Arabic joining.
+   ===================================================================== */
+@layer components {
+  .type-display {
+    @apply text-4xl font-bold leading-[1.15] sm:text-5xl lg:text-6xl;
+  }
+  .type-h1 {
+    @apply text-2xl font-bold leading-tight sm:text-3xl;
+  }
+  .type-h2 {
+    @apply text-xl font-semibold leading-snug sm:text-2xl;
+  }
+  .type-h3 {
+    @apply text-lg font-semibold leading-snug;
+  }
+  .type-h4 {
+    @apply text-base font-semibold leading-snug;
+  }
+  .type-body {
+    @apply text-sm leading-relaxed sm:text-base;
+  }
+  .type-small {
+    @apply text-sm leading-normal text-muted-foreground;
+  }
+  .type-caption {
+    @apply text-xs leading-normal text-muted-foreground;
+  }
+  .type-overline {
+    @apply text-[0.6875rem] font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+
+  /* Surface helpers */
+  .surface {
+    @apply rounded-lg border bg-card text-card-foreground shadow-soft;
+  }
+  .surface-interactive {
+    @apply transition-[box-shadow,transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-elevated;
+  }
 }
 
-/* Hide browser password reveal button and position it correctly for RTL */
+/* Hide browser password reveal button (the app renders its own) */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
   display: none;
@@ -92,168 +180,26 @@ input[type="password"]::-webkit-clear-button {
   display: none;
 }
 
-/* For Edge browser - position password reveal on left for RTL */
-[dir="rtl"] input[type="password"]::-ms-reveal {
-  margin-left: 0;
-  margin-right: auto;
-}
-
-[dir="rtl"] .rtl\:rotate-180 {
-  transform: rotate(180deg);
-}
-
-[dir="rtl"] .rtl\:flex-row-reverse {
-  flex-direction: row-reverse;
-}
-
-/* Logical properties for better RTL support */
-.ms-auto {
-  margin-inline-start: auto;
-}
-
-.me-auto {
-  margin-inline-end: auto;
-}
-
-.ps-0 {
-  padding-inline-start: 0;
-}
-.pe-0 {
-  padding-inline-end: 0;
-}
-.ps-1 {
-  padding-inline-start: 0.25rem;
-}
-.pe-1 {
-  padding-inline-end: 0.25rem;
-}
-.ps-2 {
-  padding-inline-start: 0.5rem;
-}
-.pe-2 {
-  padding-inline-end: 0.5rem;
-}
-.ps-3 {
-  padding-inline-start: 0.75rem;
-}
-.pe-3 {
-  padding-inline-end: 0.75rem;
-}
-.ps-4 {
-  padding-inline-start: 1rem;
-}
-.pe-4 {
-  padding-inline-end: 1rem;
-}
-.ps-6 {
-  padding-inline-start: 1.5rem;
-}
-.pe-6 {
-  padding-inline-end: 1.5rem;
-}
-.ps-8 {
-  padding-inline-start: 2rem;
-}
-.pe-8 {
-  padding-inline-end: 2rem;
-}
-
-.ms-0 {
-  margin-inline-start: 0;
-}
-.me-0 {
-  margin-inline-end: 0;
-}
-.ms-1 {
-  margin-inline-start: 0.25rem;
-}
-.me-1 {
-  margin-inline-end: 0.25rem;
-}
-.ms-2 {
-  margin-inline-start: 0.5rem;
-}
-.me-2 {
-  margin-inline-end: 0.5rem;
-}
-.ms-3 {
-  margin-inline-start: 0.75rem;
-}
-.me-3 {
-  margin-inline-end: 0.75rem;
-}
-.ms-4 {
-  margin-inline-start: 1rem;
-}
-.me-4 {
-  margin-inline-end: 1rem;
-}
-.ms-6 {
-  margin-inline-start: 1.5rem;
-}
-.me-6 {
-  margin-inline-end: 1.5rem;
-}
-.ms-8 {
-  margin-inline-start: 2rem;
-}
-.me-8 {
-  margin-inline-end: 2rem;
-}
-
-.start-0 {
-  inset-inline-start: 0;
-}
-.end-0 {
-  inset-inline-end: 0;
-}
-.start-3 {
-  inset-inline-start: 0.75rem;
-}
-.end-3 {
-  inset-inline-end: 0.75rem;
-}
-.start-4 {
-  inset-inline-start: 1rem;
-}
-.end-4 {
-  inset-inline-end: 1rem;
-}
-
-.text-start {
-  text-align: start;
-}
-.text-end {
-  text-align: end;
-}
-
-.rounded-s-lg {
-  border-start-start-radius: 0.5rem;
-  border-end-start-radius: 0.5rem;
-}
-.rounded-e-lg {
-  border-start-end-radius: 0.5rem;
-  border-end-end-radius: 0.5rem;
-}
-
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 4px;
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: hsl(var(--muted-foreground) / 0.45);
+  background-clip: padding-box;
 }
 
 /* Video Player Styles */
@@ -265,7 +211,7 @@ input[type="password"]::-webkit-clear-button {
 .video-player-wrapper > div {
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
 }
 
 /* Rich Text Editor Styles */
@@ -275,13 +221,13 @@ input[type="password"]::-webkit-clear-button {
 }
 
 .ql-toolbar {
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
+  border-start-start-radius: 0.5rem;
+  border-start-end-radius: 0.5rem;
 }
 
 .ql-container {
-  border-bottom-left-radius: 0.5rem;
-  border-bottom-right-radius: 0.5rem;
+  border-end-start-radius: 0.5rem;
+  border-end-end-radius: 0.5rem;
 }
 
 /* Animation Classes */
@@ -304,21 +250,21 @@ input[type="password"]::-webkit-clear-button {
    and legible instead of washing out to a pastel tint on a light background */
 .gradient-text {
   @apply bg-clip-text text-transparent;
-  background-image: linear-gradient(90deg, hsl(243 78% 45%), hsl(271 76% 48%));
+  background-image: linear-gradient(90deg, hsl(243 78% 50%), hsl(262 76% 52%));
 }
 
 .dark .gradient-text {
-  background-image: linear-gradient(90deg, hsl(243 92% 74%), hsl(271 88% 76%));
+  background-image: linear-gradient(90deg, hsl(243 92% 76%), hsl(262 88% 78%));
 }
 
 /* Card Hover Effect */
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated;
 }
 
 /* Skeleton Loading */
 .skeleton {
-  @apply animate-pulse bg-muted rounded;
+  @apply animate-pulse rounded-md bg-muted;
 }
 
 /* Hide scrollbar but keep functionality */
@@ -329,11 +275,6 @@ input[type="password"]::-webkit-clear-button {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
-}
-
-/* Arabic Font */
-.font-arabic {
-  font-family: "Cairo", "Noto Sans Arabic", sans-serif;
 }
 
 /* Progress Bar Animation */
@@ -347,11 +288,11 @@ input[type="password"]::-webkit-clear-button {
 }
 
 .badge-new {
-  @apply bg-emerald-500 text-white;
+  @apply bg-emerald-600 text-white;
 }
 
 .badge-free {
-  @apply bg-primary text-white;
+  @apply bg-primary text-primary-foreground;
 }
 
 /* Star Rating */
@@ -360,12 +301,12 @@ input[type="password"]::-webkit-clear-button {
 }
 
 .star-empty {
-  @apply text-gray-300 dark:text-gray-600;
+  @apply text-slate-300 dark:text-slate-600;
 }
 
 /* Course Card Image */
 .course-image {
-  @apply aspect-video object-cover rounded-t-lg;
+  @apply aspect-video rounded-t-lg object-cover;
 }
 
 /* Live Indicator */
@@ -375,21 +316,27 @@ input[type="password"]::-webkit-clear-button {
 
 .live-indicator::before {
   content: "";
-  @apply absolute -start-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full animate-pulse;
+  @apply absolute -start-3 top-1/2 h-2 w-2 -translate-y-1/2 animate-pulse rounded-full bg-rose-500;
 }
 
-/* ==================== Brand / Redesign utilities ==================== */
+/* ==================== Brand utilities ==================== */
 
 /* Soft dotted grid backdrop for hero / section headers */
 .bg-grid-brand {
   background-image: radial-gradient(
-    hsl(var(--primary) / 0.16) 1px,
+    hsl(var(--foreground) / 0.07) 1px,
     transparent 1px
   );
-  background-size: 24px 24px;
+  background-size: 22px 22px;
 }
 
-/* Blurred, colorful mesh blobs used behind hero/CTA sections */
+/* Fades a backdrop (e.g. .bg-grid-brand) out toward the edges */
+.bg-grid-fade {
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* Blurred brand-tinted glow used behind hero/CTA sections */
 .bg-mesh-brand {
   position: relative;
   isolation: isolate;
@@ -401,31 +348,31 @@ input[type="password"]::-webkit-clear-button {
   inset: 0;
   z-index: -1;
   background-image:
-    radial-gradient(45% 65% at 15% 20%, hsl(var(--primary) / 0.22), transparent 60%),
-    radial-gradient(40% 60% at 85% 15%, hsl(291 64% 58% / 0.18), transparent 60%),
-    radial-gradient(50% 50% at 50% 100%, hsl(38 92% 50% / 0.12), transparent 60%);
+    radial-gradient(45% 60% at 20% 10%, hsl(var(--primary) / 0.16), transparent 65%),
+    radial-gradient(40% 55% at 85% 15%, hsl(262 70% 60% / 0.12), transparent 65%),
+    radial-gradient(50% 50% at 50% 100%, hsl(173 58% 39% / 0.08), transparent 65%);
 }
 
 /* Glassy elevated surface for floating cards on top of mesh/hero backgrounds */
 .glass-card {
-  @apply border border-white/20 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+  @apply border border-white/40 bg-white/75 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
 }
 
-/* Colored glow shadow for primary CTAs and highlighted cards */
+/* Coloured glow shadow for primary CTAs and highlighted cards */
 .shadow-glow {
-  box-shadow: 0 8px 30px -8px hsl(var(--primary) / 0.45);
+  box-shadow: 0 8px 24px -8px hsl(var(--primary) / 0.45);
 }
 
 .shadow-glow-lg {
-  box-shadow: 0 20px 60px -15px hsl(var(--primary) / 0.5);
+  box-shadow: 0 20px 50px -18px hsl(var(--primary) / 0.5);
 }
 
 /* Section eyebrow / kicker label */
 .eyebrow {
-  @apply inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary;
+  @apply inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3.5 py-1 text-xs font-semibold text-primary sm:text-sm;
 }
 
-/* Animated gradient border wrapper (used sparingly on featured cards) */
+/* Gradient hairline border wrapper (used sparingly on featured cards) */
 .gradient-border {
   position: relative;
   border-radius: var(--radius);
@@ -440,8 +387,8 @@ input[type="password"]::-webkit-clear-button {
   background: linear-gradient(
     135deg,
     hsl(var(--primary)),
-    hsl(291 64% 58%),
-    hsl(38 92% 50%)
+    hsl(262 70% 62%),
+    hsl(173 58% 39%)
   );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -449,4 +396,15 @@ input[type="password"]::-webkit-clear-button {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

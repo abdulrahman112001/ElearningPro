@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Inter, Cairo } from "next/font/google"
+import { Inter, IBM_Plex_Sans_Arabic } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
 import { ThemeProvider } from "@/components/providers/theme-provider"
@@ -17,9 +17,12 @@ const inter = Inter({
   preload: false,
 })
 
-const cairo = Cairo({
+// IBM Plex Sans Arabic: a modern, highly legible UI face with matching
+// Latin glyphs, so mixed Arabic/English strings share one rhythm.
+const plexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
-  variable: "--font-cairo",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-arabic",
   display: "swap",
   preload: false,
 })
@@ -78,12 +81,12 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${cairo.variable} ${
+        className={`${inter.variable} ${plexArabic.variable} ${
           isRTL ? "font-arabic" : "font-sans"
         } antialiased`}
       >
         <NextTopLoader
-          color="#2563eb"
+          color="#5046e5"
           initialPosition={0.08}
           crawlSpeed={200}
           height={3}
@@ -108,9 +111,13 @@ export default async function RootLayout({
                     toastOptions={{
                       duration: 4000,
                       style: {
-                        background: "hsl(var(--background))",
-                        color: "hsl(var(--foreground))",
+                        background: "hsl(var(--popover))",
+                        color: "hsl(var(--popover-foreground))",
                         border: "1px solid hsl(var(--border))",
+                        borderRadius: "0.75rem",
+                        fontSize: "0.875rem",
+                        boxShadow:
+                          "0 4px 8px -2px hsl(var(--shadow-color) / 0.06), 0 24px 48px -12px hsl(var(--shadow-color) / 0.22)",
                       },
                     }}
                   />

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { getCourseAccess } from "@/lib/access"
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
@@ -52,16 +53,9 @@ export async function POST(req: Request) {
     }
 
     // Check if user is enrolled
-    const enrollment = await db.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId: session.user.id,
-          courseId: quiz.lesson.chapter.course.id,
-        },
-      },
-    })
+    const access = await getCourseAccess(session.user, quiz.lesson.chapter.course)
 
-    if (!enrollment) {
+    if (!access.allowed) {
       return NextResponse.json(
         { error: "You must be enrolled to take this quiz" },
         { status: 403 }

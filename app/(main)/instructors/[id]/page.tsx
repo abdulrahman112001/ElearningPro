@@ -4,6 +4,11 @@ import Image from "next/image"
 import Link from "next/link"
 import { getLocale, getTranslations } from "next-intl/server"
 import { db } from "@/lib/db"
+import { auth } from "@/lib/auth"
+import { getActiveTeacherSubscription } from "@/lib/access"
+import { SubscribeButton } from "@/components/student/subscribe-button"
+import { StatusBadge } from "@/components/shared"
+import { Check, Crown } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -80,6 +85,21 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
     allReviews.length > 0
       ? allReviews.reduce((acc, r) => acc + r.rating, 0) / allReviews.length
       : 0
+
+  // Monthly subscription offer + the viewer's own status
+  const tSub = await getTranslations("subscriptions")
+  const session = await auth()
+  const offer = instructor.instructorProfile
+  const subscriptionEnabled = !!offer?.subscriptionEnabled
+  const isSelf = session?.user?.id === instructor.id
+  const activeSubscription =
+    subscriptionEnabled && session?.user?.id && !isSelf
+      ? await getActiveTeacherSubscription(session.user.id, instructor.id)
+      : null
+  const subscribedUntil = activeSubscription?.endsAt ?? null
+  const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    dateStyle: "long",
+  })
 
   return (
     <div className="min-h-screen py-12">
@@ -159,6 +179,78 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* Monthly subscription offer */}
+        {subscriptionEnabled && offer && (
+          <section
+            aria-labelledby="teacher-subscription"
+            className="relative mb-8 overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-soft sm:p-8"
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -end-20 -top-20 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+            />
+            <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div className="min-w-0 space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/30">
+                    <Crown className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <h2 id="teacher-subscription" className="type-h2">
+                    {tSub("offerTitle")}
+                  </h2>
+                  {subscribedUntil && <StatusBadge status="ACTIVE" label={tSub("subscribed")} />}
+                </div>
+                <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+                  {tSub("offerDescription", {
+                    name: instructor.name ?? "",
+                    count: instructor.courses.length,
+                  })}
+                </p>
+                <ul className="grid gap-2 text-sm sm:grid-cols-2">
+                  {(["includeAllCourses", "includeNewCourses", "includeQA", "includeRenew"] as const).map(
+                    (key) => (
+                      <li key={key} className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+                        <span>{tSub(key, { count: instructor.courses.length })}</span>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-lg border bg-card/80 p-5 text-center shadow-soft backdrop-blur lg:min-w-[17rem]">
+                <p className="text-sm text-muted-foreground">{tSub("perMonthLabel")}</p>
+                <p className="text-3xl font-bold tabular-nums">
+                  {formatPrice(offer.monthlyPrice, "EGP", locale)}
+                  {offer.monthlyPrice > 0 && (
+                    <span className="ms-1 text-base font-medium text-muted-foreground">
+                      / {tSub("month")}
+                    </span>
+                  )}
+                </p>
+                {subscribedUntil && (
+                  <p className="text-sm font-medium text-success">
+                    {tSub("subscribedUntil", { date: dateFmt.format(subscribedUntil) })}
+                  </p>
+                )}
+                {isSelf ? (
+                  <p className="text-xs text-muted-foreground">{tSub("ownOffer")}</p>
+                ) : (
+                  <SubscribeButton
+                    size="lg"
+                    className="w-full"
+                    instructorId={instructor.id}
+                    monthlyPrice={offer.monthlyPrice}
+                    subscribed={!!subscribedUntil}
+                    label={subscribedUntil ? tSub("renewMonth") : tSub("subscribeNow")}
+                  />
+                )}
+                <p className="text-xs text-muted-foreground">{tSub("securePayment")}</p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Instructor Courses */}
         <div>

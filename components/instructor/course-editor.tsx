@@ -1,9 +1,9 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -26,7 +26,11 @@ import {
   Video,
   FileQuestion,
   Edit,
+  GraduationCap,
+  Lock,
+  Clock,
 } from "lucide-react"
+import { StatusBadge } from "@/components/shared"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -89,6 +93,9 @@ const makeCourseSchema = (v: (key: string) => string) => z.object({
 
 type CourseFormData = z.infer<ReturnType<typeof makeCourseSchema>>
 
+// Radix Select cannot hold an empty value, so "no grade / no group" uses a sentinel.
+const NONE = "__none__"
+
 interface Chapter {
   id: string
   titleEn: string
@@ -135,6 +142,8 @@ interface CourseEditorProps {
     whatYouLearn?: string[]
     targetAudience?: string
     status: string
+    gradeLevelId?: string | null
+    classGroupId?: string | null
     chapters: Chapter[]
   }
   categories: Array<{
@@ -150,6 +159,24 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
   const courseSchema = useMemo(() => makeCourseSchema((k) => tValidation(k)), [tValidation])
   const tEditor = useTranslations("courseEditor")
   const tCommon = useTranslations("common")
+  const tAudience = useTranslations("courseAudience")
+  const locale = useLocale()
+  const [grades, setGrades] = useState<{ id: string; nameAr: string; nameEn: string }[]>([])
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([])
+  const [gradeLevelId, setGradeLevelId] = useState(course.gradeLevelId || NONE)
+  const [classGroupId, setClassGroupId] = useState(course.classGroupId || NONE)
+
+  useEffect(() => {
+    fetch("/api/grade-levels")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setGrades)
+      .catch(() => setGrades([]))
+    fetch("/api/instructor/groups")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setGroups)
+      .catch(() => setGroups([]))
+  }, [])
+
   const [pendingDelete, setPendingDelete] = useState<
     | { type: "chapter"; chapterId: string }
     | { type: "lesson"; chapterId: string; lessonId: string }
@@ -219,7 +246,17 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
       const response = await fetch(`/api/instructor/courses/${course.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        // Audience fields are only sent when changed, so an untouched course
+        // whose grade was later deactivated still saves.
+        body: JSON.stringify({
+          ...data,
+          ...(gradeLevelId !== (course.gradeLevelId || NONE) && {
+            gradeLevelId: gradeLevelId === NONE ? null : gradeLevelId,
+          }),
+          ...(classGroupId !== (course.classGroupId || NONE) && {
+            classGroupId: classGroupId === NONE ? null : classGroupId,
+          }),
+        }),
       })
 
       if (!response.ok) throw new Error("Failed to update course")
@@ -529,8 +566,8 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
   return (
     <div className="container mx-auto py-6 px-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
@@ -541,22 +578,23 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
               <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
             </Link>
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-bold sm:text-2xl">
               {course.titleAr || course.titleEn}
             </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge
-                variant={
-                  course.status === "PUBLISHED" ? "default" : "secondary"
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <StatusBadge
+                status={course.status}
+                label={
+                  course.status === "PUBLISHED"
+                    ? t("published")
+                    : course.status === "DRAFT"
+                    ? t("draft")
+                    : course.status === "PENDING_REVIEW"
+                    ? tAudience("pendingReviewBadge")
+                    : undefined
                 }
-              >
-                {course.status === "PUBLISHED"
-                  ? t("published")
-                  : course.status === "DRAFT"
-                  ? t("draft")
-                  : course.status}
-              </Badge>
+              />
               <span className="text-sm text-muted-foreground">
                 {chapters.length} {t("chaptersCount")} • {totalLessons}{" "}
                 {t("lessonsCount")}
@@ -572,7 +610,7 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
               {t("preview")}
             </Link>
           </Button>
-          {course.status !== "PUBLISHED" && (
+          {course.status !== "PUBLISHED" && course.status !== "PENDING_REVIEW" && (
             <Button onClick={handlePublish} disabled={isLoading}>
               {isLoading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
               {t("publish")}
@@ -580,6 +618,16 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
           )}
         </div>
       </div>
+
+      {course.status === "PENDING_REVIEW" && (
+        <div
+          role="status"
+          className="mb-6 flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300"
+        >
+          <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>{tAudience("pendingReviewNotice")}</p>
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -745,6 +793,61 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
                         <SelectItem value="en">{t("english")}</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+                    <div>
+                      <p className="text-sm font-semibold">{tAudience("sectionTitle")}</p>
+                      <p className="text-xs text-muted-foreground">{tAudience("sectionHint")}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5">
+                        <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                        {tAudience("gradeLabel")}
+                      </Label>
+                      <Select value={gradeLevelId} onValueChange={setGradeLevelId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={tAudience("selectGrade")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>{tAudience("allGrades")}</SelectItem>
+                          {grades.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {locale === "ar" ? g.nameAr || g.nameEn : g.nameEn || g.nameAr}
+                            </SelectItem>
+                          ))}
+                          {gradeLevelId !== NONE &&
+                            grades.length > 0 &&
+                            !grades.some((g) => g.id === gradeLevelId) && (
+                              <SelectItem value={gradeLevelId}>{tAudience("inactiveGrade")}</SelectItem>
+                            )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5">
+                        <Lock className="h-4 w-4 text-muted-foreground" />
+                        {tAudience("groupLabel")}
+                      </Label>
+                      <Select value={classGroupId} onValueChange={setClassGroupId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={tAudience("selectGroup")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>{tAudience("noGroup")}</SelectItem>
+                          {groups.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        {classGroupId === NONE
+                          ? tAudience("groupHintOpen")
+                          : tAudience("groupHintLocked")}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">

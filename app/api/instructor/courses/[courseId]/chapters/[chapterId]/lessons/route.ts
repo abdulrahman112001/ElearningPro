@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get lessons
@@ -115,6 +116,16 @@ export async function POST(
         position: lessonPosition,
         chapterId: params.chapterId,
       },
+    })
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "lesson.created",
+      entityType: "lesson",
+      entityId: lesson.id,
+      summary: `Added lesson "${lesson.titleEn}"`,
+      metadata: { courseId: params.courseId },
     })
 
     return NextResponse.json(lesson, { status: 201 })

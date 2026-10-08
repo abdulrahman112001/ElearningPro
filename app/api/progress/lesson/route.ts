@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { getCourseAccess } from "@/lib/access"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 export async function POST(request: Request) {
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
         chapter: {
           select: {
             courseId: true,
+            course: { select: { id: true, instructorId: true, classGroupId: true } },
           },
         },
       },
@@ -36,17 +38,10 @@ export async function POST(request: Request) {
 
     const courseId = lesson.chapter.courseId
 
-    // Check enrollment
-    const enrollment = await db.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId: session.user.id,
-          courseId,
-        },
-      },
-    })
+    // Enrollment or an active teacher subscription
+    const access = await getCourseAccess(session.user, lesson.chapter.course)
 
-    if (!enrollment) {
+    if (!access.allowed) {
       return NextResponse.json(
         { error: "Not enrolled in this course" },
         { status: 403 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 
 export async function POST(
   request: Request,
@@ -107,6 +108,15 @@ export async function POST(
         })
       }
     }
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: canPublishDirectly ? "course.published" : "course.submitted_for_review",
+      entityType: "course",
+      entityId: updatedCourse.id,
+      summary: `${canPublishDirectly ? "Published" : "Submitted for review"} "${updatedCourse.titleEn}"`,
+    })
 
     return NextResponse.json(updatedCourse)
   } catch (error) {

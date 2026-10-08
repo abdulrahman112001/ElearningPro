@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { motion } from "framer-motion"
-import { ArrowLeft, Sparkles } from "lucide-react"
+import { ArrowRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function CTASection() {
@@ -17,7 +17,7 @@ export function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-8 text-center text-white md:p-16"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 p-8 text-center text-white md:p-16"
         >
           {/* Background decoration */}
           <div className="absolute inset-0 -z-0">
@@ -40,10 +40,10 @@ export function CTASection() {
             </p>
 
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
-              <Button size="xl" variant="secondary" className="shadow-xl" asChild>
+              <Button size="xl" variant="secondary" className="shadow-elevated" asChild>
                 <Link href="/register">
                   {t("auth.register")}
-                  <ArrowLeft className="me-2 h-5 w-5 rtl:rotate-180" />
+                  <ArrowRight className="h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button

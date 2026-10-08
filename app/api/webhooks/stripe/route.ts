@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { sendEmail, emailTemplates } from "@/lib/email";
+import { activateTeacherSubscription } from "@/lib/teacher-subscription";
+import { logActivity } from "@/lib/activity";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2023-10-16",
@@ -71,6 +73,28 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       ? session.payment_intent
       : session.payment_intent?.id ?? session.id;
 
+  // Monthly subscription to an instructor (see app/api/subscriptions)
+  if (session.metadata?.type === "teacher_subscription") {
+    try {
+      await activateTeacherSubscription({
+        studentId: userId,
+        instructorId,
+        amount: parseFloat(session.metadata.amount || "0") || (session.amount_total ?? 0) / 100,
+        provider: "STRIPE",
+        providerId: transactionId,
+        instructorShare: parseFloat(instructorShare || "0"),
+        platformShare: parseFloat(platformShare || "0"),
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        console.log("Subscription webhook already processed:", transactionId);
+        return;
+      }
+      throw error;
+    }
+    return;
+  }
+
   const instructorShareValue = parseFloat(instructorShare || "0");
   const platformShareValue = parseFloat(platformShare || "0");
   const discountValue = parseFloat(discountAmount || "0");
@@ -100,7 +124,8 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       // admin). The payment is still recorded instead of failing forever.
       await tx.enrollment.upsert({
         where: { userId_courseId: { userId, courseId } },
-        update: {},
+        // A purchase makes the enrollment permanent even if it was subscription-based.
+        update: { viaSubscription: false },
         create: { userId, courseId },
       });
 
@@ -155,6 +180,16 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       console.error("Failed to send confirmation email:", error);
     }
   }
+
+  await logActivity({
+    actorId: userId,
+    actorRole: "STUDENT",
+    action: "payment.completed",
+    entityType: "course",
+    entityId: courseId,
+    summary: `Paid ${session.amount_total! / 100} for course`,
+    metadata: { purchaseId: purchase.id, transactionId },
+  });
 
   console.log("Purchase completed:", purchase.id);
 }

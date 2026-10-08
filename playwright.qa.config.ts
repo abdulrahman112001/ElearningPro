@@ -58,6 +58,8 @@ export default defineConfig({
       // Simulate running behind a proxy so each test client can present its
       // own IP via X-Forwarded-For (see getClientIp in lib/rate-limit.ts).
       TRUST_PROXY: "true",
+      // Emails are only logged, never sent, during tests.
+      EMAIL_TRANSPORT: "log",
     },
   },
 })

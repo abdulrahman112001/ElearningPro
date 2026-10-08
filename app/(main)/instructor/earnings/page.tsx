@@ -1,15 +1,18 @@
 import { redirect } from "next/navigation"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import {
-  DollarSign,
-  TrendingUp,
-  Wallet,
   ArrowDownRight,
+  BarChart3,
+  BookOpen,
   Clock,
+  DollarSign,
+  History,
+  Percent,
+  Wallet,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageHeader, SectionCard, StatCard } from "@/components/shared"
 import { EarningsChart } from "@/components/instructor/earnings-chart"
 import { WithdrawalRequestDialog } from "@/components/instructor/withdrawal-request-dialog"
 import { WithdrawalHistory } from "@/components/instructor/withdrawal-history"
@@ -93,138 +96,84 @@ export default async function InstructorEarningsPage() {
     }
   })
 
+  const locale = await getLocale()
+  const nf = new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  // Balances are stored in USD (same as the withdrawal and course tables below).
+  const usd = (v: number) => `$${nf.format(v)}`
+
   return (
-    <div className="container py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">{t("earnings")}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t("earningsDescription")}
-          </p>
-        </div>
+    <div className="space-y-6">
+      <PageHeader
+        icon={Wallet}
+        title={t("earnings")}
+        description={t("earningsDescription")}
+        actions={
+          !pendingWithdrawal && profile.pendingEarnings >= 50 ? (
+            <WithdrawalRequestDialog availableBalance={profile.pendingEarnings} />
+          ) : undefined
+        }
+      />
 
-        {!pendingWithdrawal && profile.pendingEarnings >= 50 && (
-          <WithdrawalRequestDialog availableBalance={profile.pendingEarnings} />
-        )}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatCard
+          label={t("totalEarnings")}
+          value={<span dir="ltr">{usd(profile.totalEarnings)}</span>}
+          icon={DollarSign}
+          hint={t("allTimeEarnings")}
+        />
+        <StatCard
+          label={t("availableBalance")}
+          value={<span dir="ltr">{usd(profile.pendingEarnings)}</span>}
+          icon={Wallet}
+          tone="success"
+          hint={t("readyToWithdraw")}
+        />
+        <StatCard
+          label={t("totalWithdrawn")}
+          value={<span dir="ltr">{usd(totalWithdrawn)}</span>}
+          icon={ArrowDownRight}
+          tone="info"
+          hint={`${completedWithdrawals.length} ${t("withdrawals")}`}
+        />
+        <StatCard
+          label={t("platformFee")}
+          value={`${profile.commissionRate}%`}
+          icon={Percent}
+          tone="warning"
+          hint={`${t("youKeep")} ${100 - profile.commissionRate}%`}
+        />
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("totalEarnings")}
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${profile.totalEarnings.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t("allTimeEarnings")}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("availableBalance")}
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              ${profile.pendingEarnings.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t("readyToWithdraw")}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("totalWithdrawn")}
-            </CardTitle>
-            <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${totalWithdrawn.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {completedWithdrawals.length} {t("withdrawals")}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("platformFee")}
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{profile.commissionRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              {t("youKeep")} {100 - profile.commissionRate}%
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Pending Withdrawal Alert */}
       {pendingWithdrawal && (
-        <Card className="mb-8 border-yellow-200 bg-yellow-50">
-          <CardContent className="flex items-center gap-4 py-4">
-            <Clock className="h-5 w-5 text-yellow-600" />
-            <div>
-              <p className="font-medium text-yellow-800">
-                {t("pendingWithdrawal")}
-              </p>
-              <p className="text-sm text-yellow-700">
-                ${pendingWithdrawal.amount.toFixed(2)} - {t("processing")}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div
+          role="status"
+          className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-amber-800 dark:text-amber-300"
+        >
+          <Clock className="h-5 w-5 shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium">{t("pendingWithdrawal")}</p>
+            <p className="text-sm opacity-90">
+              <span dir="ltr">{usd(pendingWithdrawal.amount)}</span> · {t("processing")}
+            </p>
+          </div>
+        </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        {/* Earnings Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("earningsOverview")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EarningsChart />
-          </CardContent>
-        </Card>
-
-        {/* Withdrawal History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("withdrawalHistory")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <WithdrawalHistory withdrawals={withdrawals} />
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SectionCard icon={BarChart3} title={t("earningsOverview")}>
+          <EarningsChart />
+        </SectionCard>
+        <SectionCard icon={History} title={t("withdrawalHistory")}>
+          <WithdrawalHistory withdrawals={withdrawals} />
+        </SectionCard>
       </div>
 
-      {/* Course Earnings Table */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>{t("earningsByCourse")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CourseEarningsTable courses={courseEarnings} />
-        </CardContent>
-      </Card>
+      <SectionCard icon={BookOpen} title={t("earningsByCourse")}>
+        <CourseEarningsTable courses={courseEarnings} />
+      </SectionCard>
     </div>
   )
 }

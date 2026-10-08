@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logActivity } from "@/lib/activity";
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // POST - Create a review
@@ -84,6 +85,15 @@ export async function POST(
 
     // Update course average rating
     await updateCourseRating(params.courseId);
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "review.created",
+      entityType: "course",
+      entityId: params.courseId,
+      summary: `Rated ${rating}/5`,
+    });
 
     return NextResponse.json(review, { status: 201 });
   } catch (error) {

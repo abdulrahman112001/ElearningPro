@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { getCourseAccess } from "@/lib/access"
 
 export async function GET(
   request: Request,
@@ -16,19 +17,22 @@ export async function GET(
 
     const { courseId } = params
 
-    // Check enrollment
-    const enrollment = await db.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId: session.user.id,
-          courseId,
-        },
-      },
+    const accessCourse = await db.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, instructorId: true, classGroupId: true },
     })
-
-    if (!enrollment) {
+    if (!accessCourse) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 })
+    }
+    const access = await getCourseAccess(session.user, accessCourse)
+    if (!access.allowed) {
       return NextResponse.json({ error: "Not enrolled" }, { status: 403 })
     }
+    // Owners and admins can open the course without an enrollment.
+    const enrollment = await db.enrollment.findUnique({
+      where: { userId_courseId: { userId: session.user.id, courseId } },
+      select: { progress: true },
+    })
 
     // Get all lessons in course
     const course = await db.course.findUnique({
@@ -74,7 +78,7 @@ export async function GET(
     })
 
     return NextResponse.json({
-      courseProgress: enrollment.progress,
+      courseProgress: enrollment?.progress ?? 0,
       lessonProgress: progressMap,
       totalLessons: allLessonIds.length,
       completedLessons: lessonProgress.filter((p) => p.isCompleted).length,

@@ -1,10 +1,6 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { cn } from "@/lib/utils"
-import { DashboardMobileNav } from "@/components/layout/dashboard-mobile-nav"
 import {
   LayoutDashboard,
   Users,
@@ -15,129 +11,81 @@ import {
   Tag,
   MessageSquare,
   Shield,
+  ShieldCheck,
   Gift,
   Wallet,
   Bell,
+  Activity,
+  MessagesSquare,
+  GraduationCap,
 } from "lucide-react"
+import { DashboardShell, type DashboardNavSection } from "@/components/layout/dashboard-shell"
 
-const sidebarLinks = [
-  {
-    title: "overview",
-    href: "/admin",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "users",
-    href: "/admin/users",
-    icon: Users,
-  },
-  {
-    title: "instructors",
-    href: "/admin/instructors",
-    icon: Shield,
-  },
-  {
-    title: "courses",
-    href: "/admin/courses",
-    icon: BookOpen,
-  },
-  {
-    title: "categories",
-    href: "/admin/categories",
-    icon: Tag,
-  },
-  {
-    title: "coupons",
-    href: "/admin/coupons",
-    icon: Gift,
-  },
-  {
-    title: "payments",
-    href: "/admin/payments",
-    icon: DollarSign,
-  },
-  {
-    title: "withdrawals",
-    href: "/admin/withdrawals",
-    icon: Wallet,
-  },
-  {
-    title: "reviews",
-    href: "/admin/reviews",
-    icon: MessageSquare,
-  },
-  {
-    title: "analytics",
-    href: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "notifications",
-    href: "/admin/notifications",
-    icon: Bell,
-  },
-  {
-    title: "settings",
-    href: "/admin/settings",
-    icon: Settings,
-  },
-]
-
-export function AdminSidebar() {
+/** Builds the admin navigation, grouped into labelled sections. */
+function useAdminSections(): DashboardNavSection[] {
   const t = useTranslations("admin")
-  const pathname = usePathname()
+  const n = useTranslations("nav.dashboard")
+  return [
+    {
+      id: "general",
+      items: [
+        { href: "/admin", label: t("overview"), icon: LayoutDashboard, exact: true },
+        { href: "/admin/analytics", label: t("analytics"), icon: BarChart3 },
+        { href: "/admin/activity", label: n("activity"), icon: Activity },
+      ],
+    },
+    {
+      id: "people",
+      label: n("sections.people"),
+      items: [
+        { href: "/admin/users", label: t("users"), icon: Users },
+        { href: "/admin/instructors", label: t("instructors"), icon: Shield },
+        { href: "/admin/conversations", label: n("conversations"), icon: MessagesSquare },
+      ],
+    },
+    {
+      id: "content",
+      label: n("sections.content"),
+      items: [
+        { href: "/admin/courses", label: t("courses"), icon: BookOpen },
+        { href: "/admin/categories", label: t("categories"), icon: Tag },
+        { href: "/admin/grade-levels", label: n("gradeLevels"), icon: GraduationCap },
+        { href: "/admin/reviews", label: t("reviews"), icon: MessageSquare },
+      ],
+    },
+    {
+      id: "finance",
+      label: n("sections.finance"),
+      items: [
+        { href: "/admin/payments", label: t("payments"), icon: DollarSign },
+        { href: "/admin/withdrawals", label: t("withdrawals"), icon: Wallet },
+        { href: "/admin/coupons", label: t("coupons"), icon: Gift },
+      ],
+    },
+    {
+      id: "system",
+      label: n("sections.system"),
+      items: [
+        { href: "/admin/notifications", label: t("notifications"), icon: Bell },
+        { href: "/admin/settings", label: t("settings"), icon: Settings },
+      ],
+    },
+  ]
+}
 
-  const isActive = (href: string) => {
-    if (href === "/admin") {
-      return (
-        pathname === "/admin" ||
-        pathname === "/ar/admin" ||
-        pathname === "/en/admin"
-      )
-    }
-    return pathname?.includes(href) ?? false
-  }
-
+/** Admin dashboard chrome: sectioned sidebar (desktop) + tab bar (mobile). */
+export function AdminShell({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("admin")
+  const n = useTranslations("nav.dashboard")
+  const sections = useAdminSections()
   return (
-    <>
-    <DashboardMobileNav
-      label={t("adminPanel")}
-      links={sidebarLinks.map((link) => ({
-        href: link.href,
-        label: t(link.title),
-        icon: link.icon,
-        active: isActive(link.href),
-      }))}
-    />
-    <aside className="hidden lg:flex flex-col w-64 border-l bg-background min-h-[calc(100vh-4rem)] sticky top-16">
-      <div className="p-6 border-b">
-        <h2 className="text-lg font-semibold">{t("adminPanel")}</h2>
-      </div>
-      <nav className="flex-1 px-4 py-4 overflow-y-auto">
-        <ul className="space-y-1">
-          {sidebarLinks.map((link) => {
-            const Icon = link.icon
-            const active = isActive(link.href)
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground font-medium"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{t(link.title)}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
-    </aside>
-    </>
+    <DashboardShell
+      title={t("adminPanel")}
+      subtitle={n("adminSubtitle")}
+      icon={ShieldCheck}
+      sections={sections}
+    >
+      {children}
+    </DashboardShell>
   )
 }

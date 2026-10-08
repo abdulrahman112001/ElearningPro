@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import slugify from "slugify"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
+import { resolveCourseAudience } from "@/lib/course-audience"
+import { logActivity } from "@/lib/activity"
 
 // POST - Create a new course (instructor only)
 export async function POST(request: Request) {
@@ -30,6 +32,11 @@ export async function POST(request: Request) {
       )
     }
 
+    const audience = await resolveCourseAudience(session.user.id, {
+      gradeLevelId: body.gradeLevelId,
+      classGroupId: body.classGroupId,
+    })
+
     // Generate unique slug
     let slug = slugify(title, { lower: true, strict: true })
     const existingCourse = await db.course.findUnique({ where: { slug } })
@@ -49,7 +56,17 @@ export async function POST(request: Request) {
         language,
         instructorId: session.user.id,
         status: "DRAFT",
+        ...audience,
       },
+    })
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "course.created",
+      entityType: "course",
+      entityId: course.id,
+      summary: `Created course "${course.titleEn}"`,
     })
 
     return NextResponse.json(course, { status: 201 })

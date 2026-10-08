@@ -16,6 +16,7 @@ export async function GET() {
       where: { id: session.user.id },
       include: {
         instructorProfile: true,
+        gradeLevel: { select: { id: true, nameAr: true, nameEn: true } },
       },
     })
 
@@ -36,6 +37,11 @@ export async function GET() {
       youtube: user.youtube,
       role: user.role,
       instructorProfile: user.instructorProfile,
+      gradeLevelId: user.gradeLevelId,
+      gradeLevel: user.gradeLevel,
+      guardianName: user.guardianName,
+      guardianEmail: user.guardianEmail,
+      guardianPhone: user.guardianPhone,
     })
   } catch (error) {
     const handled = apiErrorResponse(error)
@@ -60,6 +66,24 @@ export async function PATCH(request: Request) {
     const body = await readJson(request)
     const { name, bio, image, headline, website, twitter, linkedin, youtube } =
       body
+    const { gradeLevelId, guardianName, guardianEmail, guardianPhone } = body
+
+    // Optional text fields: string or null (null clears the value)
+    const optionalText = (v: unknown, max: number) =>
+      v === undefined || v === null || (typeof v === "string" && v.length <= max)
+    if (!optionalText(guardianName, 100) || !optionalText(guardianPhone, 30)) {
+      return NextResponse.json({ error: "Invalid guardian details" }, { status: 400 })
+    }
+    if (
+      guardianEmail !== undefined && guardianEmail !== null && guardianEmail !== "" &&
+      (typeof guardianEmail !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guardianEmail))
+    ) {
+      return NextResponse.json({ error: "Invalid guardian email" }, { status: 400 })
+    }
+    if (gradeLevelId !== undefined && gradeLevelId !== null && gradeLevelId !== "") {
+      const grade = await db.gradeLevel.findFirst({ where: { id: String(gradeLevelId), isActive: true }, select: { id: true } })
+      if (!grade) return NextResponse.json({ error: "Grade level not found" }, { status: 404 })
+    }
 
     // Update user with all profile fields
     const user = await db.user.update({
@@ -73,6 +97,10 @@ export async function PATCH(request: Request) {
         ...(twitter !== undefined && { twitter }),
         ...(linkedin !== undefined && { linkedin }),
         ...(youtube !== undefined && { youtube }),
+        ...(gradeLevelId !== undefined && { gradeLevelId: gradeLevelId || null }),
+        ...(guardianName !== undefined && { guardianName: guardianName?.trim() || null }),
+        ...(guardianEmail !== undefined && { guardianEmail: guardianEmail?.trim().toLowerCase() || null }),
+        ...(guardianPhone !== undefined && { guardianPhone: guardianPhone?.trim() || null }),
       },
     })
 

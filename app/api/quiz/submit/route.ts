@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 import {
@@ -288,6 +289,16 @@ export async function POST(req: Request) {
         }
       }
     }
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "quiz.submitted",
+      entityType: "quiz",
+      entityId: attempt.quizId,
+      summary: `Scored ${Math.round(scorePercentage)}% (${passed ? "passed" : "failed"}) on "${attempt.quiz.title}"`,
+      metadata: { attemptId, score: scorePercentage, passed },
+    })
 
     return NextResponse.json({
       attemptId,

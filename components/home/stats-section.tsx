@@ -27,11 +27,11 @@ export function StatsSection() {
               viewport={{ once: true }}
               className="flex flex-col items-center gap-3 text-center md:flex-row md:text-start"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 shadow-sm">
                 <stat.icon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-extrabold tracking-tight md:text-3xl">
+                <p className="text-2xl font-extrabold md:text-3xl">
                   {stat.value}
                 </p>
                 <p className="text-sm text-muted-foreground">{t(stat.key)}</p>

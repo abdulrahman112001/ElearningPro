@@ -85,7 +85,7 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
                     </span>
                   </div>
                   {category.children.length > 0 && selectedCategory === category.id && (
-                    <div className="me-4 mt-1 space-y-1">
+                    <div className="ms-4 mt-1 space-y-1">
                       {category.children.map((child) => (
                         <div
                           key={child.id}
@@ -117,31 +117,31 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
               value={selectedLevel}
               onValueChange={(value) => updateSearchParams("level", value)}
             >
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="" id="level-all" />
                 <Label htmlFor="level-all" className="text-sm cursor-pointer">
                   {t("allLevels")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="BEGINNER" id="level-beginner" />
                 <Label htmlFor="level-beginner" className="text-sm cursor-pointer">
                   {t("beginner")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="INTERMEDIATE" id="level-intermediate" />
                 <Label htmlFor="level-intermediate" className="text-sm cursor-pointer">
                   {t("intermediate")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="ADVANCED" id="level-advanced" />
                 <Label htmlFor="level-advanced" className="text-sm cursor-pointer">
                   {t("advanced")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="ALL_LEVELS" id="level-all-levels" />
                 <Label htmlFor="level-all-levels" className="text-sm cursor-pointer">
                   {t("allLevels")}
@@ -163,19 +163,19 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
               value={selectedPrice}
               onValueChange={(value) => updateSearchParams("price", value)}
             >
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="" id="price-all" />
                 <Label htmlFor="price-all" className="text-sm cursor-pointer">
                   {t("allPrices")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="free" id="price-free" />
                 <Label htmlFor="price-free" className="text-sm cursor-pointer">
                   {t("free")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="paid" id="price-paid" />
                 <Label htmlFor="price-paid" className="text-sm cursor-pointer">
                   {t("paid")}
@@ -197,14 +197,14 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
               value={selectedRating}
               onValueChange={(value) => updateSearchParams("rating", value)}
             >
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="" id="rating-all" />
                 <Label htmlFor="rating-all" className="text-sm cursor-pointer">
                   {t("allRatings")}
                 </Label>
               </div>
               {[4.5, 4, 3.5, 3].map((rating) => (
-                <div key={rating} className="flex items-center space-x-2 space-x-reverse">
+                <div key={rating} className="flex items-center gap-2">
                   <RadioGroupItem value={rating.toString()} id={`rating-${rating}`} />
                   <Label htmlFor={`rating-${rating}`} className="text-sm cursor-pointer flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -228,25 +228,25 @@ export function CoursesSidebar({ categories }: CoursesSidebarProps) {
               value={selectedDuration}
               onValueChange={(value) => updateSearchParams("duration", value)}
             >
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="" id="duration-all" />
                 <Label htmlFor="duration-all" className="text-sm cursor-pointer">
                   {t("allDurations")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="short" id="duration-short" />
                 <Label htmlFor="duration-short" className="text-sm cursor-pointer">
                   0-2 {t("hours")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="medium" id="duration-medium" />
                 <Label htmlFor="duration-medium" className="text-sm cursor-pointer">
                   2-10 {t("hours")}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="long" id="duration-long" />
                 <Label htmlFor="duration-long" className="text-sm cursor-pointer">
                   10+ {t("hours")}

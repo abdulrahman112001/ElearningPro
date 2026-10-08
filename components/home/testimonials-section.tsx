@@ -44,7 +44,7 @@ export function TestimonialsSection() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <Card className="card-hover h-full rounded-2xl border-transparent bg-card shadow-sm">
+              <Card className="card-hover h-full rounded-lg border bg-card shadow-soft">
                 <CardContent className="p-6">
                   <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
                     <Quote className="h-5 w-5 text-primary" />
@@ -63,7 +63,7 @@ export function TestimonialsSection() {
                   <div className="flex items-center gap-3">
                     <Avatar className="ring-2 ring-primary/10">
                       <AvatarImage src={testimonial.image} />
-                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white">
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-600 text-white">
                         {getInitials(testimonial.name)}
                       </AvatarFallback>
                     </Avatar>

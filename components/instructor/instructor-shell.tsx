@@ -1,96 +1,84 @@
 "use client"
 
-import { usePathname } from "next/navigation"
-import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { cn } from "@/lib/utils"
-import { DashboardMobileNav } from "@/components/layout/dashboard-mobile-nav"
 import {
   LayoutDashboard,
   BookOpen,
+  PlusCircle,
   Video,
   Users,
+  UsersRound,
+  Trophy,
+  MessageCircleQuestion,
   DollarSign,
   BarChart3,
   Settings,
   MessageSquare,
   Star,
   Wallet,
+  BadgeDollarSign,
+  Presentation,
 } from "lucide-react"
+import { DashboardShell, type DashboardNavSection } from "@/components/layout/dashboard-shell"
 
-const sidebarLinks = [
-  { title: "overview", href: "/instructor", icon: LayoutDashboard },
-  { title: "myCourses", href: "/instructor/courses", icon: BookOpen },
-  { title: "createCourse", href: "/instructor/courses/create", icon: Video },
-  { title: "liveClasses", href: "/instructor/live", icon: Video },
-  { title: "students", href: "/instructor/students", icon: Users },
-  { title: "reviews", href: "/instructor/reviews", icon: Star },
-  { title: "earnings", href: "/instructor/earnings", icon: DollarSign },
-  { title: "withdrawals", href: "/instructor/withdrawals", icon: Wallet },
-  { title: "analytics", href: "/instructor/analytics", icon: BarChart3 },
-  { title: "messages", href: "/instructor/messages", icon: MessageSquare },
-  { title: "settings", href: "/instructor/settings", icon: Settings },
-]
-
+/** Teacher dashboard chrome: sectioned sidebar (desktop) + tab bar (mobile). */
 export function InstructorShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations("instructor")
-  const pathname = usePathname()
+  const n = useTranslations("nav.dashboard")
 
-  const isActive = (href: string) => {
-    if (href === "/instructor") {
-      return pathname === "/instructor"
-    }
-    return pathname?.startsWith(href) ?? false
-  }
+  const sections: DashboardNavSection[] = [
+    {
+      id: "general",
+      items: [
+        { href: "/instructor", label: t("overview"), icon: LayoutDashboard, exact: true },
+        { href: "/instructor/analytics", label: t("analytics"), icon: BarChart3 },
+      ],
+    },
+    {
+      id: "teaching",
+      label: n("sections.teaching"),
+      items: [
+        { href: "/instructor/courses", label: t("myCourses"), icon: BookOpen },
+        { href: "/instructor/courses/create", label: t("createCourse"), icon: PlusCircle },
+        { href: "/instructor/live", label: t("liveClasses"), icon: Video },
+      ],
+    },
+    {
+      id: "students",
+      label: n("sections.students"),
+      items: [
+        { href: "/instructor/students", label: t("students"), icon: Users },
+        { href: "/instructor/groups", label: n("groups"), icon: UsersRound },
+        { href: "/instructor/results", label: n("results"), icon: Trophy },
+        { href: "/instructor/questions", label: n("questions"), icon: MessageCircleQuestion },
+        { href: "/instructor/reviews", label: t("reviews"), icon: Star },
+        { href: "/instructor/messages", label: t("messages"), icon: MessageSquare },
+      ],
+    },
+    {
+      id: "money",
+      label: n("sections.money"),
+      items: [
+        { href: "/instructor/subscribers", label: n("subscribers"), icon: BadgeDollarSign },
+        { href: "/instructor/earnings", label: t("earnings"), icon: DollarSign },
+        { href: "/instructor/withdrawals", label: t("withdrawals"), icon: Wallet },
+      ],
+    },
+    {
+      id: "account",
+      label: n("sections.account"),
+      items: [{ href: "/instructor/settings", label: t("settings"), icon: Settings }],
+    },
+  ]
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="flex flex-col lg:flex-row">
-        {/* Section tabs (mobile) */}
-        <DashboardMobileNav
-          label={t("instructorPanel")}
-          links={sidebarLinks.map((link) => ({
-            href: link.href,
-            label: t(link.title),
-            icon: link.icon,
-            active: isActive(link.href),
-          }))}
-        />
-
-        {/* Sidebar */}
-        <aside className="hidden lg:flex flex-col w-64 border-l bg-background min-h-[calc(100vh-4rem)] sticky top-16">
-          <div className="p-6 border-b">
-            <h2 className="text-lg font-semibold">{t("instructorPanel")}</h2>
-          </div>
-          <nav className="flex-1 px-4 py-4 overflow-y-auto">
-            <ul className="space-y-1">
-              {sidebarLinks.map((link) => {
-                const Icon = link.icon
-                const active = isActive(link.href)
-                return (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200",
-                        active
-                          ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      )}
-                    >
-                      <Icon className="h-5 w-5" />
-                      <span>{t(link.title)}</span>
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6">{children}</main>
-      </div>
-    </div>
+    <DashboardShell
+      title={t("instructorPanel")}
+      subtitle={n("instructorSubtitle")}
+      icon={Presentation}
+      sections={sections}
+    >
+      {children}
+    </DashboardShell>
   )
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Request withdrawal
@@ -109,6 +110,15 @@ export async function POST(request: Request) {
         message: `Instructor ${session.user.name} requested a withdrawal of $${amount}`,
         link: `/admin/withdrawals/${withdrawal.id}`,
       })),
+    })
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "withdrawal.requested",
+      entityType: "withdrawal",
+      entityId: withdrawal.id,
+      summary: `Requested withdrawal of ${amount}`,
     })
 
     return NextResponse.json(withdrawal, { status: 201 })

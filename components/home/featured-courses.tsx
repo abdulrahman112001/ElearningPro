@@ -105,12 +105,12 @@ export function FeaturedCourses() {
               viewport={{ once: true }}
             >
               <Link href={`/course/${course.slug}`}>
-                <Card className="h-full overflow-hidden card-hover group rounded-2xl border-2 hover:border-primary/40">
+                <Card className="h-full overflow-hidden card-hover group rounded-lg hover:border-primary/30">
                   <CardHeader className="p-0">
                     <div className="relative aspect-video bg-muted">
                       {/* Course thumbnail placeholder */}
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 shadow-md">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 shadow-md">
                           <course.icon className="h-8 w-8 text-white" strokeWidth={1.75} />
                         </div>
                       </div>

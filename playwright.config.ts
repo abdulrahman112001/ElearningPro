@@ -57,6 +57,8 @@ export default defineConfig({
       TAP_SECRET_KEY: "dummy",
       LIVEKIT_API_SECRET: "dummy_qa_secret_dummy_qa_secret",
       TRUST_PROXY: "true",
+      // Emails are only logged, never sent, during tests.
+      EMAIL_TRANSPORT: "log",
     },
   },
 })

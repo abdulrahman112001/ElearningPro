@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getActiveTeacherSubscription, isInClassGroup } from "@/lib/access";
+import { logActivity } from "@/lib/activity";
 
 // POST - Enroll in a course
 export async function POST(
@@ -42,23 +44,64 @@ export async function POST(
       },
     });
 
-    if (existingEnrollment) {
+    if (existingEnrollment && !existingEnrollment.viaSubscription) {
       return NextResponse.json(
         { error: "Already enrolled" },
         { status: 400 }
       );
     }
 
+    // Courses attached to a teacher's class group are for its members only.
+    if (!(await isInClassGroup(session.user.id, course.classGroupId))) {
+      return NextResponse.json(
+        { error: "This course is only available to the teacher's group members", code: "group_only" },
+        { status: 403 }
+      );
+    }
+
     // For free courses, enroll directly
     if (course.price === 0 || (course.discountPrice !== null && course.discountPrice === 0)) {
-      const enrollment = await db.enrollment.create({
-        data: {
+      const enrollment = await db.enrollment.upsert({
+        where: { userId_courseId: { userId: session.user.id, courseId: params.courseId } },
+        update: { viaSubscription: false },
+        create: {
           userId: session.user.id,
           courseId: params.courseId,
         },
       });
 
+      await logActivity({
+        actorId: session.user.id,
+        actorRole: session.user.role,
+        action: "enrollment.created",
+        entityType: "course",
+        entityId: course.id,
+        summary: `Enrolled in free course "${course.titleEn}"`,
+      });
+
       return NextResponse.json(enrollment, { status: 201 });
+    }
+
+    // Paid course covered by an active subscription to its teacher
+    const subscription = await getActiveTeacherSubscription(session.user.id, course.instructorId);
+    if (subscription) {
+      const enrollment = await db.enrollment.upsert({
+        where: { userId_courseId: { userId: session.user.id, courseId: params.courseId } },
+        update: {},
+        create: { userId: session.user.id, courseId: params.courseId, viaSubscription: true },
+      });
+
+      await logActivity({
+        actorId: session.user.id,
+        actorRole: session.user.role,
+        action: "enrollment.created",
+        entityType: "course",
+        entityId: course.id,
+        summary: `Enrolled via teacher subscription in "${course.titleEn}"`,
+        metadata: { subscriptionId: subscription.id },
+      });
+
+      return NextResponse.json({ ...enrollment, via: "subscription" }, { status: 201 });
     }
 
     // For paid courses, require payment

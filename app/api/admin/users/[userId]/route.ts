@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get user details
@@ -117,6 +118,27 @@ export async function PATCH(
         ...(typeof isVerified === "boolean" && { isVerified }),
       },
     })
+
+    if (typeof isBlocked === "boolean") {
+      await logActivity({
+        actorId: session.user.id,
+        actorRole: session.user.role,
+        action: isBlocked ? "user.blocked" : "user.unblocked",
+        entityType: "user",
+        entityId: user.id,
+        summary: `${isBlocked ? "Blocked" : "Unblocked"} ${user.email}`,
+      })
+    }
+    if (role) {
+      await logActivity({
+        actorId: session.user.id,
+        actorRole: session.user.role,
+        action: "user.role_changed",
+        entityType: "user",
+        entityId: user.id,
+        summary: `Changed role of ${user.email} to ${role}`,
+      })
+    }
 
     return NextResponse.json(user)
   } catch (error) {

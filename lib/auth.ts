@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { UserRole } from "@prisma/client"
 import { isLocked, recordFailure, resetLimit } from "@/lib/rate-limit"
+import { logActivity } from "@/lib/activity"
 
 // Brute-force protection: 10 failed passwords per account per 15 minutes.
 const LOGIN_SCOPE = "login-failures"
@@ -90,6 +91,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (user.isBlocked) {
           throw new AccountBlocked()
         }
+
+        await logActivity({
+          actorId: user.id,
+          actorRole: user.role,
+          action: "user.login",
+          entityType: "user",
+          entityId: user.id,
+          summary: `${user.email} signed in`,
+        })
 
         return {
           id: user.id,

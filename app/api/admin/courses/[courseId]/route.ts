@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Review course (Admin only)
@@ -89,6 +90,17 @@ export async function PATCH(
           message: notificationMessage,
           link: `/instructor/courses/${course.id}`,
         },
+      })
+    }
+
+    if (action === "approve" || action === "reject") {
+      await logActivity({
+        actorId: session.user.id,
+        actorRole: session.user.role,
+        action: action === "approve" ? "course.approved" : "course.rejected",
+        entityType: "course",
+        entityId: course.id,
+        summary: `${action === "approve" ? "Approved" : "Rejected"} "${course.titleEn}"${reason ? `: ${reason}` : ""}`,
       })
     }
 

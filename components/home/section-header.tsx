@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface SectionHeaderAction {
@@ -39,7 +39,7 @@ export function SectionHeader({
     >
       <div className={isCenter ? "max-w-2xl" : ""}>
         {eyebrow && <span className="eyebrow mb-3">{eyebrow}</span>}
-        <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
+        <h2 className="mt-3 text-balance text-2xl font-bold leading-snug sm:text-3xl md:text-4xl">
           {title}
         </h2>
         {subtitle && (
@@ -48,10 +48,10 @@ export function SectionHeader({
       </div>
 
       {action && !isCenter && (
-        <Button variant="outline" className="border-2" asChild>
+        <Button variant="outline" asChild>
           <Link href={action.href}>
             {action.label}
-            <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+            <ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
         </Button>
       )}

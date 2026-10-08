@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { logActivity } from "@/lib/activity";
 import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit";
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
@@ -87,6 +88,15 @@ export async function POST(request: Request) {
           instructorProfile: { create: { isApproved: false } },
         }),
       },
+    });
+
+    await logActivity({
+      actorId: user.id,
+      actorRole: user.role,
+      action: "user.registered",
+      entityType: "user",
+      entityId: user.id,
+      summary: `${user.name} registered as ${user.role}`,
     });
 
     // Remove password from response

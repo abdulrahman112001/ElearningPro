@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { getCourseAccess } from "@/lib/access"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Get quiz for a lesson
@@ -42,6 +43,7 @@ export async function GET(
                   select: {
                     id: true,
                     instructorId: true,
+                    classGroupId: true,
                   },
                 },
               },
@@ -62,16 +64,9 @@ export async function GET(
 
     // If not instructor/admin, check enrollment
     if (!isInstructor && !isAdmin) {
-      const enrollment = await db.enrollment.findUnique({
-        where: {
-          userId_courseId: {
-            userId: session.user.id,
-            courseId: quiz.lesson.chapter.course.id,
-          },
-        },
-      })
+      const access = await getCourseAccess(session.user, quiz.lesson.chapter.course)
 
-      if (!enrollment) {
+      if (!access.allowed) {
         return NextResponse.json({ error: "Not enrolled" }, { status: 403 })
       }
 

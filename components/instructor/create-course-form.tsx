@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast from "react-hot-toast";
-import { Loader2 } from "lucide-react";
+import { GraduationCap, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +33,9 @@ const makeCourseSchema = (t: (key: string) => string) =>
 
 type CourseFormData = z.infer<ReturnType<typeof makeCourseSchema>>;
 
+// Radix Select cannot hold an empty value, so "no grade / no group" uses a sentinel.
+const NONE = "__none__";
+
 interface CreateCoursePageProps {
   categories: { id: string; nameEn: string; nameAr?: string | null }[];
 }
@@ -44,6 +47,22 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
   const router = useRouter();
   const courseSchema = useMemo(() => makeCourseSchema(tc), [tc]);
   const [isLoading, setIsLoading] = useState(false);
+  const ta = useTranslations("courseAudience");
+  const [grades, setGrades] = useState<{ id: string; nameAr: string; nameEn: string }[]>([]);
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
+  const [gradeLevelId, setGradeLevelId] = useState(NONE);
+  const [classGroupId, setClassGroupId] = useState(NONE);
+
+  useEffect(() => {
+    fetch("/api/grade-levels")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setGrades)
+      .catch(() => setGrades([]));
+    fetch("/api/instructor/groups")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setGroups)
+      .catch(() => setGroups([]));
+  }, []);
 
   const {
     register,
@@ -60,7 +79,11 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
       const response = await fetch("/api/instructor/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          gradeLevelId: gradeLevelId === NONE ? null : gradeLevelId,
+          classGroupId: classGroupId === NONE ? null : classGroupId,
+        }),
       });
 
       if (!response.ok) throw new Error();
@@ -179,6 +202,55 @@ export function CreateCourseForm({ categories }: CreateCoursePageProps) {
               {errors.language && (
                 <p className="text-sm text-destructive">{errors.language.message}</p>
               )}
+            </div>
+
+            {/* Audience */}
+            <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+              <div>
+                <p className="text-sm font-semibold">{ta("sectionTitle")}</p>
+                <p className="text-xs text-muted-foreground">{ta("sectionHint")}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  {ta("gradeLabel")}
+                </Label>
+                <Select value={gradeLevelId} onValueChange={setGradeLevelId} disabled={isLoading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={ta("selectGrade")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{ta("allGrades")}</SelectItem>
+                    {grades.map((g) => (
+                      <SelectItem key={g.id} value={g.id}>
+                        {locale === "ar" ? g.nameAr || g.nameEn : g.nameEn || g.nameAr}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  {ta("groupLabel")}
+                </Label>
+                <Select value={classGroupId} onValueChange={setClassGroupId} disabled={isLoading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={ta("selectGroup")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{ta("noGroup")}</SelectItem>
+                    {groups.map((g) => (
+                      <SelectItem key={g.id} value={g.id}>
+                        {g.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {classGroupId === NONE ? ta("groupHintOpen") : ta("groupHintLocked")}
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-4">

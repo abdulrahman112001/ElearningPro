@@ -40,7 +40,7 @@ export function CategoriesSection() {
             >
               <Link
                 href={`/courses?category=${category.slug}`}
-                className="card-hover group flex items-center gap-4 rounded-2xl border-2 bg-card p-5 transition-colors hover:border-primary/40"
+                className="card-hover group flex items-center gap-4 rounded-lg border bg-card shadow-soft p-5 transition-colors hover:border-primary/40"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-2xl transition-colors group-hover:bg-primary/12">
                   {category.icon}

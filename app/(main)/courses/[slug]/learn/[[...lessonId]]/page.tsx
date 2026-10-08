@@ -2,10 +2,12 @@ import { notFound, redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { getCourseAccess } from "@/lib/access"
 import { VideoPlayer } from "@/components/learn/course-video-player"
 import { CourseSidebar } from "@/components/learn/course-sidebar"
 import { CourseContent } from "@/components/learn/course-content"
 import { CourseNavigation } from "@/components/learn/course-navigation"
+import { LessonQuestions } from "@/components/learn/lesson-questions"
 
 interface LearnPageProps {
   params: {
@@ -53,17 +55,9 @@ export default async function LearnPage({ params }: LearnPageProps) {
     notFound()
   }
 
-  // Check enrollment
-  const enrollment = await db.enrollment.findUnique({
-    where: {
-      userId_courseId: {
-        userId: session.user.id,
-        courseId: course.id,
-      },
-    },
-  })
-
-  if (!enrollment && course.instructorId !== session.user.id) {
+  // Enrollment, teacher subscription, owner or admin
+  const access = await getCourseAccess(session.user, course)
+  if (!access.allowed) {
     redirect(`/courses/${params.slug}`)
   }
 
@@ -163,6 +157,18 @@ export default async function LearnPage({ params }: LearnPageProps) {
               courseSlug={params.slug}
               previousLesson={previousLesson}
               nextLesson={nextLesson}
+            />
+
+            {/* Lesson Q&A: students ask, the teacher answers */}
+            <LessonQuestions
+              key={currentLesson.id}
+              lessonId={currentLesson.id}
+              currentUser={{
+                id: session.user.id,
+                name: session.user.name,
+                image: session.user.image,
+              }}
+              isInstructor={course.instructorId === session.user.id}
             />
           </div>
         </div>

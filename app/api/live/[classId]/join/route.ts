@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { getCourseAccess } from "@/lib/access"
 import { generateToken } from "@/lib/livekit"
 
 // Join live class (students)
@@ -39,20 +40,17 @@ export async function POST(
 
     // Check if user is enrolled in the course (if course-specific)
     if (liveClass.courseId) {
-      const enrollment = await db.enrollment.findUnique({
-        where: {
-          userId_courseId: {
-            userId: session.user.id,
-            courseId: liveClass.courseId,
-          },
-        },
+      const liveCourse = await db.course.findUnique({
+        where: { id: liveClass.courseId },
+        select: { id: true, instructorId: true, classGroupId: true },
       })
-
-      // Allow instructor and admin
+      // Enrolled, subscribed to the teacher, host or admin
+      const access = liveCourse
+        ? await getCourseAccess(session.user, liveCourse)
+        : { allowed: false as const }
       const isInstructor = liveClass.instructorId === session.user.id
-      const isAdmin = session.user.role === "ADMIN"
 
-      if (!enrollment && !isInstructor && !isAdmin) {
+      if (!access.allowed && !isInstructor) {
         return NextResponse.json(
           { error: "You must be enrolled in this course" },
           { status: 403 }

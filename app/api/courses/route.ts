@@ -26,6 +26,12 @@ export async function GET(request: Request) {
       where.categoryId = category
     }
 
+    // ?grade=<gradeLevelId> : courses for one academic grade
+    const grade = searchParams.get("grade")
+    if (grade) {
+      where.gradeLevelId = grade
+    }
+
     if (level) {
       if (!["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"].includes(level)) {
         return NextResponse.json({ error: "Invalid level" }, { status: 400 })

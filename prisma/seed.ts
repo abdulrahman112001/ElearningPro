@@ -61,9 +61,37 @@ async function main() {
     await prisma.instructorProfile.upsert({
       where: { userId: instructor.id },
       update: {},
-      create: { userId: instructor.id, isApproved: true, approvedAt: new Date() },
+      create: {
+        userId: instructor.id,
+        isApproved: true,
+        approvedAt: new Date(),
+        subscriptionEnabled: true,
+        monthlyPrice: 150,
+      },
     })
   }
+
+  // Academic grades (Egyptian school system), managed later from the admin panel
+  const grades: { nameAr: string; nameEn: string; stage: string }[] = [
+    { nameAr: "الصف الأول الابتدائي", nameEn: "Grade 1 (Primary)", stage: "primary" },
+    { nameAr: "الصف الثاني الابتدائي", nameEn: "Grade 2 (Primary)", stage: "primary" },
+    { nameAr: "الصف الثالث الابتدائي", nameEn: "Grade 3 (Primary)", stage: "primary" },
+    { nameAr: "الصف الرابع الابتدائي", nameEn: "Grade 4 (Primary)", stage: "primary" },
+    { nameAr: "الصف الخامس الابتدائي", nameEn: "Grade 5 (Primary)", stage: "primary" },
+    { nameAr: "الصف السادس الابتدائي", nameEn: "Grade 6 (Primary)", stage: "primary" },
+    { nameAr: "الصف الأول الإعدادي", nameEn: "Grade 7 (Preparatory 1)", stage: "preparatory" },
+    { nameAr: "الصف الثاني الإعدادي", nameEn: "Grade 8 (Preparatory 2)", stage: "preparatory" },
+    { nameAr: "الصف الثالث الإعدادي", nameEn: "Grade 9 (Preparatory 3)", stage: "preparatory" },
+    { nameAr: "الصف الأول الثانوي", nameEn: "Grade 10 (Secondary 1)", stage: "secondary" },
+    { nameAr: "الصف الثاني الثانوي", nameEn: "Grade 11 (Secondary 2)", stage: "secondary" },
+    { nameAr: "الصف الثالث الثانوي", nameEn: "Grade 12 (Secondary 3)", stage: "secondary" },
+  ]
+  if ((await prisma.gradeLevel.count()) === 0) {
+    await prisma.gradeLevel.createMany({
+      data: grades.map((g, i) => ({ ...g, position: i + 1 })),
+    })
+  }
+  console.log("✅ Grade levels created")
 
   console.log("✅ Instructor users created")
 

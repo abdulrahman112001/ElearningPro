@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
+import { resolveCourseAudience } from "@/lib/course-audience"
 
 // Update course
 export async function PATCH(
@@ -60,6 +61,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Discount price cannot exceed the price" }, { status: 400 })
     }
 
+    const audience = await resolveCourseAudience(session.user.id, {
+      gradeLevelId: body.gradeLevelId,
+      classGroupId: body.classGroupId,
+    })
+
     const toList = (v: unknown) => (Array.isArray(v) ? v : v ? [v] : [])
 
     const updatedCourse = await db.course.update({
@@ -83,6 +89,7 @@ export async function PATCH(
         // targetAudience is not in schema, skip it
         thumbnail,
         promoVideo: previewVideo,
+        ...audience,
       },
     })
 

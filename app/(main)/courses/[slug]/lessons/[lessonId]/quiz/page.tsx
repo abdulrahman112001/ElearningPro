@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { getCourseAccess } from "@/lib/access"
 import { QuizClient } from "@/components/quiz/quiz-client"
 
 interface QuizPageProps {
@@ -38,24 +39,15 @@ export default async function QuizPage({ params }: QuizPageProps) {
   // Get course and lesson
   const course = await db.course.findUnique({
     where: { slug: params.slug },
-    select: { id: true, titleEn: true, titleAr: true },
+    select: { id: true, titleEn: true, titleAr: true, instructorId: true, classGroupId: true },
   })
 
   if (!course) {
     notFound()
   }
 
-  // Check enrollment
-  const enrollment = await db.enrollment.findUnique({
-    where: {
-      userId_courseId: {
-        userId: session.user.id,
-        courseId: course.id,
-      },
-    },
-  })
-
-  if (!enrollment) {
+  const access = await getCourseAccess(session.user, course)
+  if (!access.allowed) {
     redirect(`/courses/${params.slug}`)
   }
 

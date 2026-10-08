@@ -6,7 +6,38 @@ interface EmailOptions {
   html: string;
 }
 
+/**
+ * Sends an email through the first configured transport:
+ *   1. EMAIL_TRANSPORT=log   -> only logs (tests / local development)
+ *   2. RESEND_API_KEY        -> Resend (from: EMAIL_FROM)
+ *   3. SMTP_HOST + SMTP_USER -> SMTP via nodemailer
+ * Throws when none is configured, so callers can record a failed delivery.
+ */
 export async function sendEmail({ to, subject, html }: EmailOptions) {
+  if (process.env.EMAIL_TRANSPORT === "log") {
+    console.log(`[email:log] to=${to} subject=${subject}`);
+    return;
+  }
+
+  if (process.env.RESEND_API_KEY) {
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({
+      // Must be an address on a domain verified in Resend. The default only
+      // delivers to the Resend account owner's own inbox.
+      from: process.env.EMAIL_FROM || "E-Learn <onboarding@resend.dev>",
+      to,
+      subject,
+      html,
+    });
+    if (error) throw new Error(`Resend: ${error.message}`);
+    return;
+  }
+
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    throw new Error("Email is not configured: set RESEND_API_KEY or SMTP_HOST/SMTP_USER");
+  }
+
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: parseInt(process.env.SMTP_PORT || "587"),

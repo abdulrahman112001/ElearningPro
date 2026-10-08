@@ -46,13 +46,13 @@ export function TopInstructors() {
               viewport={{ once: true }}
             >
               <Link href={`/instructors/${instructor.id}`}>
-                <Card className="text-center card-hover group rounded-2xl border-2 hover:border-primary/40">
+                <Card className="text-center card-hover group rounded-lg hover:border-primary/30">
                   <CardContent className="p-6">
                     <div className="relative mx-auto mb-4 h-24 w-24">
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 opacity-0 blur-md transition-opacity group-hover:opacity-40" />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 opacity-0 blur-md transition-opacity group-hover:opacity-40" />
                       <Avatar className="relative h-24 w-24 ring-4 ring-primary/10">
                         <AvatarImage src={instructor.image} />
-                        <AvatarFallback className="text-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white">
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white">
                           {getInitials(instructor.name)}
                         </AvatarFallback>
                       </Avatar>

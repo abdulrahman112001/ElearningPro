@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { logActivity } from "@/lib/activity"
 import {
   computeCertificateGrade,
   generateCertificateNumber,
@@ -104,6 +105,15 @@ export async function POST(
         message: `Congratulations! You've earned a certificate for completing "${courseTitle}"`,
         link: `/certificates/${certificate.id}`,
       },
+    })
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "certificate.issued",
+      entityType: "certificate",
+      entityId: certificate.id,
+      summary: `Certificate ${certificate.certificateNo} for "${enrollment.course.titleEn}"`,
     })
 
     return NextResponse.json(certificate, { status: 201 })

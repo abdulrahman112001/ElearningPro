@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { useTranslations } from "next-intl"
 import { getTranslations } from "next-intl/server"
 import { db } from "@/lib/db"
+import { auth } from "@/lib/auth"
 import { CoursesGrid } from "@/components/courses/courses-grid"
 import { CoursesFilter } from "@/components/courses/courses-filter"
 import { CoursesSidebar } from "@/components/courses/courses-sidebar"
@@ -10,6 +11,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 interface CoursesPageProps {
   searchParams: {
     category?: string
+    grade?: string
     level?: string
     price?: string
     rating?: string
@@ -40,8 +42,30 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
     where.categoryId = searchParams.category
   }
 
-  if (searchParams.level) {
+  // ?grade=<gradeLevelId>: courses for one academic grade
+  if (searchParams.grade) {
+    where.gradeLevelId = searchParams.grade
+  }
+
+  if (
+    searchParams.level &&
+    ["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"].includes(searchParams.level)
+  ) {
     where.level = searchParams.level
+  }
+
+  const minRating = parseFloat(searchParams.rating || "")
+  if (!Number.isNaN(minRating) && minRating > 0) {
+    where.averageRating = { gte: minRating }
+  }
+
+  // totalDuration is stored in minutes
+  if (searchParams.duration === "short") {
+    where.totalDuration = { lte: 120 }
+  } else if (searchParams.duration === "medium") {
+    where.totalDuration = { gt: 120, lte: 600 }
+  } else if (searchParams.duration === "long") {
+    where.totalDuration = { gt: 600 }
   }
 
   if (searchParams.price) {
@@ -54,8 +78,10 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
 
   if (searchParams.search) {
     where.OR = [
-      { title: { contains: searchParams.search, mode: "insensitive" } },
-      { description: { contains: searchParams.search, mode: "insensitive" } },
+      { titleEn: { contains: searchParams.search, mode: "insensitive" } },
+      { titleAr: { contains: searchParams.search, mode: "insensitive" } },
+      { descriptionEn: { contains: searchParams.search, mode: "insensitive" } },
+      { descriptionAr: { contains: searchParams.search, mode: "insensitive" } },
     ]
   }
 
@@ -81,12 +107,21 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
   }
 
   // Pagination
-  const page = parseInt(searchParams.page || "1")
+  const page = Math.max(1, parseInt(searchParams.page || "1") || 1)
   const limit = 12
   const skip = (page - 1) * limit
 
-  // Fetch courses and categories
-  const [courses, totalCourses, categories] = await Promise.all([
+  // The signed-in student's own grade, highlighted in the grade selector
+  const session = await auth()
+  const me = session?.user?.id
+    ? await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { gradeLevelId: true },
+      })
+    : null
+
+  // Fetch courses, categories and grades
+  const [courses, totalCourses, categories, grades] = await Promise.all([
     db.course.findMany({
       where,
       orderBy,
@@ -131,6 +166,11 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
       },
       orderBy: { nameEn: "asc" },
     }),
+    db.gradeLevel.findMany({
+      where: { isActive: true },
+      orderBy: [{ position: "asc" }, { nameEn: "asc" }],
+      select: { id: true, nameAr: true, nameEn: true },
+    }),
   ])
 
   const totalPages = Math.ceil(totalCourses / limit)
@@ -151,7 +191,11 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
       </div>
 
       {/* Filters Bar */}
-      <CoursesFilter totalCourses={totalCourses} />
+      <CoursesFilter
+        totalCourses={totalCourses}
+        grades={grades}
+        myGradeId={me?.gradeLevelId ?? null}
+      />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">

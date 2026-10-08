@@ -1,25 +1,33 @@
-import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import Link from "next/link"
 import {
-  Users,
+  Activity,
   BookOpen,
-  DollarSign,
-  TrendingUp,
-  ArrowUp,
-  ArrowDown,
+  CheckCircle2,
   ChevronLeft,
-  Eye,
-  CheckCircle,
-  XCircle,
   Clock,
+  DollarSign,
+  Eye,
+  GraduationCap,
+  MessagesSquare,
+  UserPlus,
+  Users,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  AvatarName,
+  EmptyState,
+  PageHeader,
+  SectionCard,
+  StatCard,
+  StatusBadge,
+} from "@/components/shared"
 import { PendingReviewActions } from "@/components/admin/pending-review-actions"
+import { ActivityList } from "@/components/admin/activity-feed"
+import { ConversationRow } from "@/components/admin/conversations-list"
+import { ROLE_TONES, adminUserHref } from "@/components/admin/activity-meta"
+import { formatPrice } from "@/lib/utils"
 
 export async function generateMetadata() {
   const t = await getTranslations("admin")
@@ -28,8 +36,32 @@ export async function generateMetadata() {
   }
 }
 
+type ConversationRowSql = {
+  user_a: string
+  user_b: string
+  message_count: number
+  last_at: Date
+  last_content: string | null
+}
+
+function ViewAllLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Button variant="ghost" size="sm" asChild>
+      <Link href={href}>
+        {label}
+        <ChevronLeft className="h-4 w-4 ltr:rotate-180" aria-hidden="true" />
+      </Link>
+    </Button>
+  )
+}
+
 export default async function AdminDashboard() {
   const t = await getTranslations("admin")
+  const td = await getTranslations("adminDashboard")
+  const locale = await getLocale()
+  const nf = new Intl.NumberFormat(locale === "en" ? "en-US" : "ar-EG")
+  const dateFmt = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ar-EG", { dateStyle: "medium" })
+  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
   // Fetch admin stats
   const [
@@ -45,6 +77,9 @@ export default async function AdminDashboard() {
     recentUsers,
     recentCourses,
     pendingInstructors,
+    recentActivity,
+    activity24h,
+    conversationRows,
   ] = await Promise.all([
     db.user.count(),
     db.user.count({ where: { role: "INSTRUCTOR" } }),
@@ -105,247 +140,297 @@ export default async function AdminDashboard() {
         createdAt: true,
       },
     }),
+    db.activityLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: { actor: { select: { id: true, name: true, email: true, image: true, role: true } } },
+    }),
+    db.activityLog.count({ where: { createdAt: { gte: since24h } } }),
+    db.$queryRaw<ConversationRowSql[]>`
+      SELECT LEAST("fromUserId", "toUserId") AS user_a,
+             GREATEST("fromUserId", "toUserId") AS user_b,
+             COUNT(*)::int AS message_count,
+             MAX("createdAt") AS last_at,
+             (ARRAY_AGG("content" ORDER BY "createdAt" DESC))[1] AS last_content
+      FROM "Message"
+      GROUP BY 1, 2
+      ORDER BY last_at DESC
+      LIMIT 5`,
   ])
 
+  const conversationUserIds = Array.from(
+    new Set(conversationRows.flatMap((r) => [r.user_a, r.user_b]))
+  )
+  const conversationUsers = conversationUserIds.length
+    ? await db.user.findMany({
+        where: { id: { in: conversationUserIds } },
+        select: { id: true, name: true, email: true, image: true, role: true },
+      })
+    : []
+  const usersById = new Map(conversationUsers.map((u) => [u.id, u]))
+  const recentConversations = conversationRows
+    .map((r) => ({
+      participants: [usersById.get(r.user_a), usersById.get(r.user_b)].filter(
+        (u): u is NonNullable<typeof u> => Boolean(u)
+      ),
+      messageCount: r.message_count,
+      lastMessageAt: new Date(r.last_at).toISOString(),
+      lastMessage: r.last_content?.slice(0, 160) ?? "",
+    }))
+    .filter((c) => c.participants.length === 2)
+
+  const activityItems = recentActivity.map((a) => ({
+    id: a.id,
+    action: a.action,
+    actorRole: a.actorRole,
+    summary: a.summary,
+    entityType: a.entityType,
+    entityId: a.entityId,
+    createdAt: a.createdAt.toISOString(),
+    actor: a.actor,
+  }))
+
+  const pendingTotal = pendingCourses + pendingWithdrawals + pendingInstructors.length
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">{t("dashboard")}</h1>
-        <p className="text-muted-foreground mt-1">{t("dashboardSubtitle")}</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("totalUsers")}
-            </CardTitle>
-            <Users className="h-5 w-5 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{totalUsers.toLocaleString()}</p>
-            <div className="flex items-center gap-2 mt-1 text-xs">
-              <span className="text-muted-foreground">
-                {totalInstructors} {t("instructors")} • {totalStudents}{" "}
-                {t("students")}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("totalCourses")}
-            </CardTitle>
-            <BookOpen className="h-5 w-5 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{totalCourses}</p>
-            <div className="flex items-center gap-2 mt-1 text-xs">
-              <span className="text-muted-foreground">
-                {publishedCourses} {t("published")}
-              </span>
-              {pendingCourses > 0 && (
-                <Badge variant="warning" className="text-xs">
-                  {pendingCourses} {t("pending")}
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("totalRevenue")}
-            </CardTitle>
-            <DollarSign className="h-5 w-5 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">
-              {(totalRevenue._sum.amount || 0).toLocaleString()} ج.م
-            </p>
-            <div className="flex items-center gap-1 mt-1 text-xs text-green-600">
-              <ArrowUp className="h-3 w-3" />
-              <span>
-                {(monthlyRevenue._sum.amount || 0).toLocaleString()}{" "}
-                {t("thisMonth")}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("pendingActions")}
-            </CardTitle>
-            <Clock className="h-5 w-5 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">
-              {pendingCourses + pendingWithdrawals + pendingInstructors.length}
-            </p>
-            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-              <span>
-                {pendingCourses} {t("courses")}
-              </span>
-              <span>•</span>
-              <span>
-                {pendingWithdrawals} {t("withdrawals")}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pending Courses */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t("pendingCourses")}</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/admin/courses?status=PENDING">
-                {t("viewAll")}
-                <ChevronLeft className="h-4 w-4 me-1" />
+    <div className="space-y-6 sm:space-y-8">
+      <PageHeader
+        title={t("dashboard")}
+        description={t("dashboardSubtitle")}
+        className="mb-0 sm:mb-0"
+        actions={
+          <>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/admin/conversations">
+                <MessagesSquare className="h-4 w-4" aria-hidden="true" />
+                {td("conversationsShortcut")}
               </Link>
             </Button>
-          </CardHeader>
-          <CardContent>
-            {recentCourses.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
-                <p>{t("noPendingCourses")}</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">
-                        {course.titleAr || course.titleEn}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {course.instructor.name}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <PendingReviewActions kind="course" id={course.id} />
-                      <Button size="icon" variant="ghost" asChild>
-                        <Link href={`/admin/courses/${course.id}`} aria-label={t("review")}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
+            <Button size="sm" asChild>
+              <Link href="/admin/activity">
+                <Activity className="h-4 w-4" aria-hidden="true" />
+                {td("activityShortcut")}
+              </Link>
+            </Button>
+          </>
+        }
+      />
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatCard
+          label={t("totalUsers")}
+          value={nf.format(totalUsers)}
+          icon={Users}
+          tone="info"
+          hint={td("usersBreakdown", {
+            instructors: nf.format(totalInstructors),
+            students: nf.format(totalStudents),
+          })}
+        />
+        <StatCard
+          label={t("totalCourses")}
+          value={nf.format(totalCourses)}
+          icon={BookOpen}
+          tone="primary"
+          hint={td("coursesBreakdown", {
+            published: nf.format(publishedCourses),
+            pending: nf.format(pendingCourses),
+          })}
+        />
+        <StatCard
+          label={t("totalRevenue")}
+          value={formatPrice(totalRevenue._sum.amount || 0, "EGP", locale)}
+          icon={DollarSign}
+          tone="success"
+          hint={td("revenueThisMonth", {
+            amount: formatPrice(monthlyRevenue._sum.amount || 0, "EGP", locale),
+          })}
+        />
+        <StatCard
+          label={t("pendingActions")}
+          value={nf.format(pendingTotal)}
+          icon={Clock}
+          tone="warning"
+          hint={td("pendingBreakdown", {
+            courses: nf.format(pendingCourses),
+            withdrawals: nf.format(pendingWithdrawals),
+            instructors: nf.format(pendingInstructors.length),
+          })}
+        />
+      </div>
+
+      {/* Oversight: activity + conversations */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
+        <SectionCard
+          className="xl:col-span-3"
+          title={td("recentActivity")}
+          description={td("recentActivityDescription", { count: nf.format(activity24h) })}
+          icon={Activity}
+          action={<ViewAllLink href="/admin/activity" label={t("viewAll")} />}
+          contentClassName="px-4 py-1 sm:px-6"
+        >
+          {activityItems.length === 0 ? (
+            <EmptyState
+              variant="plain"
+              size="sm"
+              icon={Activity}
+              title={td("noActivity")}
+              description={td("noActivityHint")}
+            />
+          ) : (
+            <ActivityList items={activityItems} />
+          )}
+        </SectionCard>
+
+        <SectionCard
+          className="xl:col-span-2"
+          title={td("recentConversations")}
+          description={td("recentConversationsDescription")}
+          icon={MessagesSquare}
+          action={<ViewAllLink href="/admin/conversations" label={t("viewAll")} />}
+          contentClassName="p-0"
+        >
+          {recentConversations.length === 0 ? (
+            <EmptyState
+              variant="plain"
+              size="sm"
+              icon={MessagesSquare}
+              title={td("noConversations")}
+            />
+          ) : (
+            <ul className="divide-y">
+              {recentConversations.map((c) => (
+                <ConversationRow
+                  key={c.participants.map((p) => p.id).join("-")}
+                  conversation={c}
+                  compact
+                />
+              ))}
+            </ul>
+          )}
+        </SectionCard>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Pending Courses */}
+        <SectionCard
+          title={t("pendingCourses")}
+          icon={BookOpen}
+          action={<ViewAllLink href="/admin/courses?status=PENDING" label={t("viewAll")} />}
+          contentClassName="p-0"
+        >
+          {recentCourses.length === 0 ? (
+            <EmptyState
+              variant="plain"
+              size="sm"
+              icon={CheckCircle2}
+              title={t("noPendingCourses")}
+            />
+          ) : (
+            <ul className="divide-y">
+              {recentCourses.map((course) => (
+                <li
+                  key={course.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40 sm:px-6"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">
+                      {locale === "en"
+                        ? course.titleEn || course.titleAr
+                        : course.titleAr || course.titleEn}
+                    </p>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {course.instructor.name}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <PendingReviewActions kind="course" id={course.id} />
+                    <Button size="icon" variant="ghost" asChild>
+                      <Link href={`/admin/courses/${course.id}`} aria-label={t("review")}>
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
 
         {/* Pending Instructors */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t("pendingInstructors")}</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/admin/instructors?approved=false">
-                {t("viewAll")}
-                <ChevronLeft className="h-4 w-4 me-1" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {pendingInstructors.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
-                <p>{t("noPendingInstructors")}</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {pendingInstructors.map((instructor) => (
-                  <div
-                    key={instructor.id}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={instructor.image || ""} />
-                        <AvatarFallback>
-                          {instructor.name?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h4 className="font-medium">{instructor.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {instructor.email}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <PendingReviewActions kind="instructor" id={instructor.id} />
-                    </div>
+        <SectionCard
+          title={t("pendingInstructors")}
+          icon={GraduationCap}
+          action={<ViewAllLink href="/admin/instructors?approved=false" label={t("viewAll")} />}
+          contentClassName="p-0"
+        >
+          {pendingInstructors.length === 0 ? (
+            <EmptyState
+              variant="plain"
+              size="sm"
+              icon={CheckCircle2}
+              title={t("noPendingInstructors")}
+            />
+          ) : (
+            <ul className="divide-y">
+              {pendingInstructors.map((instructor) => (
+                <li
+                  key={instructor.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40 sm:px-6"
+                >
+                  <AvatarName
+                    name={instructor.name}
+                    image={instructor.image}
+                    secondary={<span dir="ltr">{instructor.email}</span>}
+                    className="flex-1"
+                  />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <PendingReviewActions kind="instructor" id={instructor.id} />
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
       </div>
 
       {/* Recent Users */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{t("recentUsers")}</CardTitle>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/admin/users">
-              {t("viewAll")}
-              <ChevronLeft className="h-4 w-4 me-1" />
-            </Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+      <SectionCard
+        title={t("recentUsers")}
+        icon={UserPlus}
+        action={<ViewAllLink href="/admin/users" label={t("viewAll")} />}
+        contentClassName="p-0"
+      >
+        <ul className="divide-y">
+          {recentUsers.map((user) => (
+            <li key={user.id}>
+              <Link
+                href={adminUserHref(user)}
+                className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40 sm:px-6"
               >
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={user.image || ""} />
-                    <AvatarFallback>
-                      {user.name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h4 className="font-medium">{user.name}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge
-                    variant={user.role === "ADMIN" ? "default" : "secondary"}
-                  >
-                    {t(user.role.toLowerCase())}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(user.createdAt).toLocaleDateString("ar-EG")}
+                <AvatarName
+                  name={user.name}
+                  image={user.image}
+                  secondary={<span dir="ltr">{user.email}</span>}
+                  className="flex-1"
+                />
+                <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                  <StatusBadge
+                    status={user.role}
+                    tone={ROLE_TONES[user.role] ?? "neutral"}
+                    label={t(user.role.toLowerCase())}
+                    dot={false}
+                  />
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {dateFmt.format(user.createdAt)}
                   </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </SectionCard>
     </div>
   )
 }

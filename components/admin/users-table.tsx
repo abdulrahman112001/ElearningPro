@@ -15,7 +15,9 @@ import {
   User,
   BookOpen,
   GraduationCap,
+  BellRing,
 } from "lucide-react"
+import { AdminAlertDialog } from "@/components/admin/admin-alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -98,6 +100,8 @@ export function UsersTable({ users, pagination }: UsersTableProps) {
   const [search, setSearch] = useState(searchParams?.get("search") || "")
   const [roleFilter, setRoleFilter] = useState(searchParams?.get("role") || "")
   const [deleteUser, setDeleteUser] = useState<User | null>(null)
+  const [alertUser, setAlertUser] = useState<User | null>(null)
+  const tAlert = useTranslations("adminDashboard.alert")
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -302,6 +306,15 @@ export function UsersTable({ users, pagination }: UsersTableProps) {
                         <Shield className="me-2 h-4 w-4" />
                         {t("makeAdmin")}
                       </DropdownMenuItem>
+                      {user.role === "STUDENT" && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setAlertUser(user)}>
+                            <BellRing className="me-2 h-4 w-4" />
+                            {tAlert("menuItem")}
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleBlockToggle(user)}>
                         <Ban className="me-2 h-4 w-4" />
@@ -376,6 +389,13 @@ export function UsersTable({ users, pagination }: UsersTableProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AdminAlertDialog
+        student={alertUser}
+        onOpenChange={(open) => {
+          if (!open) setAlertUser(null)
+        }}
+      />
     </div>
   )
 }
