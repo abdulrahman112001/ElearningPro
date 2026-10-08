@@ -95,3 +95,27 @@ export function expectNoCrash(
     `HTTP ${result.status} on ${url}`
   ).toBeTruthy()
 }
+
+type IdKey =
+  | "COURSE_ID"
+  | "LESSON_ID"
+  | "CATEGORY_ID"
+  | "INSTRUCTOR_ID"
+  | "CERTIFICATE_ID"
+  | "CERTIFICATE_NO"
+  | "LIVE_CLASS_ID"
+
+/** Ids resolved by global-setup.ts from the seeded database. */
+export function ids(): Record<IdKey, string> {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const fs = require("fs") as typeof import("fs")
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const path = require("path") as typeof import("path")
+  return JSON.parse(fs.readFileSync(path.join(__dirname, ".ids.json"), "utf8"))
+}
+
+/** Replaces {COURSE_ID}-style placeholders in a URL with real ids. */
+export function resolveIds(url: string): string {
+  const all = ids()
+  return url.replace(/\{(\w+)\}/g, (m, k) => (all as Record<string, string>)[k] ?? m)
+}

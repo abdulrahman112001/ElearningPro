@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { motion } from "framer-motion"
 import {
   Clock,
@@ -64,6 +64,9 @@ export function CoursesGrid({
   currentPage,
 }: CoursesGridProps) {
   const t = useTranslations("courses")
+  const locale = useLocale()
+  // Explicit locale: the server and the browser must format numbers identically.
+  const numberLocale = locale === "en" ? "en-US" : "ar-EG"
   const ta = useTranslations("a11y")
   const router = useRouter()
   const pathname = usePathname()
@@ -218,7 +221,7 @@ export function CoursesGrid({
                     </div>
                     <div className="flex items-center gap-1 text-muted-foreground text-sm">
                       <Users className="h-4 w-4" />
-                      <span>{course._count.enrollments.toLocaleString()}</span>
+                      <span>{course._count.enrollments.toLocaleString(numberLocale)}</span>
                     </div>
                   </div>
                 </CardContent>

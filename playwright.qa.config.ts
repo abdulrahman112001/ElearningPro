@@ -55,6 +55,9 @@ export default defineConfig({
       PAYMOB_API_KEY: "dummy",
       TAP_SECRET_KEY: "dummy",
       LIVEKIT_API_SECRET: "dummy_qa_secret_dummy_qa_secret",
+      // Simulate running behind a proxy so each test client can present its
+      // own IP via X-Forwarded-For (see getClientIp in lib/rate-limit.ts).
+      TRUST_PROXY: "true",
     },
   },
 })

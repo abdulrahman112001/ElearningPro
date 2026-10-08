@@ -32,7 +32,7 @@ test.describe("Public pages render", () => {
     expect(res?.status()).toBe(200)
   })
 
-  test("UI-03 @known-bug unknown course slug returns HTTP 404 (soft 404 behind loading.tsx streaming)", async ({ page }) => {
+  test("UI-03 unknown course slug returns HTTP 404 (soft 404 behind loading.tsx streaming)", async ({ page }) => {
     const res = await page.goto("/courses/this-course-does-not-exist")
     expect(res?.status()).toBe(404)
   })
@@ -59,39 +59,43 @@ test.describe("Login form", () => {
 
 test.describe("Broken links", () => {
   for (const path of ["/about", "/help", "/faq", "/terms", "/privacy"]) {
-    test(`UI-20 @known-bug footer link ${path} resolves (not 404)`, async ({ page }) => {
+    test(`UI-20 footer link ${path} resolves (not 404)`, async ({ page }) => {
       const res = await page.goto(path)
       expect(res?.status()).not.toBe(404)
     })
   }
 
-  test("UI-21 @known-bug admin dashboard 'view course' target exists", async ({ page, context }) => {
+  test("UI-21 admin dashboard 'view course' target exists", async ({ page, context }) => {
     await signIn(context, "admin")
     const res = await page.goto(`/admin/courses/${fixtures().courses.react.id}`)
     expect(res?.status()).not.toBe(404)
   })
 
-  test("UI-22 @known-bug quiz result 'back to lesson' target exists", async ({ page, context }) => {
+  test("UI-22 quiz result 'back to lesson' target exists", async ({ page, context }) => {
     await signIn(context, "student")
     const f = fixtures()
     const res = await page.goto(`/courses/${f.courses.react.slug}/lessons/${f.quizzes.react.lessonId}`)
     expect(res?.status()).not.toBe(404)
   })
 
-  test("UI-23 @known-bug wishlist remove endpoint exists", async ({ context }) => {
+  test("UI-23 wishlist add / check / remove round-trip", async () => {
     const api = await apiAs("student")
-    const res = await api.delete("/api/wishlist/some-course-id")
-    expect(res.status(), "remove-from-wishlist button calls a route that does not exist").not.toBe(404)
+    const courseId = fixtures().courses.nextjs.id
+    expect((await api.post("/api/wishlist", { data: { courseId } })).status()).toBe(201)
+    expect((await (await api.get(`/api/wishlist?courseId=${courseId}`)).json()).wishlisted).toBe(true)
+    expect((await api.delete(`/api/wishlist/${courseId}`)).status()).toBe(200)
+    expect((await (await api.get(`/api/wishlist?courseId=${courseId}`)).json()).wishlisted).toBe(false)
+    expect((await api.delete(`/api/wishlist/${courseId}`)).status()).toBe(404)
   })
 })
 
 test.describe("Translations", () => {
-  test("UI-30 @known-bug certificate verify page shows no raw translation keys", async ({ page }) => {
+  test("UI-30 certificate verify page shows no raw translation keys", async ({ page }) => {
     await page.goto("/verify/CERT-DOES-NOT-EXIST")
     expect(await rawKeys(page)).toEqual([])
   })
 
-  test("UI-31 @known-bug English UI shows prices with Latin digits", async ({ page, context }) => {
+  test("UI-31 English UI shows prices with Latin digits", async ({ page, context }) => {
     await setLocale(context, "en")
     // The home page featured-courses section and instructor pages use formatPrice().
     for (const path of ["/", `/instructors/${fixtures().users.ahmed}`]) {
@@ -122,7 +126,7 @@ test.describe("Responsive dashboards", () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
   for (const who of ["admin", "ahmed"] as const) {
-    test(`UI-40 @known-bug ${who} dashboard has navigation on a phone`, async ({ page, context }) => {
+    test(`UI-40 ${who} dashboard has navigation on a phone`, async ({ page, context }) => {
       await signIn(context, who)
       await page.goto(who === "admin" ? "/admin" : "/instructor")
       // Sidebar-only sections: settings + withdrawals are never linked from page content.

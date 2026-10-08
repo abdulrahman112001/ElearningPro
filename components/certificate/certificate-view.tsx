@@ -1,9 +1,7 @@
 "use client"
 
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslations, useLocale } from "next-intl"
-import { format } from "date-fns"
-import { ar, enUS } from "date-fns/locale"
 import { Download, Share2, Award } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -32,7 +30,15 @@ export function CertificateView({ certificate }: CertificateViewProps) {
   const t = useTranslations("certificate")
   const locale = useLocale()
   const certificateRef = useRef<HTMLDivElement>(null)
-  const dateLocale = locale === "ar" ? ar : enUS
+  // Rendered on the server and in the browser: both must produce identical
+  // text, so the date is formatted in UTC and the site origin (unknown on the
+  // server) is filled in after hydration.
+  const issuedOn = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(new Date(certificate.issuedAt))
+  const [origin, setOrigin] = useState(process.env.NEXT_PUBLIC_APP_URL ?? "")
+  useEffect(() => setOrigin(window.location.origin), [])
 
   const courseTitle =
     locale === "ar" && certificate.course.titleAr
@@ -138,9 +144,7 @@ export function CertificateView({ certificate }: CertificateViewProps) {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">{t("issuedOn")}</p>
                   <p className="font-semibold">
-                    {format(new Date(certificate.issuedAt), "PPP", {
-                      locale: dateLocale,
-                    })}
+                    {issuedOn}
                   </p>
                 </div>
                 <div>
@@ -160,7 +164,7 @@ export function CertificateView({ certificate }: CertificateViewProps) {
                 </p>
                 <p className="text-xs mt-1">
                   {t("verifyAt")}:{" "}
-                  {typeof window !== "undefined" && window.location.origin}
+                  {origin}
                   /verify/{certificate.certificateNo}
                 </p>
               </div>

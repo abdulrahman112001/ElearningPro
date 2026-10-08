@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useSession } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
@@ -42,6 +42,9 @@ export function CourseReviews({
   isEnrolled,
 }: CourseReviewsProps) {
   const t = useTranslations("courses")
+  const locale = useLocale()
+  // Explicit locale: the server and the browser must format numbers identically.
+  const numberLocale = locale === "en" ? "en-US" : "ar-EG"
   const ta = useTranslations("a11y")
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -118,7 +121,7 @@ export function CourseReviews({
             ))}
           </div>
           <p className="text-sm text-muted-foreground">
-            {totalReviews.toLocaleString()} {t("reviews")}
+            {totalReviews.toLocaleString(numberLocale)} {t("reviews")}
           </p>
         </div>
 

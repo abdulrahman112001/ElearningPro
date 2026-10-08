@@ -76,7 +76,7 @@ test.describe("Quiz grading", () => {
     expect(res.status()).toBe(403)
   })
 
-  test("LRN-13 @known-bug time limit is enforced on submit", async () => {
+  test("LRN-13 time limit is enforced on submit", async () => {
     const f = fixtures()
     const student = await apiAs("student")
     const [q1, q2] = f.quizzes.timed.questionIds
@@ -86,7 +86,7 @@ test.describe("Quiz grading", () => {
     expect(res.status(), "submission 3h into a 5-minute quiz was accepted").toBe(400)
   })
 
-  test("LRN-14 @known-bug non-array answers -> 400 not 500", async () => {
+  test("LRN-14 non-array answers -> 400 not 500", async () => {
     const f = fixtures()
     const u = await registerUser()
     const user = await db().user.findUniqueOrThrow({ where: { email: u.email } })
@@ -122,7 +122,7 @@ test.describe("Progress & certificates", () => {
     expect(res.status()).toBe(400)
   })
 
-  test("LRN-22 @known-bug certificate cannot be earned by skipping a failed/untaken quiz", async () => {
+  test("LRN-22 certificate cannot be earned by skipping a failed/untaken quiz", async () => {
     // Marks every lesson complete via the API without ever passing the quiz
     // attached to lesson 1, then asks for a certificate.
     const f = fixtures()

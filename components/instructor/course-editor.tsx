@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
@@ -68,24 +68,26 @@ import {
 import { ChapterEditor } from "./chapter-editor"
 import { LessonEditor } from "./lesson-editor"
 import { QuizEditor } from "./quiz-editor"
-const courseSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
+// Built per render with the active translations so validation messages
+// follow the UI language.
+const makeCourseSchema = (v: (key: string) => string) => z.object({
+  title: z.string().min(5, v("titleMin")),
   titleAr: z.string().optional(),
-  description: z.string().min(50, "Description must be at least 50 characters"),
+  description: z.string().min(50, v("descriptionMin")),
   descriptionAr: z.string().optional(),
   shortDescription: z.string().max(200).optional(),
   shortDescriptionAr: z.string().max(200).optional(),
   price: z.number().min(0),
   discountPrice: z.number().min(0).optional(),
-  categoryId: z.string().min(1, "Please select a category"),
+  categoryId: z.string().min(1, v("categoryRequired")),
   level: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"]),
-  language: z.string().min(1),
+  language: z.string().min(1, v("languageRequired")),
   requirements: z.string().optional(),
   objectives: z.string().optional(),
   targetAudience: z.string().optional(),
 })
 
-type CourseFormData = z.infer<typeof courseSchema>
+type CourseFormData = z.infer<ReturnType<typeof makeCourseSchema>>
 
 interface Chapter {
   id: string
@@ -144,6 +146,8 @@ interface CourseEditorProps {
 
 export function CourseEditor({ course, categories }: CourseEditorProps) {
   const t = useTranslations("instructor")
+  const tValidation = useTranslations("createCourse.validation")
+  const courseSchema = useMemo(() => makeCourseSchema((k) => tValidation(k)), [tValidation])
   const tEditor = useTranslations("courseEditor")
   const tCommon = useTranslations("common")
   const [pendingDelete, setPendingDelete] = useState<

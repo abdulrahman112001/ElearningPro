@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { rateLimit, getClientIp, tooManyRequests } from "../../lib/rate-limit"
+import { rateLimit, getClientIp, tooManyRequests, isLocked, recordFailure, resetLimit } from "../../lib/rate-limit"
 
 const uid = () => Math.random().toString(36).slice(2)
 
@@ -34,14 +34,39 @@ test.describe("rateLimit", () => {
 })
 
 test.describe("getClientIp", () => {
-  test("UT-23 uses the first x-forwarded-for hop", () => {
+  test.beforeEach(() => {
+    process.env.TRUST_PROXY = "true"
+  })
+  test.afterEach(() => {
+    delete process.env.TRUST_PROXY
+  })
+
+  test("UT-23 behind a trusted proxy, uses the first x-forwarded-for hop", () => {
     const req = new Request("http://x", { headers: { "x-forwarded-for": "1.1.1.1, 2.2.2.2" } })
     expect(getClientIp(req)).toBe("1.1.1.1")
   })
 
-  test("UT-24 falls back to x-real-ip, then to unknown", () => {
-    expect(getClientIp(new Request("http://x", { headers: { "x-real-ip": "3.3.3.3" } }))).toBe("3.3.3.3")
+  test("UT-24 prefers x-real-ip, then falls back to unknown", () => {
+    expect(getClientIp(new Request("http://x", { headers: { "x-real-ip": "3.3.3.3", "x-forwarded-for": "9.9.9.9" } }))).toBe("3.3.3.3")
     expect(getClientIp(new Request("http://x"))).toBe("unknown")
+  })
+
+  test("UT-26 without a trusted proxy, spoofed headers are ignored (AUTH-09)", () => {
+    delete process.env.TRUST_PROXY
+    const a = getClientIp(new Request("http://x", { headers: { "x-forwarded-for": "10.77.0.1" } }))
+    const b = getClientIp(new Request("http://x", { headers: { "x-forwarded-for": "10.77.0.2", "x-real-ip": "1.2.3.4" } }))
+    expect(a).toBe(b)
+  })
+
+  test("UT-27 rotating X-Forwarded-For does not escape the register limit (AUTH-09)", () => {
+    delete process.env.TRUST_PROXY
+    let throttled = false
+    const scope = "ut27-" + uid()
+    for (let i = 0; i < 8; i++) {
+      const ip = getClientIp(new Request("http://x", { headers: { "x-forwarded-for": `10.77.0.${i}` } }))
+      if (!rateLimit({ identifier: ip, scope, limit: 5, windowMs: 60_000 }).success) throttled = true
+    }
+    expect(throttled).toBe(true)
   })
 })
 
@@ -53,5 +78,18 @@ test.describe("tooManyRequests", () => {
     const body = await res.json()
     expect(body.error).toBeTruthy()
     expect(body.errorAr).toBeTruthy()
+  })
+})
+
+test.describe("failure lockout", () => {
+  test("UT-28 locks after N failures, reset clears it", () => {
+    const id = uid()
+    for (let i = 0; i < 3; i++) {
+      expect(isLocked("lock", id, 3)).toBe(false)
+      recordFailure("lock", id, 60_000)
+    }
+    expect(isLocked("lock", id, 3)).toBe(true)
+    resetLimit("lock", id)
+    expect(isLocked("lock", id, 3)).toBe(false)
   })
 })

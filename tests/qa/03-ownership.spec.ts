@@ -49,7 +49,7 @@ test.describe("Course content ownership", () => {
     expect([403, 404]).toContain(res.status())
   })
 
-  test("OWN-06 @known-bug reorder (PUT chapters) ignores chapter ids from another course", async () => {
+  test("OWN-06 reorder (PUT chapters) ignores chapter ids from another course", async () => {
     const f = fixtures()
     const target = f.courses.uiux.chapterIds[0]
     const before = await db().chapter.findUniqueOrThrow({ where: { id: target } })
@@ -59,7 +59,7 @@ test.describe("Course content ownership", () => {
     expect(after.position, "Ahmed moved one of Sara's chapters").toBe(before.position)
   })
 
-  test("OWN-07 @known-bug instructor cannot overwrite another instructor's quiz via own course URL", async () => {
+  test("OWN-07 instructor cannot overwrite another instructor's quiz via own course URL", async () => {
     const f = fixtures()
     const before = await db().quizQuestion.count({ where: { quizId: f.quizzes.sara.id } })
     const res = await ahmed.patch(`/api/instructor/courses/${f.courses.react.id}/lessons/${f.quizzes.sara.lessonId}/quiz`, {
@@ -81,7 +81,7 @@ test.describe("Course content ownership", () => {
 })
 
 test.describe("Course data validation", () => {
-  test("OWN-09 @known-bug instructor cannot set a negative price", async () => {
+  test("OWN-09 instructor cannot set a negative price", async () => {
     const f = fixtures()
     const before = await db().course.findUniqueOrThrow({ where: { id: f.courses.nextjs.id } })
     const res = await ahmed.patch(`/api/instructor/courses/${f.courses.nextjs.id}`, { data: { price: -50 } })
@@ -94,7 +94,7 @@ test.describe("Course data validation", () => {
     expect(after.price).toBeGreaterThanOrEqual(0)
   })
 
-  test("OWN-10 @known-bug partial PATCH keeps fields that were not sent", async () => {
+  test("OWN-10 partial PATCH keeps fields that were not sent", async () => {
     const f = fixtures()
     const before = await db().course.findUniqueOrThrow({ where: { id: f.courses.nextjs.id } })
     await ahmed.patch(`/api/instructor/courses/${f.courses.nextjs.id}`, { data: { titleEn: before.titleEn } })
@@ -106,7 +106,7 @@ test.describe("Course data validation", () => {
 })
 
 test.describe("Instructor onboarding", () => {
-  test("OWN-11 @known-bug unapproved instructor cannot publish straight to the catalogue", async () => {
+  test("OWN-11 unapproved instructor cannot publish straight to the catalogue", async () => {
     const u = await registerUser("INSTRUCTOR")
     const api = u.api
     const course = await api.post("/api/instructor/courses", { data: { title: "QA self-published " + Date.now(), titleAr: "QA", description: "d", categoryId: fixtures().categoryId, level: "BEGINNER", language: "ar" } })

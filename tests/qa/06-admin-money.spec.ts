@@ -8,26 +8,39 @@ test.describe("Withdrawals (instructor payouts)", () => {
     expect(res.status()).toBe(400)
   })
 
-  test("ADM-02 @known-bug a REJECTED withdrawal cannot later be COMPLETED (double payout)", async () => {
+  // Each test makes its own PENDING withdrawal so it can be repeated
+  // (--repeat-each) without depending on state left by earlier runs.
+  const newWithdrawal = (userId: string) =>
+    db().withdrawal.create({
+      data: { userId, amount: 100, method: "paypal", status: "PENDING", note: JSON.stringify({ tag: "QA-FIXTURE" }) },
+    })
+
+  test("ADM-02 a REJECTED withdrawal cannot later be COMPLETED (double payout)", async () => {
     const f = fixtures()
+    const w = await newWithdrawal(f.users.ahmed)
     const admin = await apiAs("admin")
     const before = await db().instructorProfile.findUniqueOrThrow({ where: { userId: f.users.ahmed } })
-    await admin.patch(`/api/admin/withdrawals/${f.withdrawals.rejectThenComplete}`, { data: { status: "REJECTED" } })
-    const second = await admin.patch(`/api/admin/withdrawals/${f.withdrawals.rejectThenComplete}`, { data: { status: "COMPLETED" } })
+    expect((await admin.patch(`/api/admin/withdrawals/${w.id}`, { data: { status: "REJECTED" } })).status()).toBe(200)
+    const second = await admin.patch(`/api/admin/withdrawals/${w.id}`, { data: { status: "COMPLETED" } })
     const after = await db().instructorProfile.findUniqueOrThrow({ where: { userId: f.users.ahmed } })
     const credited = after.pendingEarnings - before.pendingEarnings + (after.paidEarnings - before.paidEarnings)
     expect(second.status(), `instructor credited ${credited} for one 100 withdrawal`).toBe(400)
+    expect(credited).toBeCloseTo(100, 5)
   })
 
-  test("ADM-03 @known-bug concurrent COMPLETED approvals pay out only once (race: may pass intermittently)", async () => {
+  test("ADM-03 concurrent COMPLETED approvals pay out exactly once", async () => {
     const f = fixtures()
+    const w = await newWithdrawal(f.users.ahmed)
     const admin = await apiAs("admin")
     const before = await db().instructorProfile.findUniqueOrThrow({ where: { userId: f.users.ahmed } })
-    await Promise.all(
-      Array.from({ length: 10 }, () => admin.patch(`/api/admin/withdrawals/${f.withdrawals.race}`, { data: { status: "COMPLETED" } }))
-    )
+    const statuses = (
+      await Promise.all(
+        Array.from({ length: 10 }, () => admin.patch(`/api/admin/withdrawals/${w.id}`, { data: { status: "COMPLETED" } }))
+      )
+    ).map((r) => r.status())
     const after = await db().instructorProfile.findUniqueOrThrow({ where: { userId: f.users.ahmed } })
-    expect(after.paidEarnings - before.paidEarnings).toBe(100)
+    expect(after.paidEarnings - before.paidEarnings).toBeCloseTo(100, 5)
+    expect(statuses.filter((s) => s === 200).length, `statuses ${statuses}`).toBe(1)
   })
 
   test("ADM-04 instructor withdrawal request validates amount and minimum", async () => {
@@ -45,13 +58,13 @@ test.describe("Admin user management", () => {
     expect((await admin.delete(`/api/admin/users/${f.users.admin}`)).status()).toBe(400)
   })
 
-  test("ADM-11 @known-bug invalid role value -> 400 not 500", async () => {
+  test("ADM-11 invalid role value -> 400 not 500", async () => {
     const f = fixtures()
     const admin = await apiAs("admin")
     expect((await admin.patch(`/api/admin/users/${f.users.student}`, { data: { role: "SUPER" } })).status()).toBe(400)
   })
 
-  test("ADM-12 @known-bug unknown ids on admin routes -> 404 not 500", async () => {
+  test("ADM-12 unknown ids on admin routes -> 404 not 500", async () => {
     const admin = await apiAs("admin")
     expect((await admin.patch("/api/admin/coupons/nope", { data: { isActive: false } })).status()).toBe(404)
     expect((await admin.delete("/api/admin/reviews/nope")).status()).toBe(404)
@@ -64,14 +77,14 @@ test.describe("Admin user management", () => {
 })
 
 test.describe("Messaging", () => {
-  test("ADM-20 @known-bug instructor's 'my students' list includes enrolled students", async () => {
+  test("ADM-20 instructor's 'my students' list includes enrolled students", async () => {
     const res = await (await apiAs("ahmed")).get("/api/messages/students")
     expect(res.status()).toBe(200)
     const emails = (await res.json()).students.map((s: any) => s.email)
     expect(emails, "student@elearning.com is enrolled in Ahmed's course").toContain("student@elearning.com")
   })
 
-  test("ADM-21 @known-bug message to a non-existent user -> 404 not 500", async () => {
+  test("ADM-21 message to a non-existent user -> 404 not 500", async () => {
     const res = await (await apiAs("student")).post("/api/messages/does-not-exist", { data: { content: "hi" } })
     expect(res.status()).toBeLessThan(500)
   })

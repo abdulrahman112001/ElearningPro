@@ -41,11 +41,11 @@ test.describe("formatPrice", () => {
     expect(formatPrice(199.5)).not.toBe(formatPrice(199))
   })
 
-  test("UT-09 @known-bug formatPrice can render Latin digits for the English UI", () => {
-    // Audit P0-7: formatPrice is hard-wired to ar-EG and has no locale
-    // parameter, so English users always see Arabic-Indic digits.
-    const out = formatPrice(299, "USD")
-    expect(out, `got "${out}"`).toMatch(/299/)
+  test("UT-09 English locale renders Latin digits and English units", () => {
+    expect(formatPrice(299, "USD", "en")).toBe("$299")
+    expect(formatPrice(299, "EGP", "en")).toBe("299 EGP")
+    expect(formatPrice(0, "EGP", "en")).toBe("Free")
+    expect(formatPrice(299, "EGP", "ar")).not.toMatch(/299/)
   })
 })
 
@@ -66,6 +66,14 @@ test.describe("formatDuration", () => {
 
   test("UT-13 hours and minutes", () => {
     expect(formatDuration(90)).toBe("1 س 30 د")
+  })
+
+  test("UT-13b English durations", () => {
+    expect(formatDuration(90, "en")).toBe("1h 30m")
+    expect(formatDuration(60, "en")).toBe("1 hour")
+    expect(formatDuration(120, "en")).toBe("2 hours")
+    expect(formatDuration(1, "en")).toBe("1 minute")
+    expect(formatDuration(0, "en")).toBe("0m")
   })
 })
 

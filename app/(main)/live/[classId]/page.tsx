@@ -12,7 +12,6 @@ interface LivePageProps {
 
 export async function generateMetadata({ params }: LivePageProps) {
   const t = await getTranslations("live")
-  const locale = await getLocale()
   return {
     title: t("liveClass"),
   }
@@ -20,6 +19,8 @@ export async function generateMetadata({ params }: LivePageProps) {
 
 export default async function LivePage({ params }: LivePageProps) {
   const session = await auth()
+  const t = await getTranslations("live")
+  const locale = await getLocale()
 
   if (!session?.user) {
     redirect(`/login?callbackUrl=/live/${params.classId}`)

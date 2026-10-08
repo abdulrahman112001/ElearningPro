@@ -84,7 +84,7 @@ test.describe("Instructor hitting admin APIs", () => {
 })
 
 test.describe("Data exposure", () => {
-  test("AUTHZ-04 @known-bug student cannot list instructor withdrawals (payout details)", async () => {
+  test("AUTHZ-04 student cannot list instructor withdrawals (payout details)", async () => {
     const student = await apiAs("student")
     const res = await student.get("/api/instructor/withdrawals")
     const body = res.status() === 200 ? await res.json() : null
@@ -92,7 +92,7 @@ test.describe("Data exposure", () => {
     expect(res.status() === 403 || leaked === 0, `student received ${leaked} withdrawals incl. payout notes`).toBe(true)
   })
 
-  test("AUTHZ-05 @known-bug student only sees live classes of their own courses", async () => {
+  test("AUTHZ-05 student only sees live classes of their own courses", async () => {
     const f = fixtures()
     const sara = await apiAs("sara")
     const created = await sara.post("/api/live", {
@@ -123,7 +123,7 @@ test.describe("Data exposure", () => {
     expect(body.courses.every((c: any) => !c.status || c.status === "PUBLISHED")).toBe(true)
   })
 
-  test("AUTHZ-08 @known-bug bad query params on /api/courses give 400 not 500", async () => {
+  test("AUTHZ-08 bad query params on /api/courses give 400 not 500", async () => {
     const ctx = await anon()
     expect((await ctx.get("/api/courses?page=0")).status()).toBeLessThan(500)
     expect((await ctx.get("/api/courses?level=NOT_A_LEVEL")).status()).toBeLessThan(500)

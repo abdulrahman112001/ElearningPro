@@ -54,3 +54,4 @@ Thumbs.db
 # QA suite artifacts
 tests/qa/.fixtures.json
 tests/qa/results.json
+tests/e2e/.ids.json

@@ -1,9 +1,6 @@
 import { test, expect } from "@playwright/test"
-import { loginAs } from "./helpers"
+import { ids, loginAs } from "./helpers"
 
-const COURSE_ID = "cmr5esqvu0009qw5fyo302cbb"
-const LESSON_ID = "cmr5esyyr000kqw5f0k4unw8e"
-const CERTIFICATE_NO = "CERT-TEST-1783157638838"
 
 test.describe("API smoke checks", () => {
   test("GET /api/courses is public and returns 200", async ({ page }) => {
@@ -13,7 +10,7 @@ test.describe("API smoke checks", () => {
 
   test("GET /api/certificates/verify/:no is public", async ({ page }) => {
     const res = await page.request.get(
-      `/api/certificates/verify/${CERTIFICATE_NO}`
+      `/api/certificates/verify/${ids().CERTIFICATE_NO}`
     )
     expect(res.status(), await res.text()).toBe(200)
   })
@@ -45,7 +42,7 @@ test.describe("API smoke checks", () => {
 
   test("student GET /api/progress/course/:id returns 200", async ({ page }) => {
     await loginAs(page, "student")
-    const res = await page.request.get(`/api/progress/course/${COURSE_ID}`)
+    const res = await page.request.get(`/api/progress/course/${ids().COURSE_ID}`)
     expect(res.status(), await res.text()).toBe(200)
   })
 
@@ -57,13 +54,13 @@ test.describe("API smoke checks", () => {
 
   test("student GET /api/quizzes/:lessonId does not 500", async ({ page }) => {
     await loginAs(page, "student")
-    const res = await page.request.get(`/api/quizzes/${LESSON_ID}`)
+    const res = await page.request.get(`/api/quizzes/${ids().LESSON_ID}`)
     expect(res.status(), await res.text()).toBeLessThan(500)
   })
 
   test("orphaned quiz attempt route is gone (404)", async ({ page }) => {
     await loginAs(page, "student")
-    const res = await page.request.post(`/api/quizzes/${LESSON_ID}/attempt`, {
+    const res = await page.request.post(`/api/quizzes/${ids().LESSON_ID}/attempt`, {
       data: { answers: {} },
     })
     expect(res.status()).toBe(404)
@@ -71,7 +68,7 @@ test.describe("API smoke checks", () => {
 
   test("orphaned progress[lessonId] route is gone (404)", async ({ page }) => {
     await loginAs(page, "student")
-    const res = await page.request.patch(`/api/progress/${LESSON_ID}`, {
+    const res = await page.request.patch(`/api/progress/${ids().LESSON_ID}`, {
       data: { enrollmentId: "x" },
     })
     expect(res.status()).toBe(404)

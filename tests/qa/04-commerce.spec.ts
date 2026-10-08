@@ -81,12 +81,12 @@ test.describe("Coupon validation", () => {
     expect((await (await anon()).post("/api/coupons/validate", { data: {} })).status()).toBe(401)
   })
 
-  test("COM-19 @known-bug malformed JSON -> 400 not 500", async () => {
+  test("COM-19 malformed JSON -> 400 not 500", async () => {
     const u = await registerUser()
     expect((await rawJson(u.api, "post", "/api/coupons/validate")).status()).toBe(400)
   })
 
-  test("COM-20 @known-bug admin-created lowercase coupon code can be redeemed", async () => {
+  test("COM-20 admin-created lowercase coupon code can be redeemed", async () => {
     const admin = await apiAs("admin")
     const code = `qa-lower-${Date.now()}`
     const c = await admin.post("/api/admin/coupons", { data: { code, discountType: "percentage", discountValue: 10 } })
@@ -98,7 +98,7 @@ test.describe("Coupon validation", () => {
     expect(r.status, "coupon saved in lowercase can never match").toBe(200)
   })
 
-  test("COM-21 @known-bug admin coupon PATCH rejects an unknown discountType", async () => {
+  test("COM-21 admin coupon PATCH rejects an unknown discountType", async () => {
     const admin = await apiAs("admin")
     const coupon = await db().coupon.findUniqueOrThrow({ where: { code: "QA-FIXED30" } })
     const res = await admin.patch(`/api/admin/coupons/${coupon.id}`, { data: { discountType: "bogus" } })
@@ -129,7 +129,7 @@ test.describe("Payment creation", () => {
   })
 
   for (const method of ["paypal", "paymob", "tap"]) {
-    test(`COM-33 @known-bug unimplemented ${method} must not answer 2xx (UI shows fake success)`, async () => {
+    test(`COM-33 unimplemented ${method} must not answer 2xx (UI shows fake success)`, async () => {
       const u = await registerUser()
       const res = await u.api.post("/api/payments/create", { data: { courseId: fixtures().courses.react.id, paymentMethod: method } })
       const body = await res.json()
@@ -137,7 +137,7 @@ test.describe("Payment creation", () => {
     })
   }
 
-  test("COM-34 @known-bug a 100% coupon on a paid course leads to enrollment, not a 500", async () => {
+  test("COM-34 a 100% coupon on a paid course leads to enrollment, not a 500", async () => {
     const u = await registerUser()
     const res = await u.api.post("/api/payments/create", { data: { courseId: fixtures().courses.react.id, paymentMethod: "stripe", couponCode: "QA-FULL100" } })
     expect(res.status(), await res.text()).toBeLessThan(500)
@@ -174,7 +174,7 @@ test.describe("Reviews", () => {
     expect(await db().review.count({ where: { courseId: f.courses.free.id, user: { email: u.email } } })).toBe(1)
   })
 
-  test("COM-43 @known-bug non-integer rating -> 400 not 500", async () => {
+  test("COM-43 non-integer rating -> 400 not 500", async () => {
     const student = await apiAs("student")
     const res = await student.post(`/api/courses/${fixtures().courses.react.id}/reviews`, { data: { rating: 4.5, comment: "x" } })
     expect(res.status()).toBe(400)

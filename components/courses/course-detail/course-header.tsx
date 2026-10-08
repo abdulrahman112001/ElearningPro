@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { motion } from "framer-motion"
 import {
   Clock,
@@ -53,6 +53,9 @@ export function CourseHeader({
   totalDuration,
 }: CourseHeaderProps) {
   const t = useTranslations("courses")
+  const locale = useLocale()
+  // Explicit locale: the server and the browser must format numbers identically.
+  const numberLocale = locale === "en" ? "en-US" : "ar-EG"
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60)
@@ -138,13 +141,13 @@ export function CourseHeader({
                   ))}
                 </div>
                 <span className="text-gray-400">
-                  ({course._count.reviews.toLocaleString()} {t("reviews")})
+                  ({course._count.reviews.toLocaleString(numberLocale)} {t("reviews")})
                 </span>
               </div>
               <div className="flex items-center gap-1 text-gray-300">
                 <Users className="h-4 w-4" />
                 <span>
-                  {course._count.enrollments.toLocaleString()} {t("students")}
+                  {course._count.enrollments.toLocaleString(numberLocale)} {t("students")}
                 </span>
               </div>
             </div>

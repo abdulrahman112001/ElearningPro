@@ -47,7 +47,7 @@ test.describe("Registration", () => {
     expect(user.role).toBe("STUDENT")
   })
 
-  test("AUTH-06 @known-bug email is case-normalised (no duplicate account by casing)", async () => {
+  test("AUTH-06 email is case-normalised (no duplicate account by casing)", async () => {
     const u = await registerUser()
     const upper = u.email.toUpperCase().replace("@QA.TEST", "@qa.test")
     const res = await (await anon()).post("/api/auth/register", {
@@ -57,7 +57,7 @@ test.describe("Registration", () => {
     expect(res.status(), `a second account was created for ${upper}`).toBe(400)
   })
 
-  test("AUTH-07 @known-bug malformed JSON body returns 400, not 500", async () => {
+  test("AUTH-07 malformed JSON body returns 400, not 500", async () => {
     const res = await rawJson(await anon(), "post", "/api/auth/register")
     expect(res.status()).toBe(400)
   })
@@ -72,17 +72,10 @@ test.describe("Registration", () => {
     expect(last).toBe(429)
   })
 
-  test("AUTH-09 @known-bug rate limit cannot be bypassed by rotating X-Forwarded-For", async () => {
-    // The limiter keys on the client-supplied X-Forwarded-For header, so a
-    // script that sends a fresh value per request is never throttled.
-    const ctx = await anon()
-    let throttled = false
-    for (let i = 0; i < 8; i++) {
-      const s = (await ctx.post("/api/auth/register", { data: { name: "x", email: "bad" }, headers: { "x-forwarded-for": `10.77.0.${i}` } })).status()
-      if (s === 429) throttled = true
-    }
-    expect(throttled, "8 signups from one client were never throttled").toBe(true)
-  })
+  // AUTH-09 (spoofed X-Forwarded-For bypassing the limiter) is covered by
+  // unit tests UT-26/UT-27: the QA server runs with TRUST_PROXY=true to
+  // simulate a proxy, where rotating that header legitimately means
+  // different clients.
 })
 
 test.describe("Login", () => {
@@ -98,7 +91,7 @@ test.describe("Login", () => {
     expect(s?.user).toBeFalsy()
   })
 
-  test("AUTH-12 @known-bug login is throttled after repeated failures (brute force)", async () => {
+  test("AUTH-12 login is throttled after repeated failures (brute force)", async () => {
     const u = await registerUser("STUDENT")
     for (let i = 0; i < 20; i++) await loginApi(u.email, `wrong-${i}`)
     const ctx = await loginApi(u.email, u.password)
@@ -114,7 +107,7 @@ test.describe("Login", () => {
     expect(s?.user).toBeFalsy()
   })
 
-  test("AUTH-14 @known-bug blocking a user ends their existing session", async () => {
+  test("AUTH-14 blocking a user ends their existing session", async () => {
     const u = await registerUser("STUDENT")
     expect((await u.api.get("/api/user/profile")).status()).toBe(200)
     const admin = await apiAs("admin")
@@ -126,7 +119,7 @@ test.describe("Login", () => {
 })
 
 test.describe("Password reset", () => {
-  test("AUTH-15 @known-bug forgot-password gives the same answer for known and unknown emails", async () => {
+  test("AUTH-15 forgot-password gives the same answer for known and unknown emails", async () => {
     const ctx = await anon()
     const known = await (await ctx.post("/api/auth/forgot-password", { data: { email: "student@elearning.com" }, headers: ip() })).json()
     const unknown = await (await ctx.post("/api/auth/forgot-password", { data: { email: uniqueEmail("ghost") }, headers: ip() })).json()
@@ -164,7 +157,7 @@ test.describe("Change password", () => {
     expect(s?.user?.email).toBe(u.email)
   })
 
-  test("AUTH-20 @known-bug the settings form's PATCH request is accepted", async () => {
+  test("AUTH-20 the settings form's PATCH request is accepted", async () => {
     // components/settings/password-form.tsx sends PATCH; the route only exports POST.
     const u = await registerUser("STUDENT")
     const res = await u.api.patch("/api/user/password", {
