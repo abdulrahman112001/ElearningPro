@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 import { isStudentOfInstructor } from "@/lib/access"
 import { logActivity } from "@/lib/activity"
+import { pendingInstructorResponse } from "@/lib/instructor-guard"
 import { sendEmail } from "@/lib/email"
 
 const escapeHtml = (s: string) =>
@@ -60,6 +61,8 @@ export async function POST(request: Request) {
     if (!isAdmin && session.user.role !== "INSTRUCTOR") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
+    const pending = pendingInstructorResponse(session)
+    if (pending) return pending
 
     const { studentId, title, message, toGuardian = false } = await readJson(request)
     if (typeof studentId !== "string" || !studentId) {

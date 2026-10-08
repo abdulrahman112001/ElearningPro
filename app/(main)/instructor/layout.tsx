@@ -17,5 +17,11 @@ export default async function InstructorLayout({
     redirect("/")
   }
 
+  // Instructors can only use the dashboard once an admin approves their
+  // application; until then they fill it in or wait on its status page.
+  if (session.user.role === "INSTRUCTOR" && !session.user.instructorApproved) {
+    redirect("/instructor-application")
+  }
+
   return <InstructorShell>{children}</InstructorShell>
 }

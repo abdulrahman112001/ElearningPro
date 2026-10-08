@@ -65,6 +65,7 @@ async function main() {
         userId: instructor.id,
         isApproved: true,
         approvedAt: new Date(),
+        applicationStatus: "APPROVED",
         subscriptionEnabled: true,
         monthlyPrice: 150,
       },

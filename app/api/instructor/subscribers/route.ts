@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { apiErrorResponse } from "@/lib/api-error"
+import { pendingInstructorResponse } from "@/lib/instructor-guard"
 import { expireLapsedSubscriptions } from "@/lib/teacher-subscription"
 
 // GET /api/instructor/subscribers: the instructor's subscribers, newest first
@@ -12,6 +13,8 @@ export async function GET() {
     if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
+    const pending = pendingInstructorResponse(session)
+    if (pending) return pending
 
     await expireLapsedSubscriptions()
     const subscriptions = await db.teacherSubscription.findMany({

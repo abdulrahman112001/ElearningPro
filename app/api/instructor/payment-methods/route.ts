@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { pendingInstructorResponse } from "@/lib/instructor-guard"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Update payment methods
@@ -15,6 +16,10 @@ export async function PATCH(request: Request) {
     if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
+
+    const pending = pendingInstructorResponse(session)
+
+    if (pending) return pending
 
     const body = await readJson(request)
     const { paypalEmail, bankName, bankAccount } = body

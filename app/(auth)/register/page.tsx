@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import toast from "react-hot-toast"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { BadgeCheck, Eye, EyeOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -82,7 +82,8 @@ export default function RegisterPage() {
         redirect: false,
       })
 
-      router.push("/")
+      // New instructors continue straight to their application form.
+      router.push(userType === "instructor" ? "/instructor-application" : "/")
       router.refresh()
     } catch (error: any) {
       toast.error(error.message)
@@ -125,6 +126,15 @@ export default function RegisterPage() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        {userType === "instructor" && (
+          <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+            <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+            <p className="leading-relaxed text-muted-foreground">
+              {t("instructorApplicationNote")}
+            </p>
+          </div>
+        )}
 
         {/* Social Login */}
         <div className="grid grid-cols-2 gap-4">

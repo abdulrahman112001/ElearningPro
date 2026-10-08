@@ -1,16 +1,7 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
-
-async function requireInstructor() {
-  const session = await auth()
-  if (!session?.user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
-  if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
-    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) }
-  }
-  return { session }
-}
+import { requireInstructor } from "@/lib/instructor-guard"
 
 // GET /api/instructor/subscription: the instructor's own subscription settings
 export async function GET() {

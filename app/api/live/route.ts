@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { createRoom, generateToken } from "@/lib/livekit"
+import { pendingInstructorResponse } from "@/lib/instructor-guard"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 
 // Create live class
@@ -16,6 +17,10 @@ export async function POST(request: Request) {
     if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
+
+    const pending = pendingInstructorResponse(session)
+
+    if (pending) return pending
 
     const body = await readJson(request)
     const {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
+import { pendingInstructorResponse } from "@/lib/instructor-guard"
 import { db } from "@/lib/db"
 
 // Get instructor earnings summary
@@ -15,6 +16,10 @@ export async function GET(request: Request) {
     if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
+
+    const pending = pendingInstructorResponse(session)
+
+    if (pending) return pending
 
     // Get instructor profile
     const profile = await db.instructorProfile.findUnique({

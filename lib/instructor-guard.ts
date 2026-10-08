@@ -11,7 +11,24 @@ export async function requireInstructor(): Promise<Guard> {
   if (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN") {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) }
   }
+  const pending = pendingInstructorResponse(session)
+  if (pending) return { error: pending }
   return { session }
+}
+
+/**
+ * 403 for an instructor whose application an admin has not approved yet,
+ * else null. Use it in instructor-only routes that do not go through
+ * requireInstructor().
+ */
+export function pendingInstructorResponse(session: Session): NextResponse | null {
+  if (session.user.role === "INSTRUCTOR" && session.user.instructorApproved === false) {
+    return NextResponse.json(
+      { error: "Your instructor application is awaiting admin approval", code: "instructor_not_approved" },
+      { status: 403 }
+    )
+  }
+  return null
 }
 
 /** Signed-in admin, else a ready-made 401/403 response. */

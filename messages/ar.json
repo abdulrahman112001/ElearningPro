@@ -222,7 +222,8 @@
     "agreeToTermsPrefix": "بالتسجيل، أنت توافق على",
     "serverError": "تعذر تسجيل الدخول بسبب مشكلة في الخادم. حاول لاحقاً.",
     "accountBlocked": "تم حظر هذا الحساب. تواصل مع الدعم.",
-    "tooManyAttempts": "محاولات كثيرة خاطئة. حاول مرة أخرى بعد 15 دقيقة."
+    "tooManyAttempts": "محاولات كثيرة خاطئة. حاول مرة أخرى بعد 15 دقيقة.",
+    "instructorApplicationNote": "بعد إنشاء الحساب ستُكمل طلب الانضمام كمعلم (بياناتك الشخصية والمهنية ومؤهلاتك). يراجع فريق الإدارة الطلب خلال 1-3 أيام عمل، وبعد الموافقة تستطيع إنشاء الكورسات."
   },
   "hero": {
     "badge": "المنصة العربية الأولى للتعلم عن بعد",
@@ -2124,7 +2125,8 @@
       "group": "المجموعات",
       "grade": "الصفوف الدراسية",
       "withdrawal": "السحوبات",
-      "review": "التقييمات"
+      "review": "التقييمات",
+      "instructor": "طلبات المعلمين"
     },
     "actions": {
       "user": {
@@ -2193,6 +2195,12 @@
       "review": {
         "created": "إضافة تقييم",
         "deleted": "حذف تقييم"
+      },
+      "instructor": {
+        "application_submitted": "تقديم طلب انضمام معلم",
+        "approved": "قبول معلم",
+        "rejected": "رفض طلب معلم",
+        "revoked": "إلغاء اعتماد معلم"
       }
     }
   },
@@ -2707,5 +2715,359 @@
     "pendingReview": "بانتظار المراجعة",
     "pendingReviewBadge": "بانتظار مراجعة الإدارة",
     "pendingReviewNotice": "أُرسلت هذه الدورة للمراجعة. ستُنشر تلقائياً بعد موافقة الإدارة، ويمكنك متابعة التعديل في هذه الأثناء."
+  },
+  "instructorApplication": {
+    "metaTitle": "طلب الانضمام كمدرس",
+    "title": "طلب الانضمام كمدرس",
+    "subtitle": "أكمل بياناتك المهنية ليراجعها فريقنا ويفعّل حسابك كمدرس على المنصة.",
+    "optional": "اختياري",
+    "requiredNote": "الحقول المميزة بعلامة النجمة مطلوبة.",
+    "loadFailed": "تعذّر تحميل طلبك",
+    "loadFailedHint": "تحقق من اتصالك بالإنترنت ثم حاول مرة أخرى.",
+    "retry": "إعادة المحاولة",
+    "submitSuccess": "تم إرسال طلبك بنجاح، وسنراجعه في أقرب وقت.",
+    "submitFailed": "تعذّر إرسال الطلب، حاول مرة أخرى.",
+    "submit": "إرسال الطلب للمراجعة",
+    "resubmit": "إعادة إرسال الطلب",
+    "submitting": "جاري الإرسال...",
+    "editingNotice": "أنت تعدّل طلبًا قيد المراجعة. بعد الحفظ سيبقى الطلب في انتظار مراجعة الإدارة.",
+    "cancelEdit": "إلغاء التعديل",
+    "sameAsPhone": "نفس رقم الهاتف",
+    "listSeparator": "، ",
+    "yearsValue": "{count, plural, =0 {أقل من سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+    "removeSubject": "حذف {subject}",
+    "bioCounter": "{count} / {max}",
+    "bioCounterRemaining": "متبقٍ {count} حرف على الأقل",
+    "termsLabel": "أقر بأن جميع البيانات المذكورة صحيحة، وأوافق على <link>الشروط والأحكام</link> الخاصة بالمنصة.",
+    "status": {
+      "PENDING": "قيد المراجعة",
+      "REJECTED": "مرفوض"
+    },
+    "intro": {
+      "title": "مرحبًا بك في فريق المدرسين",
+      "description": "قبل أن تبدأ في نشر الكورسات، نحتاج إلى التعرف عليك أكثر. املأ النموذج التالي وسيقوم فريقنا بمراجعته.",
+      "whyTitle": "لماذا نطلب هذه البيانات؟",
+      "whyText": "للحفاظ على جودة التعليم وثقة الطلاب وأولياء الأمور في كل مدرس على المنصة.",
+      "reviewTitle": "مدة المراجعة",
+      "reviewText": "تستغرق المراجعة عادةً من 1 إلى 3 أيام عمل، وسنخطرك فور صدور القرار.",
+      "linksTitle": "روابط فقط",
+      "linksText": "لا حاجة لرفع ملفات؛ أضف روابط لسيرتك الذاتية وفيديو تعريفي (مثل Google Drive أو YouTube)."
+    },
+    "timeline": {
+      "label": "مراحل طلب الانضمام",
+      "account": "إنشاء الحساب",
+      "submitted": "إرسال الطلب",
+      "review": "مراجعة الإدارة",
+      "teaching": "ابدأ التدريس",
+      "state": {
+        "done": "تم",
+        "current": "جارٍ الآن",
+        "upcoming": "لاحقًا"
+      }
+    },
+    "pending": {
+      "title": "طلبك قيد المراجعة",
+      "description": "شكرًا لك! وصلنا طلبك ويقوم فريقنا بمراجعته الآن. تستغرق المراجعة عادةً من 1 إلى 3 أيام عمل.",
+      "submittedOn": "تاريخ الإرسال: {date}",
+      "edit": "تعديل الطلب",
+      "summaryTitle": "ملخص بياناتك",
+      "editHint": "يمكنك تعديل طلبك في أي وقت أثناء المراجعة، وسيظل في انتظار موافقة الإدارة."
+    },
+    "rejected": {
+      "title": "لم تتم الموافقة على طلبك",
+      "description": "راجع ملاحظة الإدارة أدناه، ثم عدّل بياناتك وأعد إرسال الطلب.",
+      "reasonLabel": "سبب الرفض",
+      "noReason": "لم تذكر الإدارة سببًا محددًا. راجع بياناتك وتأكد من اكتمالها ثم أعد الإرسال.",
+      "reviewedOn": "تاريخ المراجعة: {date}"
+    },
+    "approved": {
+      "title": "تمت الموافقة على طلبك!",
+      "description": "مبروك! أصبح حسابك مفعّلًا كمدرس، ويمكنك الآن إنشاء الكورسات والبدء في التدريس.",
+      "cta": "الذهاب إلى لوحة المدرس"
+    },
+    "sections": {
+      "personal": "البيانات الشخصية",
+      "personalHint": "بيانات التواصل الأساسية، ولن تظهر للطلاب.",
+      "teaching": "الخبرة التدريسية",
+      "teachingHint": "عرّفنا بما تدرّسه والمراحل الدراسية التي تتعامل معها.",
+      "qualifications": "المؤهلات العلمية",
+      "qualificationsHint": "أعلى مؤهل دراسي حصلت عليه.",
+      "about": "نبذة عنك والروابط",
+      "aboutHint": "تظهر النبذة في ملفك العام، وتساعدنا الروابط على التعرف على أسلوبك.",
+      "terms": "الإقرار والموافقة"
+    },
+    "fields": {
+      "name": "الاسم بالكامل",
+      "phone": "رقم الهاتف",
+      "whatsapp": "رقم واتساب",
+      "gender": "النوع",
+      "governorate": "المحافظة",
+      "city": "المدينة / المنطقة",
+      "headline": "اللقب المهني",
+      "specialization": "المادة الأساسية / التخصص",
+      "subjects": "مواد أخرى تدرّسها",
+      "gradeLevels": "المراحل الدراسية التي تدرّسها",
+      "yearsOfExperience": "سنوات الخبرة",
+      "currentWorkplace": "مكان العمل الحالي / المدرسة",
+      "qualification": "أعلى مؤهل دراسي",
+      "university": "الجامعة / المعهد",
+      "graduationYear": "سنة التخرج",
+      "bio": "نبذة عنك",
+      "cvUrl": "رابط السيرة الذاتية",
+      "introVideoUrl": "رابط فيديو تعريفي",
+      "facebook": "فيسبوك",
+      "linkedin": "لينكدإن",
+      "youtube": "قناة يوتيوب"
+    },
+    "placeholders": {
+      "name": "مثال: أحمد محمد علي",
+      "select": "اختر",
+      "governorate": "اختر المحافظة",
+      "city": "مثال: مدينة نصر",
+      "headline": "مثال: مدرس رياضيات للمرحلة الثانوية",
+      "specialization": "مثال: الرياضيات",
+      "subjects": "اكتب اسم المادة ثم اضغط Enter",
+      "currentWorkplace": "مثال: مدرسة النصر الثانوية",
+      "university": "مثال: جامعة القاهرة - كلية التربية",
+      "bio": "حدّثنا عن خبرتك، وأسلوبك في الشرح، وأبرز إنجازاتك مع طلابك...",
+      "cvUrl": "https://drive.google.com/...",
+      "introVideoUrl": "https://youtube.com/watch?v=...",
+      "facebook": "https://facebook.com/...",
+      "linkedin": "https://linkedin.com/in/...",
+      "youtube": "https://youtube.com/@..."
+    },
+    "hints": {
+      "phone": "سنتواصل معك على هذا الرقم بخصوص طلبك.",
+      "headline": "سطر قصير يظهر أسفل اسمك في ملفك العام.",
+      "subjects": "اضغط Enter أو فاصلة لإضافة المادة ({count} من {max}).",
+      "gradeLevels": "اختر كل المراحل التي تدرّس لها.",
+      "bio": "{min} حرفًا على الأقل.",
+      "cvUrl": "رابط Google Drive أو Dropbox، وتأكد أن الملف متاح للعرض.",
+      "introVideoUrl": "فيديو قصير تشرح فيه جزءًا من درس (YouTube أو Google Drive)."
+    },
+    "errors": {
+      "required": "هذا الحقل مطلوب",
+      "termsRequired": "يجب الموافقة على الإقرار والشروط لإرسال الطلب",
+      "bioTooShort": "النبذة قصيرة جدًا، اكتب {min} حرفًا على الأقل",
+      "invalidUrl": "أدخل رابطًا صحيحًا يبدأ بـ http:// أو https://",
+      "phoneInvalid": "رقم الهاتف غير صحيح",
+      "yearsInvalid": "أدخل رقمًا صحيحًا من 0 إلى 60",
+      "graduationYearInvalid": "أدخل سنة صحيحة بين 1950 و{max}",
+      "invalid": "القيمة غير صحيحة",
+      "fixFields": "يرجى تصحيح الحقول المميزة"
+    },
+    "genders": {
+      "male": "ذكر",
+      "female": "أنثى"
+    },
+    "qualifications": {
+      "diploma": "دبلوم",
+      "bachelor": "بكالوريوس / ليسانس",
+      "education_diploma": "دبلومة تربوية",
+      "master": "ماجستير",
+      "phd": "دكتوراه",
+      "other": "أخرى"
+    },
+    "stages": {
+      "primary": "المرحلة الابتدائية",
+      "preparatory": "المرحلة الإعدادية",
+      "secondary": "المرحلة الثانوية",
+      "university": "المرحلة الجامعية",
+      "other": "أخرى"
+    },
+    "governorates": {
+      "Cairo": "القاهرة",
+      "Giza": "الجيزة",
+      "Alexandria": "الإسكندرية",
+      "Qalyubia": "القليوبية",
+      "Dakahlia": "الدقهلية",
+      "Sharqia": "الشرقية",
+      "Gharbia": "الغربية",
+      "Monufia": "المنوفية",
+      "Beheira": "البحيرة",
+      "KafrElSheikh": "كفر الشيخ",
+      "Damietta": "دمياط",
+      "PortSaid": "بورسعيد",
+      "Ismailia": "الإسماعيلية",
+      "Suez": "السويس",
+      "NorthSinai": "شمال سيناء",
+      "SouthSinai": "جنوب سيناء",
+      "RedSea": "البحر الأحمر",
+      "Matrouh": "مطروح",
+      "NewValley": "الوادي الجديد",
+      "Faiyum": "الفيوم",
+      "BeniSuef": "بني سويف",
+      "Minya": "المنيا",
+      "Asyut": "أسيوط",
+      "Sohag": "سوهاج",
+      "Qena": "قنا",
+      "Luxor": "الأقصر",
+      "Aswan": "أسوان"
+    }
+  },
+  "adminInstructorReview": {
+    "description": "راجع طلبات انضمام المعلمين ووافق عليها أو ارفضها، وتابع جميع المعلمين على المنصة",
+    "tabsLabel": "تصفية حسب حالة الطلب",
+    "tabs": {
+      "all": "الكل",
+      "pending": "بانتظار المراجعة",
+      "draft": "لم يُقدَّم",
+      "approved": "مقبول",
+      "rejected": "مرفوض"
+    },
+    "status": {
+      "PENDING": "بانتظار المراجعة",
+      "DRAFT": "لم يُقدَّم",
+      "APPROVED": "مقبول",
+      "REJECTED": "مرفوض"
+    },
+    "stats": {
+      "total": "إجمالي المعلمين",
+      "pending": "طلبات بانتظار المراجعة",
+      "pendingHint": "تحتاج قرارك",
+      "approved": "معلمون معتمدون",
+      "draft": "لم يُقدّموا الطلب",
+      "rejected": "طلبات مرفوضة"
+    },
+    "pendingBanner": "{count, plural, =1 {يوجد طلب واحد بانتظار المراجعة} two {يوجد طلبان بانتظار المراجعة} few {يوجد # طلبات بانتظار المراجعة} many {يوجد # طلبًا بانتظار المراجعة} other {يوجد # طلب بانتظار المراجعة}}",
+    "showPending": "عرض الطلبات",
+    "columns": {
+      "instructor": "المعلم",
+      "specialization": "التخصص",
+      "governorate": "المحافظة",
+      "experience": "الخبرة",
+      "status": "الحالة",
+      "submittedAt": "تاريخ التقديم",
+      "courses": "الكورسات",
+      "actions": "الإجراءات"
+    },
+    "years": "{count, plural, =0 {أقل من سنة} =1 {سنة واحدة} =2 {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+    "coursesCount": "{count, plural, =0 {لا كورسات} =1 {كورس واحد} =2 {كورسان} few {# كورسات} many {# كورسًا} other {# كورس}}",
+    "notProvided": "غير محدد",
+    "notSubmitted": "لم يُقدَّم",
+    "reviewApplication": "مراجعة الطلب",
+    "viewInUsers": "عرض في المستخدمين",
+    "approve": "قبول",
+    "reject": "رفض",
+    "revoke": "إلغاء الاعتماد",
+    "emptyTitle": "لا يوجد معلمون هنا",
+    "emptyDescription": "جرّب تبويبًا آخر أو غيّر كلمات البحث.",
+    "emptyPendingTitle": "لا توجد طلبات بانتظار المراجعة",
+    "emptyPendingDescription": "أحسنت! تمت مراجعة كل الطلبات المقدَّمة.",
+    "dialog": {
+      "title": "طلب انضمام معلم",
+      "description": "كل البيانات التي أرسلها المعلم في طلب الانضمام",
+      "loading": "جارٍ تحميل الطلب...",
+      "loadError": "تعذّر تحميل الطلب",
+      "retry": "إعادة المحاولة",
+      "close": "إغلاق"
+    },
+    "sections": {
+      "personal": "البيانات الشخصية",
+      "teaching": "التدريس",
+      "qualifications": "المؤهلات",
+      "about": "نبذة وروابط",
+      "links": "الروابط",
+      "meta": "سجل الطلب"
+    },
+    "fields": {
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "whatsapp": "واتساب",
+      "gender": "النوع",
+      "governorate": "المحافظة",
+      "city": "المدينة / المنطقة",
+      "headline": "العنوان التعريفي",
+      "specialization": "التخصص",
+      "subjects": "المواد",
+      "gradeLevels": "المراحل الدراسية",
+      "yearsOfExperience": "سنوات الخبرة",
+      "currentWorkplace": "جهة العمل الحالية",
+      "qualification": "المؤهل",
+      "university": "الجامعة / المعهد",
+      "graduationYear": "سنة التخرج",
+      "bio": "النبذة",
+      "cv": "السيرة الذاتية",
+      "introVideo": "فيديو تعريفي",
+      "facebook": "فيسبوك",
+      "linkedin": "لينكدإن",
+      "youtube": "يوتيوب",
+      "registeredAt": "تاريخ التسجيل",
+      "submittedAt": "تاريخ التقديم",
+      "reviewedAt": "تاريخ المراجعة",
+      "agreedToTermsAt": "الموافقة على الشروط",
+      "rejectionReason": "سبب الرفض السابق"
+    },
+    "call": "اتصال",
+    "openWhatsapp": "فتح واتساب",
+    "noLinks": "لم يضف المعلم أي روابط",
+    "draftTitle": "لم يقدّم المعلم طلبه بعد",
+    "draftDescription": "سجّل هذا المعلم حسابًا لكنه لم يُرسل طلب الانضمام. ستظهر بياناته هنا بعد التقديم.",
+    "confirm": {
+      "approveTitle": "قبول المعلم",
+      "approveDescription": "سيتمكن {name} من إنشاء الكورسات فور القبول، وسيصله إشعار وبريد إلكتروني.",
+      "rejectTitle": "رفض الطلب",
+      "rejectDescription": "سيُرسل السبب إلى {name} ليعدّل طلبه ويعيد تقديمه.",
+      "revokeTitle": "إلغاء اعتماد المعلم",
+      "revokeDescription": "لن يتمكن {name} من إدارة الكورسات حتى تتم الموافقة عليه مجددًا.",
+      "reasonLabel": "سبب الرفض",
+      "reasonOptionalLabel": "السبب (اختياري)",
+      "reasonPlaceholder": "اشرح للمعلم ما الذي يجب تعديله...",
+      "reasonTooShort": "اكتب سببًا من 5 أحرف على الأقل",
+      "approveButton": "تأكيد القبول",
+      "rejectButton": "إرسال الرفض",
+      "revokeButton": "إلغاء الاعتماد",
+      "back": "رجوع"
+    },
+    "toast": {
+      "approved": "تم قبول المعلم",
+      "rejected": "تم رفض الطلب وإبلاغ المعلم",
+      "revoked": "تم إلغاء اعتماد المعلم",
+      "blocked": "تم حظر المعلم",
+      "unblocked": "تم إلغاء حظر المعلم",
+      "reasonRequired": "سبب الرفض مطلوب",
+      "failed": "تعذّر تنفيذ الإجراء، حاول مرة أخرى"
+    },
+    "qualifications": {
+      "diploma": "دبلوم",
+      "bachelor": "بكالوريوس / ليسانس",
+      "education_diploma": "دبلوم تربوي",
+      "master": "ماجستير",
+      "phd": "دكتوراه",
+      "other": "أخرى"
+    },
+    "genders": {
+      "male": "ذكر",
+      "female": "أنثى"
+    },
+    "governorates": {
+      "Cairo": "القاهرة",
+      "Giza": "الجيزة",
+      "Alexandria": "الإسكندرية",
+      "Qalyubia": "القليوبية",
+      "Dakahlia": "الدقهلية",
+      "Sharqia": "الشرقية",
+      "Gharbia": "الغربية",
+      "Monufia": "المنوفية",
+      "Beheira": "البحيرة",
+      "KafrElSheikh": "كفر الشيخ",
+      "Damietta": "دمياط",
+      "PortSaid": "بورسعيد",
+      "Ismailia": "الإسماعيلية",
+      "Suez": "السويس",
+      "NorthSinai": "شمال سيناء",
+      "SouthSinai": "جنوب سيناء",
+      "RedSea": "البحر الأحمر",
+      "Matrouh": "مطروح",
+      "NewValley": "الوادي الجديد",
+      "Faiyum": "الفيوم",
+      "BeniSuef": "بني سويف",
+      "Minya": "المنيا",
+      "Asyut": "أسيوط",
+      "Sohag": "سوهاج",
+      "Qena": "قنا",
+      "Luxor": "الأقصر",
+      "Aswan": "أسوان"
+    }
   }
 }

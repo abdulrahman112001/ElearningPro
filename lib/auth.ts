@@ -123,16 +123,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id as string
         token.role = (user as any).role || UserRole.STUDENT
-      } else if (token.id) {
-        // Re-check the account on every request so that blocking a user or
-        // changing their role takes effect immediately, not when the JWT
-        // expires. Returning null ends the session.
+      }
+      if (token.id) {
+        // Re-check the account on every request so that blocking a user,
+        // changing their role or approving an instructor takes effect
+        // immediately, not when the JWT expires. Returning null ends the
+        // session.
         const current = await db.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true, isBlocked: true },
+          select: {
+            role: true,
+            isBlocked: true,
+            instructorProfile: { select: { isApproved: true } },
+          },
         })
         if (!current || current.isBlocked) return null
         token.role = current.role
+        token.instructorApproved =
+          current.role !== UserRole.INSTRUCTOR ||
+          current.instructorProfile?.isApproved === true
       }
 
       if (trigger === "update" && session) {
@@ -146,6 +155,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as UserRole
+        session.user.instructorApproved = token.instructorApproved !== false
       }
       return session
     },

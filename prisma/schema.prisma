@@ -212,6 +212,13 @@ model PasswordResetToken {
 
 // ==================== INSTRUCTOR ====================
 
+enum InstructorApplicationStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model InstructorProfile {
   id                  String    @id @default(cuid())
   userId              String    @unique
@@ -227,6 +234,31 @@ model InstructorProfile {
   bankName            String?
   bankAccount         String?
   paypalEmail         String?
+
+  // Teacher application, reviewed by an admin. isApproved stays the source
+  // of truth for access; applicationStatus tracks the review workflow.
+  applicationStatus   InstructorApplicationStatus @default(DRAFT)
+  submittedAt         DateTime?
+  reviewedAt          DateTime?
+  reviewedById        String?
+  rejectionReason     String?   @db.Text
+  phone               String?
+  whatsapp            String?
+  gender              String?
+  governorate         String?
+  city                String?
+  specialization      String?
+  subjects            String[]  @default([])
+  gradeLevelIds       String[]  @default([])
+  qualification       String?
+  university          String?
+  graduationYear      Int?
+  yearsOfExperience   Int?
+  currentWorkplace    String?
+  cvUrl               String?
+  introVideoUrl       String?
+  facebook            String?
+  agreedToTermsAt     DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

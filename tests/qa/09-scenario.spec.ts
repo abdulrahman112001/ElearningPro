@@ -62,6 +62,22 @@ async function payTeacherSubscription(studentId: string, instructorId: string, a
   return pi
 }
 
+const TEACHER_APPLICATION = {
+  name: "عبد الرحمن معلم",
+  headline: "مدرس فيزياء للمرحلة الثانوية",
+  bio: "مدرس فيزياء بخبرة عشر سنوات في تدريس طلاب الثانوية العامة وتبسيط المفاهيم بالأمثلة العملية.",
+  phone: "+201001234567",
+  gender: "male",
+  governorate: "Cairo",
+  specialization: "فيزياء",
+  subjects: ["فيزياء", "علوم"],
+  qualification: "bachelor",
+  university: "جامعة القاهرة",
+  graduationYear: 2014,
+  yearsOfExperience: 10,
+  agreeTerms: true,
+}
+
 let teacher: Account
 let student: Account
 let weakStudent: Account
@@ -86,7 +102,14 @@ test("SC-01 teacher and student register", async () => {
   expect(profile.isApproved, "a new teacher waits for admin approval").toBe(false)
 })
 
-test("SC-02 admin approves the teacher", async () => {
+test("SC-02 teacher submits the application and the admin approves it", async () => {
+  const blocked = await teacher.api.post("/api/instructor/groups", { data: { name: "x" } })
+  expect(blocked.status(), "a pending teacher cannot use the dashboard APIs").toBe(403)
+
+  const submitted = await teacher.api.put("/api/instructor/application", { data: TEACHER_APPLICATION })
+  expect(submitted.status(), await submitted.text()).toBe(200)
+  expect((await submitted.json()).status).toBe("PENDING")
+
   const res = await admin.patch(`/api/admin/instructors/${teacher.id}`, { data: { action: "approve" } })
   expect(res.status(), await res.text()).toBe(200)
 })

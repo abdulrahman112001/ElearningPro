@@ -50,6 +50,10 @@ export const ACTION_META: Record<ActivityAction, { icon: LucideIcon; tone: Tone 
   "user.unblocked": { icon: ShieldCheck, tone: "success" },
   "user.role_changed": { icon: UserCog, tone: "warning" },
   "user.profile_updated": { icon: PenSquare, tone: "neutral" },
+  "instructor.application_submitted": { icon: Send, tone: "warning" },
+  "instructor.approved": { icon: BadgeCheck, tone: "success" },
+  "instructor.rejected": { icon: XCircle, tone: "danger" },
+  "instructor.revoked": { icon: Ban, tone: "danger" },
   "course.created": { icon: BookPlus, tone: "primary" },
   "course.updated": { icon: FilePen, tone: "neutral" },
   "course.published": { icon: Rocket, tone: "success" },
@@ -88,6 +92,7 @@ export const ACTIVITY_ACTIONS = Object.keys(ACTION_META) as ActivityAction[]
 /** Filter categories; each maps to an action prefix accepted by the API. */
 export const ACTIVITY_CATEGORIES = [
   { key: "user", prefix: "user.", icon: Users },
+  { key: "instructor", prefix: "instructor.", icon: BadgeCheck },
   { key: "course", prefix: "course.", icon: BookOpen },
   { key: "lesson", prefix: "lesson.", icon: FilePlus2 },
   { key: "enrollment", prefix: "enrollment.", icon: GraduationCap },

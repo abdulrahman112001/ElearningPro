@@ -79,6 +79,16 @@ export async function registerUser(role: "STUDENT" | "INSTRUCTOR" = "STUDENT") {
   return { email, password, api: await loginApi(email, password) }
 }
 
+/** Marks a registered instructor as approved, as an admin would. */
+export async function approveInstructor(email: string) {
+  const user = await db().user.findUniqueOrThrow({ where: { email } })
+  await db().instructorProfile.update({
+    where: { userId: user.id },
+    data: { isApproved: true, approvedAt: new Date(), applicationStatus: "APPROVED" },
+  })
+  return user.id
+}
+
 /** POSTs a raw (invalid) JSON body. */
 export function rawJson(ctx: APIRequestContext, method: "post" | "patch" | "put", url: string) {
   // A Buffer is sent verbatim; a string would be JSON-encoded by Playwright.

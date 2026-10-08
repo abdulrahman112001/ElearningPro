@@ -55,11 +55,11 @@ export async function POST(request: Request) {
       select: {
         id: true,
         name: true,
-        instructorProfile: { select: { subscriptionEnabled: true, monthlyPrice: true, commissionRate: true } },
+        instructorProfile: { select: { isApproved: true, subscriptionEnabled: true, monthlyPrice: true, commissionRate: true } },
       },
     })
     const profile = instructor?.instructorProfile
-    if (!instructor || !profile?.subscriptionEnabled) {
+    if (!instructor || !profile?.subscriptionEnabled || !profile.isApproved) {
       return NextResponse.json({ error: "This instructor does not offer a subscription" }, { status: 404 })
     }
 

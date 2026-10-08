@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import slugify from "slugify"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 import { resolveCourseAudience } from "@/lib/course-audience"
+import { pendingInstructorResponse } from "@/lib/instructor-guard"
 import { logActivity } from "@/lib/activity"
 
 // POST - Create a new course (instructor only)
@@ -21,6 +22,8 @@ export async function POST(request: Request) {
         { status: 403 }
       )
     }
+    const pending = pendingInstructorResponse(session)
+    if (pending) return pending
 
     const body = await readJson(request)
     const { title, titleAr, description, categoryId, level, language } = body

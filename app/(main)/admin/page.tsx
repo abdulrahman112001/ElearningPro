@@ -58,6 +58,7 @@ function ViewAllLink({ href, label }: { href: string; label: string }) {
 export default async function AdminDashboard() {
   const t = await getTranslations("admin")
   const td = await getTranslations("adminDashboard")
+  const tReview = await getTranslations("adminInstructorReview")
   const locale = await getLocale()
   const nf = new Intl.NumberFormat(locale === "en" ? "en-US" : "ar-EG")
   const dateFmt = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ar-EG", { dateStyle: "medium" })
@@ -128,6 +129,7 @@ export default async function AdminDashboard() {
         role: "INSTRUCTOR",
         instructorProfile: {
           isApproved: false,
+          applicationStatus: { in: ["PENDING", "APPROVED"] },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -362,7 +364,7 @@ export default async function AdminDashboard() {
         <SectionCard
           title={t("pendingInstructors")}
           icon={GraduationCap}
-          action={<ViewAllLink href="/admin/instructors?approved=false" label={t("viewAll")} />}
+          action={<ViewAllLink href="/admin/instructors?status=pending" label={t("viewAll")} />}
           contentClassName="p-0"
         >
           {pendingInstructors.length === 0 ? (
@@ -386,7 +388,10 @@ export default async function AdminDashboard() {
                     className="flex-1"
                   />
                   <div className="flex shrink-0 items-center gap-1">
-                    <PendingReviewActions kind="instructor" id={instructor.id} />
+                    {/* Instructors are reviewed with their full application (reject needs a reason). */}
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href="/admin/instructors?status=pending">{tReview("reviewApplication")}</Link>
+                    </Button>
                   </div>
                 </li>
               ))}

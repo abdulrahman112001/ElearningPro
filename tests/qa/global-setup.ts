@@ -120,7 +120,7 @@ export default async function globalSetup() {
     await db.instructorProfile.upsert({
       where: { userId: ahmed.id },
       update: { pendingEarnings: 1000, paidEarnings: 0 },
-      create: { userId: ahmed.id, isApproved: true, pendingEarnings: 1000, paidEarnings: 0 },
+      create: { userId: ahmed.id, isApproved: true, applicationStatus: "APPROVED", pendingEarnings: 1000, paidEarnings: 0 },
     })
     const mkWithdrawal = () =>
       db.withdrawal.create({

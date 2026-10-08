@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test"
 import Stripe from "stripe"
-import { anon, apiAs, db, fixtures, registerUser } from "./support"
+import { anon, apiAs, db, fixtures, registerUser, approveInstructor } from "./support"
 
 /**
  * Regression tests for fixes that had no direct test in the first QA round.
@@ -141,12 +141,15 @@ test.describe("Learning progress", () => {
 test.describe("Admin review flow", () => {
   test("FIX-30 pending course can be approved from the admin API", async () => {
     const u = await registerUser("INSTRUCTOR")
+    const userId = await approveInstructor(u.email)
     const course = await (await u.api.post("/api/instructor/courses", {
       data: { title: `QA review ${Date.now()}`, description: "d", categoryId: fixtures().categoryId, level: "BEGINNER", language: "ar" },
     })).json()
     const ch = await (await u.api.post(`/api/instructor/courses/${course.id}/chapters`, { data: { title: "c" } })).json()
     const ls = await (await u.api.post(`/api/instructor/courses/${course.id}/chapters/${ch.id}/lessons`, { data: { title: "l" } })).json()
     await u.api.patch(`/api/instructor/courses/${course.id}/chapters/${ch.id}/lessons/${ls.id}`, { data: { isPublished: true } })
+    // Publishing without approval (here: approval revoked) goes to review.
+    await db().instructorProfile.update({ where: { userId }, data: { isApproved: false } })
     const pub = await u.api.post(`/api/instructor/courses/${course.id}/publish`)
     expect((await pub.json()).status).toBe("PENDING_REVIEW")
 

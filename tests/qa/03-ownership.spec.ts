@@ -1,5 +1,5 @@
 import { test, expect, APIRequestContext } from "@playwright/test"
-import { apiAs, db, fixtures, registerUser } from "./support"
+import { apiAs, db, fixtures, registerUser, approveInstructor } from "./support"
 
 /**
  * Cross-tenant checks: Sara (instructor) owns "ui-ux-design"; Ahmed owns
@@ -106,8 +106,16 @@ test.describe("Course data validation", () => {
 })
 
 test.describe("Instructor onboarding", () => {
-  test("OWN-11 unapproved instructor cannot publish straight to the catalogue", async () => {
+  test("OWN-11 unapproved instructor cannot create courses", async () => {
     const u = await registerUser("INSTRUCTOR")
+    const res = await u.api.post("/api/instructor/courses", { data: { title: "QA blocked " + Date.now(), titleAr: "QA", description: "d", categoryId: fixtures().categoryId, level: "BEGINNER", language: "ar" } })
+    expect(res.status()).toBe(403)
+    expect((await res.json()).code).toBe("instructor_not_approved")
+  })
+
+  test("OWN-11b instructor whose approval was revoked goes through review", async () => {
+    const u = await registerUser("INSTRUCTOR")
+    const userId = await approveInstructor(u.email)
     const api = u.api
     const course = await api.post("/api/instructor/courses", { data: { title: "QA self-published " + Date.now(), titleAr: "QA", description: "d", categoryId: fixtures().categoryId, level: "BEGINNER", language: "ar" } })
     expect(course.status(), await course.text()).toBe(201)
@@ -115,6 +123,7 @@ test.describe("Instructor onboarding", () => {
     const ch = await (await api.post(`/api/instructor/courses/${id}/chapters`, { data: { title: "c1" } })).json()
     const ls = await (await api.post(`/api/instructor/courses/${id}/chapters/${ch.id}/lessons`, { data: { title: "l1" } })).json()
     await api.patch(`/api/instructor/courses/${id}/chapters/${ch.id}/lessons/${ls.id}`, { data: { isPublished: true } })
+    await db().instructorProfile.update({ where: { userId }, data: { isApproved: false } })
     await api.post(`/api/instructor/courses/${id}/publish`)
     const after = await db().course.findUniqueOrThrow({ where: { id } })
     expect(after.status, "brand-new unapproved instructor published without admin review").not.toBe("PUBLISHED")
@@ -122,6 +131,7 @@ test.describe("Instructor onboarding", () => {
 
   test("OWN-12 publish is refused for a course with no content", async () => {
     const u = await registerUser("INSTRUCTOR")
+    await approveInstructor(u.email)
     const course = await (await u.api.post("/api/instructor/courses", { data: { title: "QA empty " + Date.now(), titleAr: "QA", description: "d", categoryId: fixtures().categoryId, level: "BEGINNER", language: "ar" } })).json()
     const res = await u.api.post(`/api/instructor/courses/${course.id}/publish`)
     expect(res.status()).toBe(400)

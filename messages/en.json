@@ -163,7 +163,8 @@
     "agreeToTermsPrefix": "By signing up, you agree to the",
     "serverError": "Sign-in failed because of a server problem. Please try again later.",
     "accountBlocked": "This account has been blocked. Please contact support.",
-    "tooManyAttempts": "Too many failed attempts. Try again in 15 minutes."
+    "tooManyAttempts": "Too many failed attempts. Try again in 15 minutes.",
+    "instructorApplicationNote": "After creating your account you will complete your instructor application (personal details, teaching experience and qualifications). Our team reviews it within 1-3 working days; once approved you can create courses."
   },
   "hero": {
     "badge": "The Leading Arabic Platform for Online Learning",
@@ -2124,7 +2125,8 @@
       "group": "Groups",
       "grade": "Grade levels",
       "withdrawal": "Withdrawals",
-      "review": "Reviews"
+      "review": "Reviews",
+      "instructor": "Instructor applications"
     },
     "actions": {
       "user": {
@@ -2193,6 +2195,12 @@
       "review": {
         "created": "Review posted",
         "deleted": "Review deleted"
+      },
+      "instructor": {
+        "application_submitted": "Instructor application submitted",
+        "approved": "Instructor approved",
+        "rejected": "Instructor application rejected",
+        "revoked": "Instructor approval revoked"
       }
     }
   },
@@ -2707,5 +2715,359 @@
     "pendingReview": "Pending review",
     "pendingReviewBadge": "Pending admin review",
     "pendingReviewNotice": "This course was submitted for review. It will be published automatically once an admin approves it; you can keep editing meanwhile."
+  },
+  "instructorApplication": {
+    "metaTitle": "Instructor application",
+    "title": "Instructor application",
+    "subtitle": "Complete your professional details so our team can review them and activate your instructor account.",
+    "optional": "optional",
+    "requiredNote": "Fields marked with an asterisk are required.",
+    "loadFailed": "We couldn't load your application",
+    "loadFailedHint": "Check your internet connection and try again.",
+    "retry": "Try again",
+    "submitSuccess": "Your application was submitted. We'll review it soon.",
+    "submitFailed": "We couldn't submit your application. Please try again.",
+    "submit": "Submit for review",
+    "resubmit": "Resubmit application",
+    "submitting": "Submitting...",
+    "editingNotice": "You're editing an application under review. After saving it stays pending until an admin reviews it.",
+    "cancelEdit": "Cancel editing",
+    "sameAsPhone": "Same as phone",
+    "listSeparator": ", ",
+    "yearsValue": "{count, plural, =0 {Less than a year} one {# year} other {# years}}",
+    "removeSubject": "Remove {subject}",
+    "bioCounter": "{count} / {max}",
+    "bioCounterRemaining": "{count} more characters needed",
+    "termsLabel": "I confirm that all the information above is correct and I agree to the platform's <link>terms and conditions</link>.",
+    "status": {
+      "PENDING": "Under review",
+      "REJECTED": "Rejected"
+    },
+    "intro": {
+      "title": "Welcome to our teaching team",
+      "description": "Before you start publishing courses, we'd like to get to know you. Fill in the form below and our team will review it.",
+      "whyTitle": "Why we ask",
+      "whyText": "It keeps teaching quality high and earns students' and parents' trust in every instructor on the platform.",
+      "reviewTitle": "Review time",
+      "reviewText": "Reviews usually take 1–3 working days, and we'll notify you as soon as there's a decision.",
+      "linksTitle": "Links only",
+      "linksText": "No uploads needed; add links to your CV and an intro video (e.g. Google Drive or YouTube)."
+    },
+    "timeline": {
+      "label": "Application progress",
+      "account": "Account created",
+      "submitted": "Application submitted",
+      "review": "Admin review",
+      "teaching": "Start teaching",
+      "state": {
+        "done": "Done",
+        "current": "In progress",
+        "upcoming": "Up next"
+      }
+    },
+    "pending": {
+      "title": "Your application is under review",
+      "description": "Thank you! We've received your application and our team is reviewing it. Reviews usually take 1–3 working days.",
+      "submittedOn": "Submitted on {date}",
+      "edit": "Edit application",
+      "summaryTitle": "Your details",
+      "editHint": "You can edit your application at any time during the review; it will stay pending until an admin approves it."
+    },
+    "rejected": {
+      "title": "Your application wasn't approved",
+      "description": "Read the admin's note below, update your details and resubmit your application.",
+      "reasonLabel": "Reason",
+      "noReason": "No specific reason was given. Please review your details, make sure they're complete and resubmit.",
+      "reviewedOn": "Reviewed on {date}"
+    },
+    "approved": {
+      "title": "Your application is approved!",
+      "description": "Congratulations! Your instructor account is active, and you can now create courses and start teaching.",
+      "cta": "Go to the instructor dashboard"
+    },
+    "sections": {
+      "personal": "Personal information",
+      "personalHint": "Basic contact details. These aren't shown to students.",
+      "teaching": "Teaching experience",
+      "teachingHint": "Tell us what you teach and which grades you work with.",
+      "qualifications": "Qualifications",
+      "qualificationsHint": "Your highest academic qualification.",
+      "about": "About you & links",
+      "aboutHint": "Your bio appears on your public profile; links help us get to know your teaching style.",
+      "terms": "Confirmation"
+    },
+    "fields": {
+      "name": "Full name",
+      "phone": "Phone number",
+      "whatsapp": "WhatsApp number",
+      "gender": "Gender",
+      "governorate": "Governorate",
+      "city": "City / area",
+      "headline": "Professional headline",
+      "specialization": "Main subject / specialization",
+      "subjects": "Other subjects you teach",
+      "gradeLevels": "Grade levels you teach",
+      "yearsOfExperience": "Years of experience",
+      "currentWorkplace": "Current school / workplace",
+      "qualification": "Highest qualification",
+      "university": "University / institute",
+      "graduationYear": "Graduation year",
+      "bio": "About you",
+      "cvUrl": "CV link",
+      "introVideoUrl": "Intro video link",
+      "facebook": "Facebook",
+      "linkedin": "LinkedIn",
+      "youtube": "YouTube channel"
+    },
+    "placeholders": {
+      "name": "e.g. Ahmed Mohamed Ali",
+      "select": "Select",
+      "governorate": "Select governorate",
+      "city": "e.g. Nasr City",
+      "headline": "e.g. Math teacher for secondary stage",
+      "specialization": "e.g. Mathematics",
+      "subjects": "Type a subject and press Enter",
+      "currentWorkplace": "e.g. El Nasr Secondary School",
+      "university": "e.g. Cairo University – Faculty of Education",
+      "bio": "Tell us about your experience, how you explain lessons and what your students have achieved...",
+      "cvUrl": "https://drive.google.com/...",
+      "introVideoUrl": "https://youtube.com/watch?v=...",
+      "facebook": "https://facebook.com/...",
+      "linkedin": "https://linkedin.com/in/...",
+      "youtube": "https://youtube.com/@..."
+    },
+    "hints": {
+      "phone": "We'll contact you on this number about your application.",
+      "headline": "A short line shown under your name on your public profile.",
+      "subjects": "Press Enter or a comma to add a subject ({count} of {max}).",
+      "gradeLevels": "Select every grade level you teach.",
+      "bio": "At least {min} characters.",
+      "cvUrl": "A Google Drive or Dropbox link; make sure the file is viewable.",
+      "introVideoUrl": "A short clip of you explaining part of a lesson (YouTube or Google Drive)."
+    },
+    "errors": {
+      "required": "This field is required",
+      "termsRequired": "You must accept the confirmation and terms to submit",
+      "bioTooShort": "Your bio is too short; write at least {min} characters",
+      "invalidUrl": "Enter a valid link starting with http:// or https://",
+      "phoneInvalid": "Enter a valid phone number",
+      "yearsInvalid": "Enter a whole number from 0 to 60",
+      "graduationYearInvalid": "Enter a valid year between 1950 and {max}",
+      "invalid": "This value is invalid",
+      "fixFields": "Please fix the highlighted fields"
+    },
+    "genders": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "qualifications": {
+      "diploma": "Diploma",
+      "bachelor": "Bachelor's degree",
+      "education_diploma": "Education diploma",
+      "master": "Master's degree",
+      "phd": "PhD",
+      "other": "Other"
+    },
+    "stages": {
+      "primary": "Primary stage",
+      "preparatory": "Preparatory stage",
+      "secondary": "Secondary stage",
+      "university": "University",
+      "other": "Other"
+    },
+    "governorates": {
+      "Cairo": "Cairo",
+      "Giza": "Giza",
+      "Alexandria": "Alexandria",
+      "Qalyubia": "Qalyubia",
+      "Dakahlia": "Dakahlia",
+      "Sharqia": "Sharqia",
+      "Gharbia": "Gharbia",
+      "Monufia": "Monufia",
+      "Beheira": "Beheira",
+      "KafrElSheikh": "Kafr El Sheikh",
+      "Damietta": "Damietta",
+      "PortSaid": "Port Said",
+      "Ismailia": "Ismailia",
+      "Suez": "Suez",
+      "NorthSinai": "North Sinai",
+      "SouthSinai": "South Sinai",
+      "RedSea": "Red Sea",
+      "Matrouh": "Matrouh",
+      "NewValley": "New Valley",
+      "Faiyum": "Faiyum",
+      "BeniSuef": "Beni Suef",
+      "Minya": "Minya",
+      "Asyut": "Asyut",
+      "Sohag": "Sohag",
+      "Qena": "Qena",
+      "Luxor": "Luxor",
+      "Aswan": "Aswan"
+    }
+  },
+  "adminInstructorReview": {
+    "description": "Review teacher applications, approve or reject them, and keep track of every instructor on the platform",
+    "tabsLabel": "Filter by application status",
+    "tabs": {
+      "all": "All",
+      "pending": "Pending review",
+      "draft": "Not submitted",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "status": {
+      "PENDING": "Pending review",
+      "DRAFT": "Not submitted",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "stats": {
+      "total": "Total instructors",
+      "pending": "Awaiting review",
+      "pendingHint": "Needs your decision",
+      "approved": "Approved instructors",
+      "draft": "Haven't applied yet",
+      "rejected": "Rejected applications"
+    },
+    "pendingBanner": "{count, plural, =1 {One application is waiting for review} other {# applications are waiting for review}}",
+    "showPending": "Show applications",
+    "columns": {
+      "instructor": "Instructor",
+      "specialization": "Specialization",
+      "governorate": "Governorate",
+      "experience": "Experience",
+      "status": "Status",
+      "submittedAt": "Submitted",
+      "courses": "Courses",
+      "actions": "Actions"
+    },
+    "years": "{count, plural, =0 {Under a year} =1 {1 year} other {# years}}",
+    "coursesCount": "{count, plural, =0 {No courses} =1 {1 course} other {# courses}}",
+    "notProvided": "Not provided",
+    "notSubmitted": "Not submitted",
+    "reviewApplication": "Review application",
+    "viewInUsers": "View in users",
+    "approve": "Approve",
+    "reject": "Reject",
+    "revoke": "Revoke approval",
+    "emptyTitle": "No instructors here",
+    "emptyDescription": "Try another tab or change your search.",
+    "emptyPendingTitle": "No applications waiting",
+    "emptyPendingDescription": "All caught up. Every submitted application has been reviewed.",
+    "dialog": {
+      "title": "Instructor application",
+      "description": "Everything the teacher sent in their application",
+      "loading": "Loading application...",
+      "loadError": "Couldn't load the application",
+      "retry": "Try again",
+      "close": "Close"
+    },
+    "sections": {
+      "personal": "Personal details",
+      "teaching": "Teaching",
+      "qualifications": "Qualifications",
+      "about": "About & links",
+      "links": "Links",
+      "meta": "Application history"
+    },
+    "fields": {
+      "email": "Email",
+      "phone": "Phone",
+      "whatsapp": "WhatsApp",
+      "gender": "Gender",
+      "governorate": "Governorate",
+      "city": "City / area",
+      "headline": "Headline",
+      "specialization": "Specialization",
+      "subjects": "Subjects",
+      "gradeLevels": "Grade levels",
+      "yearsOfExperience": "Years of experience",
+      "currentWorkplace": "Current workplace",
+      "qualification": "Qualification",
+      "university": "University / institute",
+      "graduationYear": "Graduation year",
+      "bio": "Bio",
+      "cv": "CV",
+      "introVideo": "Intro video",
+      "facebook": "Facebook",
+      "linkedin": "LinkedIn",
+      "youtube": "YouTube",
+      "registeredAt": "Registered",
+      "submittedAt": "Submitted",
+      "reviewedAt": "Reviewed",
+      "agreedToTermsAt": "Accepted terms",
+      "rejectionReason": "Previous rejection reason"
+    },
+    "call": "Call",
+    "openWhatsapp": "Open WhatsApp",
+    "noLinks": "The teacher didn't add any links",
+    "draftTitle": "The teacher hasn't submitted the application yet",
+    "draftDescription": "This teacher registered an account but never sent the application. Their details will appear here once they submit.",
+    "confirm": {
+      "approveTitle": "Approve instructor",
+      "approveDescription": "{name} will be able to create courses right away and will get a notification and an email.",
+      "rejectTitle": "Reject application",
+      "rejectDescription": "The reason is sent to {name} so they can fix the application and resubmit.",
+      "revokeTitle": "Revoke instructor approval",
+      "revokeDescription": "{name} won't be able to manage courses until approved again.",
+      "reasonLabel": "Rejection reason",
+      "reasonOptionalLabel": "Reason (optional)",
+      "reasonPlaceholder": "Explain what the teacher needs to change...",
+      "reasonTooShort": "Write a reason of at least 5 characters",
+      "approveButton": "Confirm approval",
+      "rejectButton": "Send rejection",
+      "revokeButton": "Revoke approval",
+      "back": "Back"
+    },
+    "toast": {
+      "approved": "Instructor approved",
+      "rejected": "Application rejected and the teacher was notified",
+      "revoked": "Instructor approval revoked",
+      "blocked": "Instructor blocked",
+      "unblocked": "Instructor unblocked",
+      "reasonRequired": "A rejection reason is required",
+      "failed": "Couldn't complete the action, please try again"
+    },
+    "qualifications": {
+      "diploma": "Diploma",
+      "bachelor": "Bachelor's degree",
+      "education_diploma": "Education diploma",
+      "master": "Master's degree",
+      "phd": "PhD",
+      "other": "Other"
+    },
+    "genders": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "governorates": {
+      "Cairo": "Cairo",
+      "Giza": "Giza",
+      "Alexandria": "Alexandria",
+      "Qalyubia": "Qalyubia",
+      "Dakahlia": "Dakahlia",
+      "Sharqia": "Sharqia",
+      "Gharbia": "Gharbia",
+      "Monufia": "Monufia",
+      "Beheira": "Beheira",
+      "KafrElSheikh": "Kafr El Sheikh",
+      "Damietta": "Damietta",
+      "PortSaid": "Port Said",
+      "Ismailia": "Ismailia",
+      "Suez": "Suez",
+      "NorthSinai": "North Sinai",
+      "SouthSinai": "South Sinai",
+      "RedSea": "Red Sea",
+      "Matrouh": "Matrouh",
+      "NewValley": "New Valley",
+      "Faiyum": "Faiyum",
+      "BeniSuef": "Beni Suef",
+      "Minya": "Minya",
+      "Asyut": "Asyut",
+      "Sohag": "Sohag",
+      "Qena": "Qena",
+      "Luxor": "Luxor",
+      "Aswan": "Aswan"
+    }
   }
 }
