@@ -14,6 +14,7 @@ enum UserRole {
   STUDENT
   INSTRUCTOR
   ADMIN
+  PARENT
 }
 
 enum CourseLevel {
@@ -43,6 +44,8 @@ enum PaymentProvider {
   PAYPAL
   PAYMOB
   TAP
+  WALLET
+  CODE
 }
 
 enum SubscriptionPlan {
@@ -121,6 +124,17 @@ model User {
   guardianEmail String?
   guardianPhone String?
 
+  // Contact phone (watermark, WhatsApp) and the code a parent uses to link
+  phone          String?
+  parentLinkCode String?   @unique
+  // Wallet (charged by codes / approved transfers)
+  walletBalance  Float     @default(0)
+  // Gamification
+  points         Int       @default(0)
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastActiveDate DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -157,6 +171,39 @@ model User {
   activityLogs          ActivityLog[]
   alertsSent            StudentAlert[]        @relation("AlertSender")
   alertsReceived        StudentAlert[]        @relation("AlertStudent")
+
+  // Platform features
+  lessonViews            LessonView[]
+  devices                UserDevice[]
+  codeBatchesCreated     AccessCodeBatch[]      @relation("CodeBatchCreator")
+  codeBatchesOwned       AccessCodeBatch[]      @relation("CodeBatchInstructor")
+  codesRedeemed          AccessCode[]           @relation("CodeRedeemer")
+  walletTransactions     WalletTransaction[]
+  manualPayments         ManualPayment[]        @relation("ManualPaymentUser")
+  manualPaymentsReviewed ManualPayment[]        @relation("ManualPaymentReviewer")
+  questionBank           QuestionBankItem[]
+  childrenLinks          ParentLink[]           @relation("ParentOf")
+  parentLinks            ParentLink[]           @relation("ChildOf")
+  messageDeliveries      MessageDelivery[]
+  organizationsOwned     Organization[]         @relation("OrganizationOwner")
+  organizationMembers    OrganizationMember[]
+  organizationInvites    OrganizationInvite[]   @relation("OrganizationInviter")
+  attendance             AttendanceRecord[]     @relation("AttendanceStudent")
+  attendanceMarked       AttendanceRecord[]     @relation("AttendanceMarker")
+  groupFees              GroupFee[]             @relation("FeeStudent")
+  groupFeesRecorded      GroupFee[]             @relation("FeeRecorder")
+  classSubjectsTaught    ClassSubject[]
+  timetableEntries       TimetableEntry[]
+  assignmentsCreated     Assignment[]
+  submissions            AssignmentSubmission[] @relation("SubmissionStudent")
+  submissionsGraded      AssignmentSubmission[] @relation("SubmissionGrader")
+  gradeEntries           GradeEntry[]           @relation("GradeEntryStudent")
+  gradeEntriesRecorded   GradeEntry[]           @relation("GradeEntryRecorder")
+  announcements          Announcement[]
+  aiUsage                AiUsage[]
+  aiTutorMessages        AiTutorMessage[]
+  pointTransactions      PointTransaction[]
+  badges                 UserBadge[]
 
   @@index([email])
   @@index([role])
@@ -237,28 +284,28 @@ model InstructorProfile {
 
   // Teacher application, reviewed by an admin. isApproved stays the source
   // of truth for access; applicationStatus tracks the review workflow.
-  applicationStatus   InstructorApplicationStatus @default(DRAFT)
-  submittedAt         DateTime?
-  reviewedAt          DateTime?
-  reviewedById        String?
-  rejectionReason     String?   @db.Text
-  phone               String?
-  whatsapp            String?
-  gender              String?
-  governorate         String?
-  city                String?
-  specialization      String?
-  subjects            String[]  @default([])
-  gradeLevelIds       String[]  @default([])
-  qualification       String?
-  university          String?
-  graduationYear      Int?
-  yearsOfExperience   Int?
-  currentWorkplace    String?
-  cvUrl               String?
-  introVideoUrl       String?
-  facebook            String?
-  agreedToTermsAt     DateTime?
+  applicationStatus InstructorApplicationStatus @default(DRAFT)
+  submittedAt       DateTime?
+  reviewedAt        DateTime?
+  reviewedById      String?
+  rejectionReason   String?                     @db.Text
+  phone             String?
+  whatsapp          String?
+  gender            String?
+  governorate       String?
+  city              String?
+  specialization    String?
+  subjects          String[]                    @default([])
+  gradeLevelIds     String[]                    @default([])
+  qualification     String?
+  university        String?
+  graduationYear    Int?
+  yearsOfExperience Int?
+  currentWorkplace  String?
+  cvUrl             String?
+  introVideoUrl     String?
+  facebook          String?
+  agreedToTermsAt   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -324,30 +371,36 @@ model Course {
   language       String         @default("ar")
   subtitles      String[]
 
-  instructorId String
-  categoryId   String
-  gradeLevelId String? // academic grade this course targets
-  classGroupId String? // set = only members of this group can enroll
+  instructorId     String
+  categoryId       String
+  gradeLevelId     String? // academic grade this course targets
+  classGroupId     String? // set = only members of this group can enroll
+  organizationId   String? // course published by a center / school
+  watermarkEnabled Boolean @default(true) // moving name/phone watermark on videos
 
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   // Relations
-  instructor   User          @relation("InstructorCourses", fields: [instructorId], references: [id])
-  category     Category      @relation(fields: [categoryId], references: [id])
-  chapters     Chapter[]
-  enrollments  Enrollment[]
-  reviews      Review[]
-  purchases    Purchase[]
-  wishlists    Wishlist[]
-  certificates Certificate[]
-  coupons      Coupon[]
-  liveSessions LiveSession[]
-  liveClasses  LiveClass[]
-  faqs         CourseFAQ[]
-  gradeLevel   GradeLevel?   @relation(fields: [gradeLevelId], references: [id], onDelete: SetNull)
-  classGroup   ClassGroup?   @relation(fields: [classGroupId], references: [id], onDelete: SetNull)
+  instructor        User              @relation("InstructorCourses", fields: [instructorId], references: [id])
+  category          Category          @relation(fields: [categoryId], references: [id])
+  chapters          Chapter[]
+  enrollments       Enrollment[]
+  reviews           Review[]
+  purchases         Purchase[]
+  wishlists         Wishlist[]
+  certificates      Certificate[]
+  coupons           Coupon[]
+  liveSessions      LiveSession[]
+  liveClasses       LiveClass[]
+  faqs              CourseFAQ[]
+  gradeLevel        GradeLevel?       @relation(fields: [gradeLevelId], references: [id], onDelete: SetNull)
+  classGroup        ClassGroup?       @relation(fields: [classGroupId], references: [id], onDelete: SetNull)
+  organization      Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  accessCodeBatches AccessCodeBatch[]
+  assignments       Assignment[]
+  aiTutorMessages   AiTutorMessage[]
 
   @@index([slug])
   @@index([instructorId])
@@ -355,6 +408,7 @@ model Course {
   @@index([status])
   @@index([gradeLevelId])
   @@index([classGroupId])
+  @@index([organizationId])
 }
 
 model Chapter {
@@ -391,6 +445,8 @@ model Lesson {
   isPublished   Boolean        @default(false)
   isFree        Boolean        @default(false)
   isPreview     Boolean        @default(false)
+  maxViews      Int? // per student; null = unlimited
+  transcript    String?        @db.Text // lesson text the AI tutor can use
 
   chapterId String
 
@@ -403,6 +459,8 @@ model Lesson {
   questions   Question[]
   attachments Attachment[]
   quiz        Quiz?
+  views       LessonView[]
+  assignments Assignment[]
 
   @@index([chapterId])
 }
@@ -881,6 +939,13 @@ model Quiz {
   shuffleQuestions Boolean @default(false)
   showResults      Boolean @default(true)
 
+  // Exam settings
+  availableFrom       DateTime? // closed before this time
+  availableUntil      DateTime? // closed after this time
+  maxAttempts         Int? // null = unlimited
+  questionsPerAttempt Int? // random subset per student; null = all
+  detectTabSwitch     Boolean   @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -901,6 +966,7 @@ model QuizQuestion {
   explanation   String?      @db.Text
   explanationAr String?      @db.Text
   points        Int          @default(1)
+  imageUrl      String?
   position      Int          @default(0)
 
   createdAt DateTime @default(now())
@@ -916,6 +982,7 @@ enum QuestionType {
   MULTIPLE_CHOICE
   TRUE_FALSE
   MULTIPLE_SELECT
+  ESSAY
 }
 
 model QuizAttempt {
@@ -927,6 +994,11 @@ model QuizAttempt {
   startedAt   DateTime  @default(now())
   completedAt DateTime?
   timeSpent   Int? // in seconds
+
+  attemptNumber Int      @default(1)
+  questionIds   String[] @default([]) // questions served in this attempt
+  tabSwitches   Int      @default(0)
+  needsGrading  Boolean  @default(false) // has essay answers waiting for the teacher
 
   quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
   user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -943,6 +1015,12 @@ model QuizAnswer {
   answer     Json // Selected option(s)
   isCorrect  Boolean
   points     Float   @default(0)
+
+  textAnswer  String?   @db.Text // essay answer
+  manualScore Float? // points given by the teacher for an essay
+  feedback    String?   @db.Text
+  gradedAt    DateTime?
+  gradedById  String?
 
   attempt  QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
@@ -1015,15 +1093,31 @@ model ClassGroup {
   instructorId String
   gradeLevelId String?
 
+  organizationId String? // class of a center / school
+  mode           String  @default("ONLINE") // ONLINE | OFFLINE | HYBRID
+  location       String?
+  monthlyFee     Float   @default(0)
+  capacity       Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  instructor User               @relation("InstructorGroups", fields: [instructorId], references: [id], onDelete: Cascade)
-  gradeLevel GradeLevel?        @relation(fields: [gradeLevelId], references: [id], onDelete: SetNull)
-  members    ClassGroupMember[]
-  courses    Course[]
+  instructor    User                @relation("InstructorGroups", fields: [instructorId], references: [id], onDelete: Cascade)
+  gradeLevel    GradeLevel?         @relation(fields: [gradeLevelId], references: [id], onDelete: SetNull)
+  members       ClassGroupMember[]
+  courses       Course[]
+  organization  Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  scheduleSlots GroupScheduleSlot[]
+  sessions      GroupSession[]
+  fees          GroupFee[]
+  subjects      ClassSubject[]
+  timetable     TimetableEntry[]
+  assignments   Assignment[]
+  gradeEntries  GradeEntry[]
+  announcements Announcement[]
 
   @@index([instructorId])
+  @@index([organizationId])
 }
 
 model ClassGroupMember {
@@ -1109,4 +1203,603 @@ model ActivityLog {
   @@index([createdAt])
   @@index([actorId])
   @@index([action])
+}
+
+// ===========================================================================
+// Video protection
+// ===========================================================================
+
+/// How many times a student opened a lesson video (for Lesson.maxViews).
+model LessonView {
+  id           String   @id @default(cuid())
+  lessonId     String
+  userId       String
+  count        Int      @default(0)
+  extraViews   Int      @default(0) // granted by the teacher on request
+  lastViewedAt DateTime @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, userId])
+  @@index([userId])
+}
+
+/// Devices a user signed in from (limit set in Setting "security.maxDevices").
+model UserDevice {
+  id          String    @id @default(cuid())
+  userId      String
+  deviceId    String // random id kept in a cookie
+  label       String? // e.g. "Chrome on Windows"
+  userAgent   String?
+  ip          String?
+  firstSeenAt DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  revokedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+}
+
+// ===========================================================================
+// Access codes, wallet and manual transfers
+// ===========================================================================
+
+enum AccessCodeType {
+  COURSE // unlocks one course
+  SUBSCRIPTION // months of a teacher subscription
+  WALLET // adds credit to the wallet
+}
+
+model AccessCodeBatch {
+  id           String         @id @default(cuid())
+  name         String
+  type         AccessCodeType
+  createdById  String
+  instructorId String? // teacher whose course / subscription the codes unlock
+  courseId     String?
+  value        Float          @default(0) // wallet credit for WALLET codes
+  months       Int            @default(1) // SUBSCRIPTION codes
+  quantity     Int
+  expiresAt    DateTime?
+  createdAt    DateTime       @default(now())
+
+  createdBy  User         @relation("CodeBatchCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  instructor User?        @relation("CodeBatchInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
+  course     Course?      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  codes      AccessCode[]
+
+  @@index([createdById])
+  @@index([instructorId])
+}
+
+model AccessCode {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  batchId      String
+  redeemedById String?
+  redeemedAt   DateTime?
+  disabled     Boolean   @default(false)
+
+  batch      AccessCodeBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  redeemedBy User?           @relation("CodeRedeemer", fields: [redeemedById], references: [id], onDelete: SetNull)
+
+  @@index([batchId])
+  @@index([redeemedById])
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+}
+
+model WalletTransaction {
+  id           String                @id @default(cuid())
+  userId       String
+  type         WalletTransactionType
+  amount       Float
+  balanceAfter Float
+  reason       String // code_redeemed | transfer_approved | course_purchase | subscription | group_fee | refund | admin_adjustment
+  reference    String? // id of the code / purchase / payment
+  note         String?
+  createdAt    DateTime              @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+enum ManualPaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// A transfer (Vodafone Cash, InstaPay, bank) the student reports; an admin approves it into the wallet.
+model ManualPayment {
+  id           String              @id @default(cuid())
+  userId       String
+  method       String // VODAFONE_CASH | INSTAPAY | BANK_TRANSFER | FAWRY | CASH
+  amount       Float
+  reference    String // transaction number from the receipt
+  senderPhone  String?
+  note         String?
+  status       ManualPaymentStatus @default(PENDING)
+  reviewedById String?
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime            @default(now())
+
+  user       User  @relation("ManualPaymentUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("ManualPaymentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+// ===========================================================================
+// Exams: question bank
+// ===========================================================================
+
+model QuestionBankItem {
+  id            String       @id @default(cuid())
+  instructorId  String
+  subject       String?
+  gradeLevelId  String?
+  tags          String[]     @default([])
+  difficulty    String? // easy | medium | hard
+  question      String       @db.Text
+  questionAr    String?      @db.Text
+  type          QuestionType @default(MULTIPLE_CHOICE)
+  options       Json // same shape as QuizQuestion.options
+  explanation   String?      @db.Text
+  explanationAr String?      @db.Text
+  imageUrl      String?
+  points        Int          @default(1)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  instructor User @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@index([instructorId])
+}
+
+// ===========================================================================
+// Parents
+// ===========================================================================
+
+enum ParentLinkStatus {
+  PENDING
+  ACTIVE
+}
+
+model ParentLink {
+  id        String           @id @default(cuid())
+  parentId  String
+  studentId String
+  relation  String? // father | mother | guardian
+  status    ParentLinkStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+
+  parent  User @relation("ParentOf", fields: [parentId], references: [id], onDelete: Cascade)
+  student User @relation("ChildOf", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, studentId])
+  @@index([studentId])
+}
+
+/// Every outgoing WhatsApp / email / SMS message, for delivery tracking.
+model MessageDelivery {
+  id        String   @id @default(cuid())
+  channel   String // WHATSAPP | EMAIL | SMS
+  to        String
+  template  String // weekly_report | absence | fee_due | alert | ...
+  body      String?  @db.Text
+  status    String // SENT | LOGGED | FAILED
+  error     String?
+  userId    String? // recipient user when known
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([template, createdAt])
+  @@index([userId])
+}
+
+// ===========================================================================
+// Organizations (centers, schools, academies)
+// ===========================================================================
+
+enum OrganizationType {
+  CENTER
+  SCHOOL
+  ACADEMY
+}
+
+enum OrganizationRole {
+  OWNER
+  MANAGER
+  TEACHER
+  STUDENT
+}
+
+model Organization {
+  id           String           @id @default(cuid())
+  name         String
+  slug         String           @unique
+  type         OrganizationType @default(CENTER)
+  description  String?          @db.Text
+  logoUrl      String?
+  coverUrl     String?
+  primaryColor String? // hex, used to brand the public page
+  phone        String?
+  email        String?
+  address      String?
+  governorate  String?
+  ownerId      String
+  isActive     Boolean          @default(true)
+  isApproved   Boolean          @default(false) // admin approval before it goes public
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  owner         User                 @relation("OrganizationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members       OrganizationMember[]
+  invites       OrganizationInvite[]
+  courses       Course[]
+  classGroups   ClassGroup[]
+  terms         AcademicTerm[]
+  timetable     TimetableEntry[]
+  gradeEntries  GradeEntry[]
+  announcements Announcement[]
+
+  @@index([ownerId])
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrganizationRole
+  title          String? // e.g. "Math teacher", "Grade 3 - A"
+  joinedAt       DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model OrganizationInvite {
+  id             String           @id @default(cuid())
+  organizationId String
+  email          String
+  role           OrganizationRole
+  token          String           @unique
+  createdById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("OrganizationInviter", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+// ===========================================================================
+// Group schedule, attendance and monthly fees
+// ===========================================================================
+
+/// Weekly recurring slot of a group, e.g. Saturday 17:00 for 90 minutes.
+model GroupScheduleSlot {
+  id          String  @id @default(cuid())
+  groupId     String
+  dayOfWeek   Int // 0 = Sunday ... 6 = Saturday
+  startTime   String // "17:00" (Africa/Cairo)
+  durationMin Int     @default(60)
+  location    String?
+
+  group ClassGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+}
+
+model GroupSession {
+  id          String    @id @default(cuid())
+  groupId     String
+  title       String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  mode        String    @default("OFFLINE") // ONLINE | OFFLINE
+  location    String?
+  liveClassId String? // online sessions can point to a live class
+  qrToken     String?   @unique // rotating token students scan to check in
+  qrExpiresAt DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  group      ClassGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  attendance AttendanceRecord[]
+
+  @@index([groupId, startsAt])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  EXCUSED
+}
+
+model AttendanceRecord {
+  id             String           @id @default(cuid())
+  sessionId      String
+  studentId      String
+  status         AttendanceStatus
+  method         String           @default("MANUAL") // QR | MANUAL | LIVE
+  markedAt       DateTime         @default(now())
+  markedById     String?
+  parentNotified Boolean          @default(false)
+
+  session  GroupSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student  User         @relation("AttendanceStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  markedBy User?        @relation("AttendanceMarker", fields: [markedById], references: [id], onDelete: SetNull)
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+}
+
+enum FeeStatus {
+  DUE
+  PAID
+  WAIVED
+}
+
+model GroupFee {
+  id           String    @id @default(cuid())
+  groupId      String
+  studentId    String
+  period       String // "2026-10"
+  amount       Float
+  status       FeeStatus @default(DUE)
+  method       String? // CASH | WALLET | CODE | ONLINE
+  paidAt       DateTime?
+  receiptNo    String?   @unique
+  recordedById String?
+  note         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  group      ClassGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student    User       @relation("FeeStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  recordedBy User?      @relation("FeeRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, studentId, period])
+  @@index([studentId])
+  @@index([status])
+}
+
+// ===========================================================================
+// School: terms, subjects, timetable, homework, gradebook, announcements
+// ===========================================================================
+
+model AcademicTerm {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String // "First term 2026/2027"
+  startsAt       DateTime
+  endsAt         DateTime
+  isCurrent      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  gradeEntries GradeEntry[]
+
+  @@index([organizationId])
+}
+
+/// A subject taught in a class by a teacher (school mode).
+model ClassSubject {
+  id        String @id @default(cuid())
+  groupId   String
+  subject   String
+  teacherId String
+
+  group   ClassGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher User       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, subject])
+  @@index([teacherId])
+}
+
+model TimetableEntry {
+  id             String  @id @default(cuid())
+  organizationId String
+  groupId        String
+  subject        String
+  teacherId      String?
+  dayOfWeek      Int // 0 = Sunday ... 6 = Saturday
+  startTime      String // "08:00"
+  endTime        String // "08:45"
+  room           String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  group        ClassGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher      User?        @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([groupId, dayOfWeek])
+}
+
+/// Homework, for a group, a course or a lesson.
+model Assignment {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?   @db.Text
+  teacherId     String
+  groupId       String?
+  courseId      String?
+  lessonId      String?
+  subject       String?
+  dueAt         DateTime?
+  maxScore      Float     @default(10)
+  allowLate     Boolean   @default(true)
+  attachmentUrl String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  teacher     User                   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  group       ClassGroup?            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  course      Course?                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson      Lesson?                @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  submissions AssignmentSubmission[]
+
+  @@index([teacherId])
+  @@index([groupId])
+  @@index([courseId])
+}
+
+model AssignmentSubmission {
+  id           String    @id @default(cuid())
+  assignmentId String
+  studentId    String
+  content      String?   @db.Text
+  linkUrl      String?
+  submittedAt  DateTime  @default(now())
+  isLate       Boolean   @default(false)
+  score        Float?
+  feedback     String?   @db.Text
+  gradedAt     DateTime?
+  gradedById   String?
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    User       @relation("SubmissionStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  gradedBy   User?      @relation("SubmissionGrader", fields: [gradedById], references: [id], onDelete: SetNull)
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+}
+
+/// One mark in the gradebook (exam, homework, participation...).
+model GradeEntry {
+  id             String   @id @default(cuid())
+  organizationId String?
+  termId         String?
+  groupId        String
+  studentId      String
+  subject        String
+  title          String // "Midterm", "Monthly exam - October"
+  score          Float
+  maxScore       Float
+  weight         Float    @default(1)
+  recordedById   String
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  term         AcademicTerm? @relation(fields: [termId], references: [id], onDelete: SetNull)
+  group        ClassGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student      User          @relation("GradeEntryStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  recordedBy   User          @relation("GradeEntryRecorder", fields: [recordedById], references: [id], onDelete: Cascade)
+
+  @@index([groupId, termId])
+  @@index([studentId])
+}
+
+model Announcement {
+  id             String   @id @default(cuid())
+  organizationId String?
+  groupId        String?
+  authorId       String
+  title          String
+  body           String   @db.Text
+  audience       String   @default("ALL") // ALL | STUDENTS | PARENTS | TEACHERS
+  pinned         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  group        ClassGroup?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([groupId, createdAt])
+}
+
+// ===========================================================================
+// AI
+// ===========================================================================
+
+model AiUsage {
+  id           String   @id @default(cuid())
+  userId       String
+  feature      String // generate_questions | tutor | diagnose
+  model        String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model AiTutorMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  lessonId  String?
+  role      String // user | assistant
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId, courseId, createdAt])
+}
+
+// ===========================================================================
+// Gamification
+// ===========================================================================
+
+model PointTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  points      Int
+  reason      String // lesson_completed | quiz_passed | perfect_score | course_completed | streak_bonus | assignment_submitted
+  referenceId String   @default("") // makes awards idempotent per reason + reference
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reason, referenceId])
+  @@index([userId, createdAt])
+}
+
+model Badge {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  nameAr        String
+  nameEn        String
+  descriptionAr String?
+  descriptionEn String?
+  icon          String? // lucide icon name
+  createdAt     DateTime @default(now())
+
+  awards UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
 }

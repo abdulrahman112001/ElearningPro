@@ -32,9 +32,19 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url))
   }
 
+  if (pathname.startsWith("/parent") && role !== "PARENT" && role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/", req.url))
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/instructor/:path*", "/student/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/instructor/:path*",
+    "/student/:path*",
+    "/parent/:path*",
+    "/org/:path*",
+  ],
 }

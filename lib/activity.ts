@@ -5,7 +5,11 @@ import { db } from "@/lib/db"
  * Action names recorded in the admin activity feed. Keep them stable: the
  * admin UI groups and translates them by this key.
  */
-export type ActivityAction =
+// Known actions get icons and labels in the admin feed; new features may log
+// any "<entity>.<verb>" string and fall back to a generic icon.
+export type ActivityAction = KnownActivityAction | `${string}.${string}`
+
+export type KnownActivityAction =
   | "user.registered"
   | "user.login"
   | "user.blocked"

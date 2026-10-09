@@ -59,6 +59,7 @@ export default defineConfig({
       TRUST_PROXY: "true",
       // Emails are only logged, never sent, during tests.
       EMAIL_TRANSPORT: "log",
+      WHATSAPP_TRANSPORT: "log",
     },
   },
 })

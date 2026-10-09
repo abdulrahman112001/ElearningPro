@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test"
 
 /**
  * QA regression suite (tests/qa).
+ * AGENT VARIANT: no globalSetup (it deletes QA users, which would break
+ * tests running in parallel) and reuses the dev server on port 3010.
  *
  * It WRITES fixture data (coupons, quizzes, withdrawals, throwaway users), so
  * it refuses to run against anything but a local database. Point it at a
@@ -26,8 +28,7 @@ const PORT = 3010
 
 export default defineConfig({
   testDir: "./tests/qa",
-  globalSetup: "./tests/qa/global-setup.ts",
-  fullyParallel: false,
+    fullyParallel: false,
   workers: 1,
   retries: 0,
   timeout: 90_000,

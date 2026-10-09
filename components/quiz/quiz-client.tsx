@@ -40,7 +40,7 @@ interface QuizQuestion {
   id: string
   question: string
   questionAr?: string | null
-  type: "MULTIPLE_CHOICE" | "TRUE_FALSE" | "MULTIPLE_SELECT"
+  type: "MULTIPLE_CHOICE" | "TRUE_FALSE" | "MULTIPLE_SELECT" | "ESSAY"
   points: number
   options: QuizOption[]
 }

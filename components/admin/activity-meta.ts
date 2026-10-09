@@ -33,7 +33,7 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react"
-import type { ActivityAction } from "@/lib/activity"
+import type { KnownActivityAction as ActivityAction } from "@/lib/activity"
 import type { Tone } from "@/components/shared"
 
 /**
