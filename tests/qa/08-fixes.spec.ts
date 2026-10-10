@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test"
 import Stripe from "stripe"
-import { anon, apiAs, db, fixtures, registerUser, approveInstructor } from "./support"
+import { anon, apiAs, BASE_URL, db, fixtures, registerUser, approveInstructor } from "./support"
 
 /**
  * Regression tests for fixes that had no direct test in the first QA round.
@@ -214,7 +214,7 @@ test.describe("Access scoping", () => {
     expect(ok.headers()["set-cookie"]).toContain("locale=en")
 
     const evil = await ctx.get("/api/set-locale?locale=xx&redirect=//evil.example", { maxRedirects: 0 })
-    expect(new URL(evil.headers()["location"]).host).toBe("localhost:3010")
+    expect(new URL(evil.headers()["location"]).host).toBe(new URL(BASE_URL).host)
     expect(evil.headers()["set-cookie"]).toContain("locale=ar")
   })
 

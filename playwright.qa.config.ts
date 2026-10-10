@@ -23,6 +23,7 @@ process.env.DATABASE_URL = QA_DB
 process.env.DIRECT_URL = QA_DB
 
 const PORT = 3010
+process.env.QA_BASE_URL = `http://localhost:${PORT}`
 
 export default defineConfig({
   testDir: "./tests/qa",

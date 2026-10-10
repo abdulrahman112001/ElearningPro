@@ -24,11 +24,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    if (!session?.user?.id) {
+    // Realtime needs a long-lived Socket.IO server. Serverless hosts such as
+    // Vercel cannot run one, so connecting to /api/socket/io there only
+    // produced 400 errors. Connect only when a socket server is configured.
+    if (!session?.user?.id || !process.env.NEXT_PUBLIC_SOCKET_URL) {
       return
     }
 
-    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || "", {
+    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
       path: "/api/socket/io",
       addTrailingSlash: false,
       withCredentials: true,

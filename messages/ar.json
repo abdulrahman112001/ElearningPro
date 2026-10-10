@@ -2024,7 +2024,8 @@
       "roles": {
         "STUDENT": "طالب",
         "INSTRUCTOR": "مدرّس",
-        "ADMIN": "مدير"
+        "ADMIN": "مدير",
+        "PARENT": "ولي أمر"
       },
       "homework": "واجباتي",
       "timetable": "جدول الحصص",
@@ -2144,7 +2145,8 @@
     "roles": {
       "ADMIN": "مدير",
       "INSTRUCTOR": "معلم",
-      "STUDENT": "طالب"
+      "STUDENT": "طالب",
+      "PARENT": "ولي أمر"
     },
     "categories": {
       "all": "الكل",
@@ -2393,7 +2395,8 @@
     "roles": {
       "ADMIN": "مدير",
       "INSTRUCTOR": "معلم",
-      "STUDENT": "طالب"
+      "STUDENT": "طالب",
+      "PARENT": "ولي أمر"
     },
     "threadTitle": "عرض المحادثة",
     "threadDescription": "سجل الرسائل الكامل بين المستخدمَين بترتيب زمني.",
@@ -4301,7 +4304,8 @@
       "OWNER": "المالك",
       "MANAGER": "مدير",
       "TEACHER": "مدرس",
-      "STUDENT": "طالب"
+      "STUDENT": "طالب",
+      "PARENT": "ولي أمر"
     },
     "modes": {
       "ONLINE": "أونلاين",

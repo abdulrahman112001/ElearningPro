@@ -2024,7 +2024,8 @@
       "roles": {
         "STUDENT": "Student",
         "INSTRUCTOR": "Instructor",
-        "ADMIN": "Administrator"
+        "ADMIN": "Administrator",
+        "PARENT": "Parent"
       },
       "homework": "Homework",
       "timetable": "Timetable",
@@ -2144,7 +2145,8 @@
     "roles": {
       "ADMIN": "Admin",
       "INSTRUCTOR": "Teacher",
-      "STUDENT": "Student"
+      "STUDENT": "Student",
+      "PARENT": "Parent"
     },
     "categories": {
       "all": "All",
@@ -2393,7 +2395,8 @@
     "roles": {
       "ADMIN": "Admin",
       "INSTRUCTOR": "Teacher",
-      "STUDENT": "Student"
+      "STUDENT": "Student",
+      "PARENT": "Parent"
     },
     "threadTitle": "Conversation",
     "threadDescription": "The full message history between the two users, in chronological order.",
@@ -4301,7 +4304,8 @@
       "OWNER": "Owner",
       "MANAGER": "Manager",
       "TEACHER": "Teacher",
-      "STUDENT": "Student"
+      "STUDENT": "Student",
+      "PARENT": "Parent"
     },
     "modes": {
       "ONLINE": "Online",

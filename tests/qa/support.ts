@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client"
 import fs from "fs"
 import path from "path"
 
-export const BASE_URL = "http://localhost:3010"
+export const BASE_URL = process.env.QA_BASE_URL ?? "http://localhost:3010"
 
 export const ACCOUNTS = {
   admin: { email: "admin@elearning.com", password: "admin123" },

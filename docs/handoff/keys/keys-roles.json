@@ -1,0 +1,4 @@
+{
+  "ar": { "nav": { "dashboard": { "roles": { "PARENT": "ولي أمر" } } } },
+  "en": { "nav": { "dashboard": { "roles": { "PARENT": "Parent" } } } }
+}
