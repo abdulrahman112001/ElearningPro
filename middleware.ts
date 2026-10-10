@@ -8,7 +8,10 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === "production",
+    // NextAuth names the cookie "__Secure-…" only on https, so follow the
+    // request protocol rather than NODE_ENV (a production build served over
+    // plain http would otherwise look for the wrong cookie and log everyone out).
+    secureCookie: req.nextUrl.protocol === "https:",
   })
 
   const { pathname } = req.nextUrl

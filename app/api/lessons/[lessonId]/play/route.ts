@@ -116,7 +116,7 @@ export async function POST(request: Request, { params }: { params: { lessonId: s
         res.cookies.set(DEVICE_COOKIE, deviceId, {
           httpOnly: true,
           sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
+          secure: new URL(request.url).protocol === "https:",
           path: "/",
           maxAge: DEVICE_COOKIE_MAX_AGE,
         })
