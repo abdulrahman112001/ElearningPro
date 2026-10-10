@@ -1,0 +1,406 @@
+{
+  "ar": {
+    "parent": {
+      "shell": {
+        "title": "لوحة ولي الأمر",
+        "subtitle": "تابع دراسة أبنائك",
+        "overview": "أبنائي",
+        "reports": "التقارير الأسبوعية",
+        "settings": "الإعدادات",
+        "sections": { "family": "العائلة", "account": "الحساب" }
+      },
+      "common": { "error": "حدث خطأ، حاول مرة أخرى" },
+      "relations": { "father": "الأب", "mother": "الأم", "guardian": "ولي الأمر" },
+      "register": {
+        "tab": "ولي أمر",
+        "note": "بعد إنشاء الحساب اطلب من ابنك كود الربط من صفحة «العائلة» في حسابه، وستصلك تقارير أسبوعية عن مستواه على واتساب والبريد الإلكتروني.",
+        "phone": "رقم الموبايل (واتساب)",
+        "phoneHelp": "نرسل عليه التقرير الأسبوعي لابنك.",
+        "phoneInvalid": "أدخل رقم موبايل صحيحاً"
+      },
+      "addChild": {
+        "help": "اطلب من ابنك فتح صفحة «العائلة» في حسابه ونسخ كود الربط المكون من 8 أحرف.",
+        "codeLabel": "كود الربط",
+        "relationLabel": "صلة القرابة",
+        "submit": "ربط الحساب",
+        "success": "تم ربط حساب {name} بنجاح",
+        "errors": {
+          "invalidCode": "الكود غير صحيح. تأكد منه واطلب من ابنك أحدث كود.",
+          "alreadyLinked": "هذا الطالب مرتبط بحسابك بالفعل.",
+          "limit": "وصل هذا الطالب للحد الأقصى من أولياء الأمور (4).",
+          "tooMany": "محاولات كثيرة، حاول بعد قليل.",
+          "generic": "تعذّر ربط الحساب، حاول مرة أخرى."
+        }
+      },
+      "home": {
+        "title": "أبنائي",
+        "description": "نظرة سريعة على مستوى أبنائك الدراسي وحضورهم ومصروفاتهم.",
+        "stats": {
+          "children": "الأبناء",
+          "feesDue": "مصروفات مستحقة",
+          "missingHomework": "واجبات لم تُسلّم",
+          "alerts": "تنبيهات المعلمين",
+          "last30": "آخر 30 يوماً"
+        },
+        "emptyTitle": "لم تربط أي حساب بعد",
+        "emptyDescription": "أضف ابنك باستخدام كود الربط الظاهر في حسابه لتتابع تقدمه.",
+        "viewDetails": "عرض التفاصيل",
+        "addTitle": "إضافة ابن",
+        "addDescription": "اربط حساب ابنك باستخدام الكود الخاص به."
+      },
+      "indicators": {
+        "progress": "متوسط التقدم في {count, plural, =0 {لا كورسات} one {كورس واحد} two {كورسين} few {# كورسات} many {# كورساً} other {# كورس}}",
+        "quizAvg": "متوسط الاختبارات",
+        "attendance": "نسبة الحضور",
+        "missingHomework": "واجبات ناقصة",
+        "feesDue": "مستحقات"
+      },
+      "child": {
+        "metaTitle": "متابعة الابن",
+        "noGrade": "لم يحدد الصف الدراسي",
+        "unlink": "إلغاء الربط",
+        "unlinkTitle": "إلغاء ربط الحساب؟",
+        "unlinkDescription": "لن تتمكن من متابعة {name} ولن تصلك تقاريره حتى تربطه مرة أخرى بكود جديد.",
+        "unlinked": "تم إلغاء الربط",
+        "stats": {
+          "progress": "متوسط التقدم",
+          "courses": "{count, plural, =0 {لا كورسات} one {كورس واحد} two {كورسان} few {# كورسات} many {# كورساً} other {# كورس}}",
+          "quizAvg": "متوسط الاختبارات",
+          "attendance": "نسبة الحضور",
+          "last90": "آخر 90 يوماً",
+          "feesDue": "مصروفات مستحقة"
+        },
+        "courses": { "title": "الكورسات والتقدم", "empty": "غير مشترك في أي كورس بعد" },
+        "quizzes": { "title": "نتائج الاختبارات الأخيرة", "empty": "لا توجد اختبارات بعد", "grading": "قيد التصحيح" },
+        "attendance": {
+          "title": "الحضور",
+          "description": "آخر 90 يوماً",
+          "empty": "لا توجد سجلات حضور",
+          "recent": "آخر الغيابات والتأخيرات",
+          "status": { "PRESENT": "حاضر", "LATE": "متأخر", "ABSENT": "غائب", "EXCUSED": "بعذر" }
+        },
+        "fees": { "title": "المصروفات المستحقة", "empty": "لا توجد مصروفات مستحقة", "total": "الإجمالي" },
+        "homework": {
+          "title": "الواجبات",
+          "empty": "لا توجد واجبات حالياً",
+          "due": "التسليم {date}",
+          "state": { "graded": "تم التصحيح", "submitted": "سُلّم", "missing": "لم يُسلّم", "pending": "مطلوب" }
+        },
+        "grades": { "title": "الدرجات", "empty": "لا توجد درجات مسجلة" },
+        "alerts": { "title": "تنبيهات المعلمين", "empty": "لا توجد تنبيهات" },
+        "upcoming": { "title": "الحصص القادمة", "empty": "لا توجد حصص قادمة" }
+      },
+      "reports": {
+        "title": "التقارير الأسبوعية",
+        "description": "تقارير تُرسل كل يوم جمعة عن أداء أبنائك خلال الأسبوع.",
+        "manage": "إعدادات التقارير",
+        "emptyTitle": "لم يصلك أي تقرير بعد",
+        "emptyDescription": "يُرسل التقرير كل جمعة مساءً لكل ابن مرتبط بحسابك.",
+        "listTitle": "آخر التقارير المرسلة",
+        "channel": { "WHATSAPP": "واتساب", "EMAIL": "البريد الإلكتروني" },
+        "status": { "SENT": "أُرسل", "FAILED": "فشل الإرسال" },
+        "show": "عرض",
+        "hide": "إخفاء",
+        "emailSentTo": "أُرسل التقرير إلى {email}"
+      },
+      "settings": {
+        "title": "الإعدادات",
+        "description": "بيانات التواصل وطريقة استلام التقارير الأسبوعية.",
+        "profileTitle": "بياناتك",
+        "profileDescription": "نستخدم رقمك لإرسال التقارير على واتساب.",
+        "name": "الاسم",
+        "email": "البريد الإلكتروني",
+        "phone": "رقم الموبايل (واتساب)",
+        "phoneHelp": "مثال: 01012345678",
+        "language": "لغة التقارير",
+        "languageHelp": "تصلك التقارير بهذه اللغة.",
+        "reportsTitle": "التقارير الأسبوعية",
+        "reportsDescription": "اختر القنوات التي تصلك عليها التقارير.",
+        "whatsapp": "واتساب",
+        "whatsappHelp": "رسالة مختصرة على رقمك كل جمعة.",
+        "whatsappNoPhone": "أضف رقم موبايل لتصلك التقارير على واتساب.",
+        "emailReports": "البريد الإلكتروني",
+        "emailHelp": "تقرير مفصل على بريدك كل جمعة.",
+        "saved": "تم حفظ الإعدادات",
+        "errors": {
+          "phone": "رقم الموبايل غير صحيح",
+          "name": "الاسم يجب أن يكون حرفين على الأقل",
+          "generic": "تعذّر الحفظ، حاول مرة أخرى"
+        }
+      },
+      "family": {
+        "title": "العائلة",
+        "description": "اربط حسابك بولي أمرك ليتابع تقدمك وتصله تقارير أسبوعية.",
+        "studentsOnly": "هذه الصفحة متاحة للطلاب فقط",
+        "codeTitle": "كود الربط",
+        "codeDescription": "شارك هذا الكود مع والدك أو والدتك ليضيفاك من حسابهما.",
+        "codeLabel": "كود الربط",
+        "codeHelp": "يستخدم ولي الأمر الكود مرة واحدة. إذا شاركته مع شخص آخر بالخطأ أنشئ كوداً جديداً.",
+        "copy": "نسخ",
+        "copyFailed": "تعذّر النسخ",
+        "regenerate": "إنشاء كود جديد",
+        "regenerateTitle": "إنشاء كود جديد؟",
+        "regenerateDescription": "سيتوقف الكود الحالي عن العمل فوراً. أولياء الأمور المرتبطون حالياً سيبقون مرتبطين.",
+        "regenerated": "تم إنشاء كود جديد",
+        "error": "حدث خطأ، حاول مرة أخرى",
+        "parentsTitle": "أولياء الأمور المرتبطون",
+        "parentsDescription": "{count, plural, =0 {لا يوجد أحد مرتبط} one {مرتبط ولي أمر واحد} two {مرتبط وليا أمر} few {مرتبط # أولياء أمور} many {مرتبط # ولي أمر} other {مرتبط # ولي أمر}} من أصل {max}",
+        "noParents": "لم يرتبط أحد بحسابك بعد",
+        "noParentsDescription": "شارك كود الربط مع ولي أمرك.",
+        "linkedOn": "منذ {date}",
+        "remove": "إزالة",
+        "removeTitle": "إزالة ولي الأمر؟",
+        "removeDescription": "لن يتمكن {name} من متابعة تقدمك أو استلام تقاريرك.",
+        "removed": "تمت الإزالة"
+      },
+      "admin": {
+        "title": "الرسائل والتقارير",
+        "description": "سجل رسائل واتساب والبريد المرسلة، وإرسال التقارير الأسبوعية لأولياء الأمور.",
+        "counts": { "SENT": "أُرسلت", "LOGGED": "مسجلة فقط", "FAILED": "فشلت" },
+        "last30": "آخر 30 يوماً",
+        "logTitle": "سجل الرسائل",
+        "logTotal": "{count, plural, =0 {لا توجد رسائل} one {رسالة واحدة} two {رسالتان} few {# رسائل} many {# رسالة} other {# رسالة}}",
+        "filters": {
+          "channel": "القناة",
+          "template": "النوع",
+          "status": "الحالة",
+          "all": "الكل",
+          "apply": "تطبيق",
+          "reset": "مسح"
+        },
+        "channel": { "WHATSAPP": "واتساب", "EMAIL": "البريد الإلكتروني", "SMS": "رسالة نصية" },
+        "empty": "لا توجد رسائل مطابقة",
+        "prev": "السابق",
+        "next": "التالي",
+        "pageOf": "صفحة {page} من {pages}",
+        "error": "حدث خطأ، حاول مرة أخرى",
+        "runTitle": "التقارير الأسبوعية",
+        "runDescription": "تُرسل تلقائياً كل جمعة الساعة 6 مساءً بتوقيت القاهرة. من استلم تقريراً خلال آخر 6 أيام لن يستلمه مرة أخرى.",
+        "runNow": "إرسال الآن",
+        "runConfirmTitle": "إرسال التقارير الأسبوعية الآن؟",
+        "runConfirmDescription": "سيُرسل تقرير لكل ولي أمر مرتبط ولجهات تواصل أولياء الأمور المسجلة للطلاب.",
+        "runDone": "تم: {sent} مرسلة، {failed} فشلت، {skipped} تم تخطيها",
+        "testTitle": "رسالة واتساب تجريبية",
+        "testPhone": "رقم الموبايل",
+        "testSend": "إرسال رسالة تجريبية",
+        "testDone": "تم الإرسال ({status})",
+        "testFailed": "فشل الإرسال: {error}",
+        "invalidPhone": "رقم الموبايل غير صحيح"
+      }
+    },
+    "adminActivity": {
+      "actions": {
+        "parent": {
+          "linked": "ربط ولي أمر بطالب",
+          "unlinked": "إلغاء ربط ولي أمر",
+          "code_regenerated": "تجديد كود ربط ولي الأمر",
+          "settings_updated": "تحديث إعدادات ولي الأمر",
+          "weekly_reports_sent": "إرسال التقارير الأسبوعية"
+        },
+        "messaging": { "test_sent": "إرسال رسالة واتساب تجريبية" }
+      }
+    }
+  },
+  "en": {
+    "parent": {
+      "shell": {
+        "title": "Parent Dashboard",
+        "subtitle": "Follow your children's studies",
+        "overview": "My children",
+        "reports": "Weekly reports",
+        "settings": "Settings",
+        "sections": { "family": "Family", "account": "Account" }
+      },
+      "common": { "error": "Something went wrong, please try again" },
+      "relations": { "father": "Father", "mother": "Mother", "guardian": "Guardian" },
+      "register": {
+        "tab": "Parent",
+        "note": "After signing up, ask your child for the link code on the \"Family\" page of their account. You will get weekly reports on WhatsApp and email.",
+        "phone": "Mobile number (WhatsApp)",
+        "phoneHelp": "We send your child's weekly report to this number.",
+        "phoneInvalid": "Enter a valid mobile number"
+      },
+      "addChild": {
+        "help": "Ask your child to open the \"Family\" page in their account and copy the 8-character link code.",
+        "codeLabel": "Link code",
+        "relationLabel": "Relation",
+        "submit": "Link account",
+        "success": "{name} is now linked to your account",
+        "errors": {
+          "invalidCode": "That code is not valid. Check it and ask your child for the latest code.",
+          "alreadyLinked": "This student is already linked to your account.",
+          "limit": "This student already has the maximum of 4 parents.",
+          "tooMany": "Too many attempts, please try again later.",
+          "generic": "Could not link the account, please try again."
+        }
+      },
+      "home": {
+        "title": "My children",
+        "description": "A quick look at your children's progress, attendance and fees.",
+        "stats": {
+          "children": "Children",
+          "feesDue": "Fees due",
+          "missingHomework": "Missing homework",
+          "alerts": "Teacher alerts",
+          "last30": "Last 30 days"
+        },
+        "emptyTitle": "No children linked yet",
+        "emptyDescription": "Add your child with the link code shown in their account to follow their progress.",
+        "viewDetails": "View details",
+        "addTitle": "Add a child",
+        "addDescription": "Link your child's account using their code."
+      },
+      "indicators": {
+        "progress": "Average progress in {count, plural, =0 {no courses} one {# course} other {# courses}}",
+        "quizAvg": "Quiz average",
+        "attendance": "Attendance",
+        "missingHomework": "Missing homework",
+        "feesDue": "Fees due"
+      },
+      "child": {
+        "metaTitle": "Child overview",
+        "noGrade": "Grade not set",
+        "unlink": "Unlink",
+        "unlinkTitle": "Unlink this account?",
+        "unlinkDescription": "You will no longer follow {name} or receive their reports until you link again with a new code.",
+        "unlinked": "Account unlinked",
+        "stats": {
+          "progress": "Average progress",
+          "courses": "{count, plural, =0 {no courses} one {# course} other {# courses}}",
+          "quizAvg": "Quiz average",
+          "attendance": "Attendance",
+          "last90": "Last 90 days",
+          "feesDue": "Fees due"
+        },
+        "courses": { "title": "Courses & progress", "empty": "Not enrolled in any course yet" },
+        "quizzes": { "title": "Recent quiz results", "empty": "No quizzes yet", "grading": "Being graded" },
+        "attendance": {
+          "title": "Attendance",
+          "description": "Last 90 days",
+          "empty": "No attendance records",
+          "recent": "Recent absences and late arrivals",
+          "status": { "PRESENT": "Present", "LATE": "Late", "ABSENT": "Absent", "EXCUSED": "Excused" }
+        },
+        "fees": { "title": "Fees due", "empty": "No fees due", "total": "Total" },
+        "homework": {
+          "title": "Homework",
+          "empty": "No homework right now",
+          "due": "Due {date}",
+          "state": { "graded": "Graded", "submitted": "Submitted", "missing": "Missing", "pending": "To do" }
+        },
+        "grades": { "title": "Marks", "empty": "No marks recorded" },
+        "alerts": { "title": "Teacher alerts", "empty": "No alerts" },
+        "upcoming": { "title": "Upcoming classes", "empty": "No upcoming classes" }
+      },
+      "reports": {
+        "title": "Weekly reports",
+        "description": "Reports sent every Friday about your children's week.",
+        "manage": "Report settings",
+        "emptyTitle": "No reports yet",
+        "emptyDescription": "A report is sent every Friday evening for each child linked to your account.",
+        "listTitle": "Recent reports",
+        "channel": { "WHATSAPP": "WhatsApp", "EMAIL": "Email" },
+        "status": { "SENT": "Sent", "FAILED": "Failed" },
+        "show": "Show",
+        "hide": "Hide",
+        "emailSentTo": "Report emailed to {email}"
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Your contact details and how you receive weekly reports.",
+        "profileTitle": "Your details",
+        "profileDescription": "We use your number to send reports on WhatsApp.",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Mobile number (WhatsApp)",
+        "phoneHelp": "Example: 01012345678",
+        "language": "Report language",
+        "languageHelp": "Reports are sent in this language.",
+        "reportsTitle": "Weekly reports",
+        "reportsDescription": "Choose where you receive reports.",
+        "whatsapp": "WhatsApp",
+        "whatsappHelp": "A short message to your number every Friday.",
+        "whatsappNoPhone": "Add a mobile number to receive reports on WhatsApp.",
+        "emailReports": "Email",
+        "emailHelp": "A detailed report to your inbox every Friday.",
+        "saved": "Settings saved",
+        "errors": {
+          "phone": "Invalid mobile number",
+          "name": "Name must be at least 2 characters",
+          "generic": "Could not save, please try again"
+        }
+      },
+      "family": {
+        "title": "Family",
+        "description": "Link your account to your parent so they can follow your progress and get weekly reports.",
+        "studentsOnly": "This page is for students only",
+        "codeTitle": "Link code",
+        "codeDescription": "Share this code with your father or mother so they can add you from their account.",
+        "codeLabel": "Link code",
+        "codeHelp": "If you shared it with someone by mistake, create a new code.",
+        "copy": "Copy",
+        "copyFailed": "Could not copy",
+        "regenerate": "Create new code",
+        "regenerateTitle": "Create a new code?",
+        "regenerateDescription": "The current code stops working immediately. Parents already linked stay linked.",
+        "regenerated": "New code created",
+        "error": "Something went wrong, please try again",
+        "parentsTitle": "Linked parents",
+        "parentsDescription": "{count, plural, =0 {Nobody linked} one {# parent linked} other {# parents linked}} of {max}",
+        "noParents": "Nobody is linked to your account yet",
+        "noParentsDescription": "Share your link code with your parent.",
+        "linkedOn": "Since {date}",
+        "remove": "Remove",
+        "removeTitle": "Remove this parent?",
+        "removeDescription": "{name} will no longer follow your progress or receive your reports.",
+        "removed": "Removed"
+      },
+      "admin": {
+        "title": "Messaging & reports",
+        "description": "Log of WhatsApp and email messages, and the weekly parent reports.",
+        "counts": { "SENT": "Sent", "LOGGED": "Logged only", "FAILED": "Failed" },
+        "last30": "Last 30 days",
+        "logTitle": "Message log",
+        "logTotal": "{count, plural, =0 {No messages} one {# message} other {# messages}}",
+        "filters": {
+          "channel": "Channel",
+          "template": "Type",
+          "status": "Status",
+          "all": "All",
+          "apply": "Apply",
+          "reset": "Reset"
+        },
+        "channel": { "WHATSAPP": "WhatsApp", "EMAIL": "Email", "SMS": "SMS" },
+        "empty": "No matching messages",
+        "prev": "Previous",
+        "next": "Next",
+        "pageOf": "Page {page} of {pages}",
+        "error": "Something went wrong, please try again",
+        "runTitle": "Weekly reports",
+        "runDescription": "Sent automatically every Friday at 6 PM Cairo time. Anyone who got a report in the last 6 days is skipped.",
+        "runNow": "Send now",
+        "runConfirmTitle": "Send the weekly reports now?",
+        "runConfirmDescription": "A report goes to every linked parent and to the guardian contacts saved on student profiles.",
+        "runDone": "Done: {sent} sent, {failed} failed, {skipped} skipped",
+        "testTitle": "Test WhatsApp message",
+        "testPhone": "Mobile number",
+        "testSend": "Send test message",
+        "testDone": "Sent ({status})",
+        "testFailed": "Sending failed: {error}",
+        "invalidPhone": "Invalid mobile number"
+      }
+    },
+    "adminActivity": {
+      "actions": {
+        "parent": {
+          "linked": "Parent linked to student",
+          "unlinked": "Parent unlinked",
+          "code_regenerated": "Parent link code regenerated",
+          "settings_updated": "Parent settings updated",
+          "weekly_reports_sent": "Weekly reports sent"
+        },
+        "messaging": { "test_sent": "Test WhatsApp sent" }
+      }
+    }
+  }
+}

@@ -238,6 +238,7 @@ export default async function InstructorPage({ params }: InstructorPageProps) {
                   <p className="text-xs text-muted-foreground">{tSub("ownOffer")}</p>
                 ) : (
                   <SubscribeButton
+                    alternatives
                     size="lg"
                     className="w-full"
                     instructorId={instructor.id}

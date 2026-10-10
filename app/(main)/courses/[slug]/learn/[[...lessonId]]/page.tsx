@@ -8,6 +8,7 @@ import { CourseSidebar } from "@/components/learn/course-sidebar"
 import { CourseContent } from "@/components/learn/course-content"
 import { CourseNavigation } from "@/components/learn/course-navigation"
 import { LessonQuestions } from "@/components/learn/lesson-questions"
+import { CourseTutor } from "@/components/ai/course-tutor"
 
 interface LearnPageProps {
   params: {
@@ -114,13 +115,31 @@ export default async function LearnPage({ params }: LearnPageProps) {
 
   // Get all lessons for navigation
   const allLessons = course.chapters.flatMap((chapter) =>
-    chapter.lessons.map((lesson) => ({
+    chapter.lessons.map(({ videoUrl, ...lesson }) => ({
       ...lesson,
       chapterId: chapter.id,
       chapterTitle: chapter.titleEn,
       chapterTitleAr: chapter.titleAr,
     }))
   )
+
+  // Video protection: the video URL never goes into the page. The player asks
+  // /api/lessons/[id]/play for it, which enforces view and device limits.
+  const stripVideo = <T extends { videoUrl?: string | null }>({ videoUrl, ...rest }: T) => ({
+    ...rest,
+    hasVideo: !!videoUrl,
+  })
+  const safeChapters = course.chapters.map((chapter) => ({
+    ...chapter,
+    lessons: chapter.lessons.map(stripVideo),
+  }))
+  const safeCourse = {
+    id: course.id,
+    slug: course.slug,
+    titleEn: course.titleEn,
+    titleAr: course.titleAr,
+  }
+  const safeLesson = stripVideo(currentLesson)
 
   const currentIndex = allLessons.findIndex((l) => l.id === currentLesson.id)
   const previousLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null
@@ -131,8 +150,8 @@ export default async function LearnPage({ params }: LearnPageProps) {
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <CourseSidebar
-        course={course}
-        chapters={course.chapters}
+        course={safeCourse}
+        chapters={safeChapters}
         currentLessonId={currentLesson.id}
         userId={session.user.id}
       />
@@ -141,7 +160,8 @@ export default async function LearnPage({ params }: LearnPageProps) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Video Player */}
         <VideoPlayer
-          lesson={currentLesson}
+          key={currentLesson.id}
+          lesson={safeLesson}
           progress={progress}
           userId={session.user.id}
           courseSlug={params.slug}
@@ -151,7 +171,7 @@ export default async function LearnPage({ params }: LearnPageProps) {
         {/* Lesson Content & Navigation */}
         <div className="flex-1 overflow-y-auto">
           <div className="container max-w-4xl mx-auto p-6 space-y-6">
-            <CourseContent lesson={currentLesson} />
+            <CourseContent lesson={safeLesson} />
 
             <CourseNavigation
               courseSlug={params.slug}
@@ -171,6 +191,8 @@ export default async function LearnPage({ params }: LearnPageProps) {
               isInstructor={course.instructorId === session.user.id}
             />
           </div>
+          {/* AI tutor grounded in this course (floating button + chat panel) */}
+          <CourseTutor courseId={course.id} lessonId={currentLesson.id} />
         </div>
       </div>
     </div>

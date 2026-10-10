@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { getCourseAccess } from "@/lib/access"
 import { QuizClient } from "@/components/quiz/quiz-client"
+import { attemptDeadline, attemptQuestions, sanitizeQuestion } from "@/lib/exams"
 
 interface QuizPageProps {
   params: {
@@ -34,9 +35,6 @@ export default async function QuizPage({ params }: QuizPageProps) {
     redirect("/login")
   }
 
-  const t = await getTranslations("quiz")
-
-  // Get course and lesson
   const course = await db.course.findUnique({
     where: { slug: params.slug },
     select: { id: true, titleEn: true, titleAr: true, instructorId: true, classGroupId: true },
@@ -51,15 +49,12 @@ export default async function QuizPage({ params }: QuizPageProps) {
     redirect(`/courses/${params.slug}`)
   }
 
-  // Get lesson with quiz
-  const lesson = await db.lesson.findUnique({
-    where: { id: params.lessonId },
+  const lesson = await db.lesson.findFirst({
+    where: { id: params.lessonId, chapter: { courseId: course.id } },
     include: {
       quiz: {
         include: {
-          questions: {
-            orderBy: { position: "asc" },
-          },
+          questions: { orderBy: { position: "asc" } },
         },
       },
     },
@@ -68,47 +63,45 @@ export default async function QuizPage({ params }: QuizPageProps) {
   if (!lesson || !lesson.quiz) {
     notFound()
   }
+  const quiz = lesson.quiz
 
-  // Check for existing incomplete attempt
   const existingAttempt = await db.quizAttempt.findFirst({
-    where: {
-      quizId: lesson.quiz.id,
-      userId: session.user.id,
-      completedAt: null,
-    },
+    where: { quizId: quiz.id, userId: session.user.id, completedAt: null },
     orderBy: { startedAt: "desc" },
   })
 
-  // Get previous attempts count
-  const attemptsCount = await db.quizAttempt.count({
-    where: {
-      quizId: lesson.quiz.id,
-      userId: session.user.id,
-      completedAt: { not: null },
-    },
-  })
+  const [attemptsCount, attemptsUsed] = await Promise.all([
+    db.quizAttempt.count({
+      where: { quizId: quiz.id, userId: session.user.id, completedAt: { not: null } },
+    }),
+    db.quizAttempt.count({ where: { quizId: quiz.id, userId: session.user.id } }),
+  ])
 
-  // Prepare quiz data (remove correct answers for client)
+  // Only the questions of an attempt in progress are sent, never the answer key.
+  const resume = existingAttempt
+    ? {
+        attemptId: existingAttempt.id,
+        deadline: attemptDeadline(existingAttempt.startedAt, quiz)?.toISOString() ?? null,
+        tabSwitches: existingAttempt.tabSwitches,
+        questions: attemptQuestions(existingAttempt.questionIds, quiz.questions).map(sanitizeQuestion),
+      }
+    : undefined
+
+  const total = quiz.questions.length
   const quizData = {
-    id: lesson.quiz.id,
-    title: lesson.quiz.title,
-    titleAr: lesson.quiz.titleAr,
-    description: lesson.quiz.description,
-    passingScore: lesson.quiz.passingScore,
-    timeLimit: lesson.quiz.timeLimit,
-    shuffleQuestions: lesson.quiz.shuffleQuestions,
-    questions: lesson.quiz.questions.map((q) => ({
-      id: q.id,
-      question: q.question,
-      questionAr: q.questionAr,
-      type: q.type,
-      points: q.points,
-      options: (q.options as any[]).map((opt: any) => ({
-        id: opt.id,
-        text: opt.text,
-        textAr: opt.textAr,
-      })),
-    })),
+    id: quiz.id,
+    title: quiz.title,
+    titleAr: quiz.titleAr,
+    description: quiz.description,
+    passingScore: quiz.passingScore,
+    timeLimit: quiz.timeLimit,
+    questionCount:
+      quiz.questionsPerAttempt && quiz.questionsPerAttempt < total ? quiz.questionsPerAttempt : total,
+    availableFrom: quiz.availableFrom?.toISOString() ?? null,
+    availableUntil: quiz.availableUntil?.toISOString() ?? null,
+    maxAttempts: quiz.maxAttempts,
+    detectTabSwitch: quiz.detectTabSwitch,
+    hasEssay: quiz.questions.some((q) => q.type === "ESSAY"),
   }
 
   return (
@@ -117,8 +110,9 @@ export default async function QuizPage({ params }: QuizPageProps) {
         quiz={quizData}
         lessonId={params.lessonId}
         courseSlug={params.slug}
-        existingAttemptId={existingAttempt?.id}
+        resume={resume}
         attemptsCount={attemptsCount}
+        attemptsUsed={attemptsUsed}
       />
     </div>
   )

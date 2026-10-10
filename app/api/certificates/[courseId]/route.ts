@@ -3,6 +3,7 @@ import { apiErrorResponse } from "@/lib/api-error"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { logActivity } from "@/lib/activity"
+import { onCourseCompleted } from "@/lib/gamification"
 import {
   computeCertificateGrade,
   generateCertificateNumber,
@@ -115,6 +116,9 @@ export async function POST(
       entityId: certificate.id,
       summary: `Certificate ${certificate.certificateNo} for "${enrollment.course.titleEn}"`,
     })
+
+    // Course points + badges (idempotent; also covers courses finished via quizzes)
+    await onCourseCompleted(session.user.id, courseId)
 
     return NextResponse.json(certificate, { status: 201 })
   } catch (error) {

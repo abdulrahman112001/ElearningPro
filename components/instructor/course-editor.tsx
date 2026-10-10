@@ -71,6 +71,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { ChapterEditor } from "./chapter-editor"
 import { LessonEditor } from "./lesson-editor"
+import { WatermarkToggle } from "@/components/video-protection/watermark-toggle"
 import { QuizEditor } from "./quiz-editor"
 // Built per render with the active translations so validation messages
 // follow the UI language.
@@ -118,6 +119,7 @@ interface Lesson {
   isPublished: boolean
   isFree: boolean
   isPreview?: boolean
+  maxViews?: number | null
   quiz?: { id: string } | null
 }
 
@@ -144,6 +146,7 @@ interface CourseEditorProps {
     status: string
     gradeLevelId?: string | null
     classGroupId?: string | null
+    watermarkEnabled?: boolean
     chapters: Chapter[]
   }
   categories: Array<{
@@ -876,6 +879,11 @@ export function CourseEditor({ course, categories }: CourseEditorProps) {
               </Button>
             </div>
           </form>
+
+          {/* Video protection: moving watermark */}
+          <div className="mt-6">
+            <WatermarkToggle courseId={course.id} initial={course.watermarkEnabled ?? true} />
+          </div>
         </TabsContent>
 
         {/* Curriculum Tab */}

@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { signIn } from "next-auth/react"
+import { getSession, signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -70,7 +70,13 @@ export default function LoginPage() {
         }
       } else {
         toast.success(t("loginSuccess"))
-        router.push(callbackUrl)
+        // Parents land on their dashboard unless they were sent somewhere specific.
+        let target = callbackUrl
+        if (callbackUrl === "/") {
+          const session = await getSession().catch(() => null)
+          if (session?.user?.role === "PARENT") target = "/parent"
+        }
+        router.push(target)
         router.refresh()
       }
     } catch (error) {

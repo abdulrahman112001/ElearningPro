@@ -32,6 +32,19 @@ export async function POST(request: Request, { params }: { params: { groupId: st
     })
     if (!student) return NextResponse.json({ error: "No student account with this email" }, { status: 404 })
 
+    // Respect the group capacity (re-adding an existing member is fine).
+    if (group.capacity) {
+      const [count, already] = await Promise.all([
+        db.classGroupMember.count({ where: { groupId: group.id } }),
+        db.classGroupMember.findUnique({
+          where: { groupId_studentId: { groupId: group.id, studentId: student.id } },
+        }),
+      ])
+      if (!already && count >= group.capacity) {
+        return NextResponse.json({ error: "Group is full", code: "group_full" }, { status: 409 })
+      }
+    }
+
     const member = await db.classGroupMember.upsert({
       where: { groupId_studentId: { groupId: group.id, studentId: student.id } },
       update: {},

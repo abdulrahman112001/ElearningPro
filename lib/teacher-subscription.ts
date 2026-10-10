@@ -12,6 +12,8 @@ interface ActivateInput {
   providerId?: string | null
   instructorShare?: number
   platformShare?: number
+  /** Length of the period in days (default SUBSCRIPTION_DAYS, one month) */
+  days?: number
 }
 
 /**
@@ -21,61 +23,79 @@ interface ActivateInput {
  * credit twice (providerId is unique).
  */
 export async function activateTeacherSubscription(input: ActivateInput) {
+  const result = await db.$transaction((tx: Prisma.TransactionClient) =>
+    activateTeacherSubscriptionInTx(tx, input)
+  )
+  await logSubscriptionActivated(input, result)
+  return result
+}
+
+/**
+ * Same as activateTeacherSubscription, inside the caller's transaction (e.g.
+ * together with a wallet debit or a code redemption). The caller logs the
+ * activity after commit with logSubscriptionActivated.
+ */
+export async function activateTeacherSubscriptionInTx(tx: Prisma.TransactionClient, input: ActivateInput) {
   const now = new Date()
-  const result = await db.$transaction(async (tx: Prisma.TransactionClient) => {
-    const current = await tx.teacherSubscription.findFirst({
-      where: {
-        studentId: input.studentId,
-        instructorId: input.instructorId,
-        status: "ACTIVE",
-        endsAt: { gt: now },
-      },
-      orderBy: { endsAt: "desc" },
-    })
-    const startsAt = current?.endsAt ?? now
-    const endsAt = new Date(startsAt.getTime() + SUBSCRIPTION_DAYS * 24 * 60 * 60 * 1000)
+  const days = input.days && input.days > 0 ? input.days : SUBSCRIPTION_DAYS
+  const current = await tx.teacherSubscription.findFirst({
+    where: {
+      studentId: input.studentId,
+      instructorId: input.instructorId,
+      status: "ACTIVE",
+      endsAt: { gt: now },
+    },
+    orderBy: { endsAt: "desc" },
+  })
+  const startsAt = current?.endsAt ?? now
+  const endsAt = new Date(startsAt.getTime() + days * 24 * 60 * 60 * 1000)
 
-    const subscription = await tx.teacherSubscription.create({
-      data: {
-        studentId: input.studentId,
-        instructorId: input.instructorId,
-        status: "ACTIVE",
-        amount: input.amount,
-        currency: input.currency ?? "EGP",
-        provider: input.provider ?? null,
-        providerId: input.providerId ?? null,
-        instructorShare: input.instructorShare ?? 0,
-        platformShare: input.platformShare ?? 0,
-        startsAt,
-        endsAt,
-      },
-    })
-
-    const share = input.instructorShare ?? 0
-    if (share > 0) {
-      await tx.instructorProfile.upsert({
-        where: { userId: input.instructorId },
-        update: {
-          pendingEarnings: { increment: share },
-          totalEarnings: { increment: share },
-        },
-        create: { userId: input.instructorId, pendingEarnings: share, totalEarnings: share },
-      })
-    }
-
-    await tx.notification.create({
-      data: {
-        userId: input.instructorId,
-        type: "NEW_SUBSCRIPTION",
-        title: "New subscriber",
-        message: "A student subscribed to your courses.",
-        link: "/instructor/subscribers",
-      },
-    })
-
-    return subscription
+  const subscription = await tx.teacherSubscription.create({
+    data: {
+      studentId: input.studentId,
+      instructorId: input.instructorId,
+      status: "ACTIVE",
+      amount: input.amount,
+      currency: input.currency ?? "EGP",
+      provider: input.provider ?? null,
+      providerId: input.providerId ?? null,
+      instructorShare: input.instructorShare ?? 0,
+      platformShare: input.platformShare ?? 0,
+      startsAt,
+      endsAt,
+    },
   })
 
+  const share = input.instructorShare ?? 0
+  if (share > 0) {
+    await tx.instructorProfile.upsert({
+      where: { userId: input.instructorId },
+      update: {
+        pendingEarnings: { increment: share },
+        totalEarnings: { increment: share },
+      },
+      create: { userId: input.instructorId, pendingEarnings: share, totalEarnings: share },
+    })
+  }
+
+  await tx.notification.create({
+    data: {
+      userId: input.instructorId,
+      type: "NEW_SUBSCRIPTION",
+      title: "New subscriber",
+      message: "A student subscribed to your courses.",
+      link: "/instructor/subscribers",
+    },
+  })
+
+  return subscription
+}
+
+/** Activity-feed entry for an activated subscription (never throws). */
+export async function logSubscriptionActivated(
+  input: Pick<ActivateInput, "studentId" | "instructorId" | "amount" | "provider">,
+  result: { id: string; endsAt: Date | null }
+) {
   await logActivity({
     actorId: input.studentId,
     actorRole: "STUDENT",
@@ -83,10 +103,8 @@ export async function activateTeacherSubscription(input: ActivateInput) {
     entityType: "teacherSubscription",
     entityId: result.id,
     summary: `Subscription active until ${result.endsAt?.toISOString().slice(0, 10)}`,
-    metadata: { instructorId: input.instructorId, amount: input.amount },
+    metadata: { instructorId: input.instructorId, amount: input.amount, provider: input.provider ?? null },
   })
-
-  return result
 }
 
 /** Marks subscriptions whose period ended as EXPIRED (cheap, idempotent). */

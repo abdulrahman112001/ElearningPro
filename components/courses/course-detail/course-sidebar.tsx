@@ -25,6 +25,8 @@ import { Progress } from "@/components/ui/progress"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { SubscribeButton } from "@/components/student/subscribe-button"
+import { PayFromWalletButton, useWalletBalance } from "@/components/wallet/pay-from-wallet-button"
+import { RedeemCodeDialog } from "@/components/codes/redeem-code-dialog"
 import { cn, formatPrice } from "@/lib/utils"
 
 interface CourseSidebarProps {
@@ -75,6 +77,11 @@ export function CourseSidebar({
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [offer, setOffer] = useState<SubscriptionOffer | null>(null)
   const [groupOnly, setGroupOnly] = useState(false)
+  const { balance: walletBalance } = useWalletBalance()
+  const effectivePrice =
+    course.discountPrice !== undefined && course.discountPrice !== null && course.discountPrice < course.price
+      ? course.discountPrice
+      : course.price
 
   // Load the real wishlist state for this course.
   useEffect(() => {
@@ -285,6 +292,8 @@ export function CourseSidebar({
                 className="w-full"
                 instructorId={course.instructorId!}
                 monthlyPrice={offer.monthlyPrice}
+                alternatives
+                codeLink={false}
                 expired
               />
             )}
@@ -340,6 +349,21 @@ export function CourseSidebar({
                 {t("addToCart")}
               </Button>
             )}
+            {!coveredBySubscription && !isFreeCourse && !groupOnly && (
+              <PayFromWalletButton
+                kind="course"
+                id={course.id}
+                price={effectivePrice}
+                itemName={locale === "ar" ? course.titleAr || course.titleEn : course.titleEn}
+                balance={walletBalance}
+                onPaid={() => router.push(`/courses/${course.slug}/learn`)}
+              />
+            )}
+            {!coveredBySubscription && !isFreeCourse && !groupOnly && (
+              <div className="flex justify-center">
+                <RedeemCodeDialog variant="link" className="h-auto px-0 text-sm" />
+              </div>
+            )}
           </div>
         )}
 
@@ -372,6 +396,8 @@ export function CourseSidebar({
               className="w-full"
               instructorId={course.instructorId!}
               monthlyPrice={offer.monthlyPrice}
+              alternatives
+              codeLink={false}
               onActivated={() => setOffer({ ...offer, subscribed: true })}
             />
           </div>

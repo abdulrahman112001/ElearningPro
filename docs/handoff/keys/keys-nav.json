@@ -1,0 +1,72 @@
+{
+  "ar": {
+    "nav": {
+      "dashboard": {
+        "sections": {
+          "progress": "تقدّمي",
+          "community": "مدرستي ومجموعاتي",
+          "walletShopping": "المحفظة والمشتريات"
+        },
+        "homework": "واجباتي",
+        "timetable": "جدول الحصص",
+        "grades": "درجاتي",
+        "attendance": "الحضور والمصاريف",
+        "achievements": "إنجازاتي",
+        "leaderboard": "لوحة الصدارة",
+        "organizations": "السناتر والمدارس",
+        "announcements": "الإعلانات",
+        "wallet": "المحفظة",
+        "family": "ولي الأمر",
+        "devices": "أجهزتي",
+        "aiInsights": "تحليلات الذكاء الاصطناعي",
+        "assignments": "الواجبات",
+        "questionBank": "بنك الأسئلة",
+        "grading": "تصحيح الامتحانات",
+        "videoProtection": "حماية الفيديو",
+        "gradebook": "كشف الدرجات",
+        "codes": "أكواد الشحن",
+        "ai": "الذكاء الاصطناعي",
+        "messaging": "رسائل واتساب والتقارير",
+        "manualPayments": "التحويلات اليدوية",
+        "security": "الأمان والأجهزة",
+        "myOrganizations": "مؤسساتي",
+        "parentDashboard": "لوحة ولي الأمر"
+      }
+    }
+  },
+  "en": {
+    "nav": {
+      "dashboard": {
+        "sections": {
+          "progress": "My progress",
+          "community": "Schools & groups",
+          "walletShopping": "Wallet & purchases"
+        },
+        "homework": "Homework",
+        "timetable": "Timetable",
+        "grades": "My grades",
+        "attendance": "Attendance & fees",
+        "achievements": "Achievements",
+        "leaderboard": "Leaderboard",
+        "organizations": "Centers & schools",
+        "announcements": "Announcements",
+        "wallet": "Wallet",
+        "family": "Parents",
+        "devices": "My devices",
+        "aiInsights": "AI insights",
+        "assignments": "Assignments",
+        "questionBank": "Question bank",
+        "grading": "Exam grading",
+        "videoProtection": "Video protection",
+        "gradebook": "Gradebook",
+        "codes": "Access codes",
+        "ai": "AI",
+        "messaging": "WhatsApp & reports",
+        "manualPayments": "Manual transfers",
+        "security": "Security & devices",
+        "myOrganizations": "My organizations",
+        "parentDashboard": "Parent dashboard"
+      }
+    }
+  }
+}

@@ -13,7 +13,8 @@ export function generateCertificateNumber(): string {
 
 /**
  * Every quiz on a published lesson of the course must have a passed attempt
- * by the user before a certificate is issued.
+ * by the user before a certificate is issued. An attempt whose essay answers
+ * are still awaiting the teacher's grading never counts as passed.
  */
 export async function hasPassedAllQuizzes(userId: string, courseId: string): Promise<boolean> {
   const quizzes = await db.quiz.findMany({
@@ -24,17 +25,20 @@ export async function hasPassedAllQuizzes(userId: string, courseId: string): Pro
   })
   if (quizzes.length === 0) return true
   const passed = await db.quizAttempt.findMany({
-    where: { userId, passed: true, quizId: { in: quizzes.map((q) => q.id) } },
+    where: { userId, passed: true, needsGrading: false, quizId: { in: quizzes.map((q) => q.id) } },
     select: { quizId: true },
     distinct: ["quizId"],
   })
   return passed.length === quizzes.length
 }
 
-/** Certificate grade: average of the best score on each quiz, 100 if none. */
+/**
+ * Certificate grade: average of the best score on each quiz, 100 if none.
+ * Attempts awaiting teacher grading only have a provisional score and are skipped.
+ */
 export async function computeCertificateGrade(userId: string, courseId: string): Promise<number> {
   const attempts = await db.quizAttempt.findMany({
-    where: { userId, completedAt: { not: null }, quiz: { lesson: { chapter: { courseId } } } },
+    where: { userId, completedAt: { not: null }, needsGrading: false, quiz: { lesson: { chapter: { courseId } } } },
     select: { quizId: true, score: true },
   })
   const best: Record<string, number> = {}

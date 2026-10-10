@@ -18,6 +18,12 @@ import {
   Activity,
   MessagesSquare,
   GraduationCap,
+  Sparkles,
+  Building2,
+  Send,
+  Banknote,
+  Ticket,
+  Lock,
 } from "lucide-react"
 import { DashboardShell, type DashboardNavSection } from "@/components/layout/dashboard-shell"
 
@@ -32,6 +38,7 @@ function useAdminSections(): DashboardNavSection[] {
         { href: "/admin", label: t("overview"), icon: LayoutDashboard, exact: true },
         { href: "/admin/analytics", label: t("analytics"), icon: BarChart3 },
         { href: "/admin/activity", label: n("activity"), icon: Activity },
+        { href: "/admin/ai", label: n("ai"), icon: Sparkles },
       ],
     },
     {
@@ -40,7 +47,9 @@ function useAdminSections(): DashboardNavSection[] {
       items: [
         { href: "/admin/users", label: t("users"), icon: Users },
         { href: "/admin/instructors", label: t("instructors"), icon: Shield },
+        { href: "/admin/organizations", label: n("organizations"), icon: Building2 },
         { href: "/admin/conversations", label: n("conversations"), icon: MessagesSquare },
+        { href: "/admin/messaging", label: n("messaging"), icon: Send },
       ],
     },
     {
@@ -58,6 +67,8 @@ function useAdminSections(): DashboardNavSection[] {
       label: n("sections.finance"),
       items: [
         { href: "/admin/payments", label: t("payments"), icon: DollarSign },
+        { href: "/admin/manual-payments", label: n("manualPayments"), icon: Banknote },
+        { href: "/admin/codes", label: n("codes"), icon: Ticket },
         { href: "/admin/withdrawals", label: t("withdrawals"), icon: Wallet },
         { href: "/admin/coupons", label: t("coupons"), icon: Gift },
       ],
@@ -67,6 +78,7 @@ function useAdminSections(): DashboardNavSection[] {
       label: n("sections.system"),
       items: [
         { href: "/admin/notifications", label: t("notifications"), icon: Bell },
+        { href: "/admin/security", label: n("security"), icon: Lock },
         { href: "/admin/settings", label: t("settings"), icon: Settings },
       ],
     },

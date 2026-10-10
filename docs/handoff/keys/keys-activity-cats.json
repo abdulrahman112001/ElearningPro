@@ -1,0 +1,12 @@
+{
+  "ar": { "adminActivity": { "categories": {
+    "exam": "الامتحانات والتصحيح", "homework": "الواجبات", "gradebook": "كشف الدرجات",
+    "attendance": "الحضور", "fee": "المصاريف", "code": "الأكواد والمحفظة", "video": "حماية الفيديو",
+    "organization": "المؤسسات", "parent": "أولياء الأمور", "ai": "الذكاء الاصطناعي", "badge": "الشارات والنقاط"
+  } } },
+  "en": { "adminActivity": { "categories": {
+    "exam": "Exams & grading", "homework": "Homework", "gradebook": "Gradebook",
+    "attendance": "Attendance", "fee": "Fees", "code": "Codes & wallet", "video": "Video protection",
+    "organization": "Organizations", "parent": "Parents", "ai": "AI", "badge": "Badges & points"
+  } } }
+}

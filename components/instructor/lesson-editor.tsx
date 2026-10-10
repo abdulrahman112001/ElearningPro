@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { LessonTranscriptField } from "@/components/ai/lesson-transcript-field"
 import { Loader2, Video, FileText, FileQuestion, Upload } from "lucide-react"
 
 interface LessonEditorProps {
@@ -29,6 +30,8 @@ interface LessonEditorProps {
     videoDuration?: number
     isPublished: boolean
     isFree: boolean
+    maxViews?: number | null
+    transcript?: string | null
   }
   onSave: (data: any) => void
   onCancel: () => void
@@ -36,6 +39,16 @@ interface LessonEditorProps {
 
 export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
   const t = useTranslations("instructor")
+  const tv = useTranslations("videoProtection")
+  // Per-student view limit ("" = unlimited). Only editable on an existing
+  // lesson: the create endpoint does not take it.
+  const [maxViews, setMaxViews] = useState(
+    lesson?.maxViews != null ? String(lesson.maxViews) : ""
+  )
+  const maxViewsNumber = Number(maxViews)
+  const maxViewsInvalid =
+    maxViews.trim() !== "" &&
+    (!Number.isInteger(maxViewsNumber) || maxViewsNumber < 1 || maxViewsNumber > 100)
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("basic")
 
@@ -61,10 +74,18 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title.trim()) return
+    if (lesson && maxViewsInvalid) {
+      setActiveTab("settings")
+      return
+    }
 
     setIsLoading(true)
     try {
-      await onSave(formData)
+      await onSave(
+        lesson
+          ? { ...formData, maxViews: maxViews.trim() === "" ? null : maxViewsNumber }
+          : formData
+      )
     } finally {
       setIsLoading(false)
     }
@@ -76,7 +97,7 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
     } else if (url.includes("vimeo.com")) {
       return "VIMEO"
     }
-    return "OTHER"
+    return "CUSTOM"
   }
 
   const handleVideoUrlChange = (url: string) => {
@@ -196,8 +217,8 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
                   <SelectContent>
                     <SelectItem value="YOUTUBE">YouTube</SelectItem>
                     <SelectItem value="VIMEO">Vimeo</SelectItem>
-                    <SelectItem value="UPLOAD">{t("uploadVideo")}</SelectItem>
-                    <SelectItem value="OTHER">{t("other")}</SelectItem>
+                    <SelectItem value="UPLOADTHING">{t("uploadVideo")}</SelectItem>
+                    <SelectItem value="CUSTOM">{t("other")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -216,7 +237,7 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
                 />
               </div>
 
-              {formData.videoProvider === "UPLOAD" && (
+              {formData.videoProvider === "UPLOADTHING" && (
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                   <p className="text-muted-foreground">
@@ -301,6 +322,35 @@ export function LessonEditor({ lesson, onSave, onCancel }: LessonEditorProps) {
               onCheckedChange={(v) => updateField("isPublished", v)}
             />
           </div>
+
+          {lesson && (
+            <div className="space-y-2 p-4 border rounded-lg">
+              <Label htmlFor="lesson-max-views" className="text-base">
+                {tv("maxViewsLabel")}
+              </Label>
+              <p className="text-sm text-muted-foreground">{tv("maxViewsHint")}</p>
+              <Input
+                id="lesson-max-views"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={100}
+                step={1}
+                value={maxViews}
+                onChange={(e) => setMaxViews(e.target.value)}
+                placeholder={tv("maxViewsPlaceholder")}
+                aria-invalid={maxViewsInvalid}
+                className="max-w-[12rem] tabular-nums"
+              />
+              {maxViewsInvalid && (
+                <p className="text-xs text-destructive">{tv("maxViewsInvalid")}</p>
+              )}
+            </div>
+          )}
+          {/* Lesson text the AI tutor and question generator can use */}
+          {lesson && (
+            <LessonTranscriptField lessonId={lesson.id} initialValue={lesson.transcript ?? ""} />
+          )}
         </TabsContent>
       </Tabs>
 

@@ -107,6 +107,17 @@ export const ACTIVITY_CATEGORIES = [
   { key: "grade", prefix: "grade.", icon: Layers },
   { key: "withdrawal", prefix: "withdrawal.", icon: Wallet },
   { key: "review", prefix: "review.", icon: Star },
+  { key: "exam", prefix: "exam.", icon: ClipboardCheck },
+  { key: "homework", prefix: "homework.", icon: FilePen },
+  { key: "gradebook", prefix: "gradebook.", icon: Layers },
+  { key: "attendance", prefix: "attendance.", icon: CheckCircle2 },
+  { key: "fee", prefix: "fee.", icon: Wallet },
+  { key: "code", prefix: "code.", icon: CreditCard },
+  { key: "video", prefix: "video.", icon: ShieldCheck },
+  { key: "organization", prefix: "organization.", icon: Users },
+  { key: "parent", prefix: "parent.", icon: UserPlus },
+  { key: "ai", prefix: "ai.", icon: Rocket },
+  { key: "badge", prefix: "badge.", icon: Award },
 ] as const
 
 export type ActivityCategoryKey = (typeof ACTIVITY_CATEGORIES)[number]["key"]

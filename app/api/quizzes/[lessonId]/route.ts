@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { getCourseAccess } from "@/lib/access"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
+import { questionContentSchema, sanitizeQuestion } from "@/lib/exams"
+import { z } from "zod"
 
 // Get quiz for a lesson
 export async function GET(
@@ -29,6 +31,7 @@ export async function GET(
             options: true,
             points: true,
             position: true,
+            imageUrl: true,
             // Don't include correct answers for students
           },
         },
@@ -73,15 +76,8 @@ export async function GET(
       // Remove correct answers for students
       const sanitizedQuiz = {
         ...quiz,
-        questions: quiz.questions.map((q) => ({
-          ...q,
-          options: (q.options as any[]).map((opt) => ({
-            id: opt.id,
-            text: opt.text,
-            textAr: opt.textAr,
-            // isCorrect is not included
-          })),
-        })),
+        // isCorrect / explanations are never included
+        questions: quiz.questions.map((q) => ({ ...sanitizeQuestion(q), position: q.position })),
       }
 
       return NextResponse.json(sanitizedQuiz)
@@ -175,16 +171,20 @@ export async function POST(
       })
 
       // Create new questions
+      const parsed = z.array(questionContentSchema).parse(
+        questions.map((q: any) => ({ ...q, type: q?.type || "MULTIPLE_CHOICE" }))
+      )
       await db.quizQuestion.createMany({
-        data: questions.map((q: any, index: number) => ({
+        data: parsed.map((q, index) => ({
           quizId: quiz.id,
           question: q.question,
-          questionAr: q.questionAr,
-          type: q.type || "MULTIPLE_CHOICE",
+          questionAr: q.questionAr || null,
+          type: q.type,
           options: q.options,
-          explanation: q.explanation,
-          explanationAr: q.explanationAr,
-          points: q.points || 1,
+          explanation: q.explanation || null,
+          explanationAr: q.explanationAr || null,
+          points: q.points,
+          imageUrl: q.imageUrl,
           position: index,
         })),
       })
@@ -201,6 +201,9 @@ export async function POST(
 
     return NextResponse.json(updatedQuiz)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+    }
     const handled = apiErrorResponse(error)
     if (handled) return handled
     console.error("Create quiz error:", error)

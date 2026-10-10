@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter, IBM_Plex_Sans_Arabic } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
@@ -8,6 +8,7 @@ import { QueryProvider } from "@/components/providers/query-provider"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { SocketProvider } from "@/providers/socket-provider"
 import NextTopLoader from "nextjs-toploader"
+import { RegisterSW } from "@/components/pwa/register-sw"
 import "./globals.css"
 
 const inter = Inter({
@@ -66,6 +67,31 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  // Installable app (PWA): app/manifest.ts (linked automatically) + public/sw.js
+  applicationName: "E-Learn",
+  appleWebApp: {
+    capable: true,
+    title: "E-Learn",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  formatDetection: { telephone: false },
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#4f46e5" },
+    { media: "(prefers-color-scheme: dark)", color: "#1e1b4b" },
+  ],
 }
 
 export default async function RootLayout({
@@ -126,6 +152,7 @@ export default async function RootLayout({
             </NextIntlClientProvider>
           </QueryProvider>
         </AuthProvider>
+        <RegisterSW />
       </body>
     </html>
   )

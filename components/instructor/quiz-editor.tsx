@@ -1,262 +1,200 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
+import toast from "react-hot-toast"
+import { Clock, Loader2, Plus, ShieldAlert, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, GripVertical, Loader2, CheckCircle } from "lucide-react"
-import toast from "react-hot-toast"
+import { QuestionFields } from "@/components/exams/question-fields"
+import { QuestionBankPicker } from "@/components/exams/question-bank-picker"
+import { SaveToBankButton } from "@/components/exams/save-to-bank-button"
+import { cairoInputToIso, isoToCairoInput } from "@/components/exams/cairo-time"
+import {
+  blankQuestion,
+  questionPayload,
+  questionProblem,
+  toEditorQuestion,
+  type EditorQuestion,
+} from "@/components/exams/types"
+import { GenerateQuestionsDialog, type GeneratedQuestion } from "@/components/ai/generate-questions-dialog"
 
-interface QuizOption {
+interface ExistingQuiz {
   id: string
-  text: string
-  textAr?: string
-  isCorrect: boolean
-}
-
-interface QuizQuestion {
-  id: string
-  question: string
-  questionAr?: string
-  type: "MULTIPLE_CHOICE" | "TRUE_FALSE" | "MULTIPLE_SELECT"
-  options: QuizOption[]
-  explanation?: string
-  explanationAr?: string
-  points: number
+  title: string
+  titleAr?: string | null
+  description?: string | null
+  passingScore: number
+  timeLimit?: number | null
+  shuffleQuestions: boolean
+  showResults?: boolean
+  availableFrom?: string | null
+  availableUntil?: string | null
+  maxAttempts?: number | null
+  questionsPerAttempt?: number | null
+  detectTabSwitch?: boolean
+  questions: any[]
 }
 
 interface QuizEditorProps {
   lessonId: string
   courseId: string
-  existingQuiz?: {
-    id: string
-    title: string
-    titleAr?: string
-    description?: string
-    passingScore: number
-    timeLimit?: number
-    shuffleQuestions: boolean
-    questions: QuizQuestion[]
-  }
+  /** When omitted the editor loads the lesson's quiz itself (if any). */
+  existingQuiz?: ExistingQuiz
   onSave: () => void
   onCancel: () => void
 }
 
-export function QuizEditor({
-  lessonId,
-  courseId,
-  existingQuiz,
-  onSave,
-  onCancel,
-}: QuizEditorProps) {
+interface Settings {
+  title: string
+  titleAr: string
+  description: string
+  passingScore: number
+  timeLimit: string
+  shuffleQuestions: boolean
+  showResults: boolean
+  availableFrom: string
+  availableUntil: string
+  maxAttempts: string
+  questionsPerAttempt: string
+  detectTabSwitch: boolean
+}
+
+function settingsFrom(q?: ExistingQuiz): Settings {
+  return {
+    title: q?.title ?? "",
+    titleAr: q?.titleAr ?? "",
+    description: q?.description ?? "",
+    passingScore: q?.passingScore ?? 70,
+    timeLimit: q ? (q.timeLimit ? String(q.timeLimit) : "") : "30",
+    shuffleQuestions: q?.shuffleQuestions ?? false,
+    showResults: q?.showResults ?? true,
+    availableFrom: isoToCairoInput(q?.availableFrom),
+    availableUntil: isoToCairoInput(q?.availableUntil),
+    maxAttempts: q?.maxAttempts ? String(q.maxAttempts) : "",
+    questionsPerAttempt: q?.questionsPerAttempt ? String(q.questionsPerAttempt) : "",
+    detectTabSwitch: q?.detectTabSwitch ?? true,
+  }
+}
+
+const optionalInt = (v: string) => {
+  const n = parseInt(v)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+export function QuizEditor({ lessonId, courseId, existingQuiz, onSave, onCancel }: QuizEditorProps) {
   const t = useTranslations("instructor")
-  const tQuiz = useTranslations("quiz")
+  const te = useTranslations("exams")
   const tq = useTranslations("quizEditor")
   const [isLoading, setIsLoading] = useState(false)
-
-  const [formData, setFormData] = useState({
-    title: existingQuiz?.title || "",
-    titleAr: existingQuiz?.titleAr || "",
-    description: existingQuiz?.description || "",
-    passingScore: existingQuiz?.passingScore || 70,
-    timeLimit: existingQuiz?.timeLimit || 30,
-    shuffleQuestions: existingQuiz?.shuffleQuestions || false,
-  })
-
-  const [questions, setQuestions] = useState<QuizQuestion[]>(
-    existingQuiz?.questions || []
+  const [loaded, setLoaded] = useState<boolean>(!!existingQuiz)
+  const [quizExists, setQuizExists] = useState<boolean>(!!existingQuiz)
+  const [settings, setSettings] = useState<Settings>(settingsFrom(existingQuiz))
+  const [questions, setQuestions] = useState<EditorQuestion[]>(
+    existingQuiz?.questions.map((q) => toEditorQuestion(q, true)) ?? []
   )
 
-  const addQuestion = () => {
-    const newQuestion: QuizQuestion = {
-      id: `temp-${Date.now()}`,
-      question: "",
-      questionAr: "",
-      type: "MULTIPLE_CHOICE",
-      options: [
-        { id: `opt-${Date.now()}-0`, text: "", textAr: "", isCorrect: true },
-        { id: `opt-${Date.now()}-1`, text: "", textAr: "", isCorrect: false },
-        { id: `opt-${Date.now()}-2`, text: "", textAr: "", isCorrect: false },
-        { id: `opt-${Date.now()}-3`, text: "", textAr: "", isCorrect: false },
-      ],
-      explanation: "",
-      explanationAr: "",
-      points: 1,
+  // Load the lesson's quiz when the caller did not pass it.
+  useEffect(() => {
+    if (existingQuiz) return
+    let cancelled = false
+    fetch(`/api/instructor/courses/${courseId}/lessons/${lessonId}/quiz`)
+      .then(async (res) => {
+        if (cancelled) return
+        if (res.ok) {
+          const quiz = (await res.json()) as ExistingQuiz
+          if (cancelled) return
+          setSettings(settingsFrom(quiz))
+          setQuestions(quiz.questions.map((q) => toEditorQuestion(q, true)))
+          setQuizExists(true)
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoaded(true)
+      })
+    return () => {
+      cancelled = true
     }
-    setQuestions([...questions, newQuestion])
+  }, [existingQuiz, courseId, lessonId])
+
+  const set = (patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch }))
+  const append = (more: EditorQuestion[]) => {
+    if (more.length === 0) return
+    setQuestions((qs) => [...qs, ...more])
+    toast.success(te("editor.questionsAdded", { count: more.length }))
   }
-
-  const updateQuestion = (index: number, field: string, value: any) => {
-    const updated = [...questions]
-    updated[index] = { ...updated[index], [field]: value }
-
-    // If type changes, update options accordingly
-    if (field === "type") {
-      if (value === "TRUE_FALSE") {
-        updated[index].options = [
-          {
-            id: `opt-${Date.now()}-0`,
-            text: "True",
-            textAr: "صح",
-            isCorrect: true,
-          },
-          {
-            id: `opt-${Date.now()}-1`,
-            text: "False",
-            textAr: "خطأ",
-            isCorrect: false,
-          },
-        ]
-      } else if (
-        value === "MULTIPLE_CHOICE" &&
-        updated[index].options.length < 4
-      ) {
-        // Ensure we have at least 4 options for multiple choice
-        const existingOptions = updated[index].options
-        updated[index].options = [
-          ...existingOptions,
-          ...Array(4 - existingOptions.length)
-            .fill(null)
-            .map((_, i) => ({
-              id: `opt-${Date.now()}-${existingOptions.length + i}`,
-              text: "",
-              textAr: "",
-              isCorrect: false,
-            })),
-        ]
-      }
-    }
-
-    setQuestions(updated)
-  }
-
-  const updateOption = (
-    questionIndex: number,
-    optionIndex: number,
-    field: "text" | "textAr" | "isCorrect",
-    value: string | boolean
-  ) => {
-    const updated = [...questions]
-    const options = [...updated[questionIndex].options]
-
-    if (field === "isCorrect" && value === true) {
-      // For MULTIPLE_CHOICE, only one can be correct
-      if (updated[questionIndex].type === "MULTIPLE_CHOICE") {
-        options.forEach((opt, i) => {
-          options[i] = { ...opt, isCorrect: i === optionIndex }
-        })
-      } else {
-        options[optionIndex] = { ...options[optionIndex], [field]: value }
-      }
-    } else {
-      options[optionIndex] = { ...options[optionIndex], [field]: value }
-    }
-
-    updated[questionIndex].options = options
-    setQuestions(updated)
-  }
-
-  const removeQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index))
-  }
+  const insertGenerated = (generated: GeneratedQuestion[]) => append(generated.map((g) => toEditorQuestion(g)))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate
-    if (!formData.title.trim()) {
+    if (!settings.title.trim() && !settings.titleAr.trim()) {
       toast.error(t("titleRequired"))
       return
     }
-
     if (questions.length === 0) {
       toast.error(t("addAtLeastOneQuestion"))
       return
     }
-
-    // Validate each question
     for (let i = 0; i < questions.length; i++) {
-      const q = questions[i]
-      if (!q.question.trim()) {
-        toast.error(
-          `${t("question")} ${i + 1}: ${
-            t("questionRequired")
-          }`
-        )
+      const problem = questionProblem(questions[i])
+      if (problem) {
+        toast.error(`${te("question.number", { number: i + 1 })}: ${te(problem)}`)
         return
       }
-      if (
-        q.type === "MULTIPLE_CHOICE" &&
-        q.options.filter((o) => o.text.trim()).length < 2
-      ) {
-        toast.error(
-          `${t("question")} ${i + 1}: ${
-            t("addAtLeastTwoOptions")
-          }`
-        )
-        return
-      }
-      // Check that at least one option is correct
-      if (!q.options.some((o) => o.isCorrect)) {
-        toast.error(
-          `${t("question")} ${i + 1}: ${
-            t("selectCorrectAnswer")
-          }`
-        )
-        return
-      }
+    }
+    const availableFrom = cairoInputToIso(settings.availableFrom)
+    const availableUntil = cairoInputToIso(settings.availableUntil)
+    if (availableFrom && availableUntil && availableUntil <= availableFrom) {
+      toast.error(te("errors.windowOrder"))
+      return
+    }
+    const questionsPerAttempt = optionalInt(settings.questionsPerAttempt)
+    if (questionsPerAttempt && questionsPerAttempt > questions.length) {
+      toast.error(te("errors.perAttemptTooMany", { count: questions.length }))
+      return
     }
 
     setIsLoading(true)
     try {
       const payload = {
-        title: formData.title,
-        titleAr: formData.titleAr,
-        description: formData.description,
-        passingScore: formData.passingScore,
-        timeLimit: formData.timeLimit || null,
-        shuffleQuestions: formData.shuffleQuestions,
+        title: settings.title.trim() || settings.titleAr.trim(),
+        titleAr: settings.titleAr.trim() || null,
+        description: settings.description.trim() || null,
+        passingScore: settings.passingScore,
+        timeLimit: optionalInt(settings.timeLimit),
+        shuffleQuestions: settings.shuffleQuestions,
+        showResults: settings.showResults,
+        availableFrom,
+        availableUntil,
+        maxAttempts: optionalInt(settings.maxAttempts),
+        questionsPerAttempt,
+        detectTabSwitch: settings.detectTabSwitch,
         questions: questions.map((q, index) => ({
-          question: q.question,
-          questionAr: q.questionAr,
-          type: q.type,
-          options: q.options.filter((o) => o.text.trim()), // JSON array with {id, text, textAr, isCorrect}
-          explanation: q.explanation,
-          explanationAr: q.explanationAr,
-          points: q.points,
+          ...questionPayload(q),
+          // Saved questions keep their id so past attempts keep their answers.
+          id: q.id.startsWith("temp-") ? undefined : q.id,
           position: index,
         })),
       }
 
-      const url = `/api/instructor/courses/${courseId}/lessons/${lessonId}/quiz`
-
-      const response = await fetch(url, {
-        method: existingQuiz ? "PATCH" : "POST",
+      const response = await fetch(`/api/instructor/courses/${courseId}/lessons/${lessonId}/quiz`, {
+        method: quizExists ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        const data = await response.json()
+        const data = await response.json().catch(() => ({}))
         throw new Error(data.error || tq("saveFailed"))
       }
 
-      toast.success(
-        existingQuiz
-          ? t("quizUpdated")
-          : t("quizCreated")
-      )
+      toast.success(quizExists ? t("quizUpdated") : t("quizCreated"))
       onSave()
     } catch (error: any) {
       toast.error(error.message || tq("saveFailed"))
@@ -265,36 +203,38 @@ export function QuizEditor({
     }
   }
 
+  if (!loaded) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 max-h-[70vh] overflow-y-auto pe-2"
-    >
-      {/* Quiz Settings */}
+    <form onSubmit={handleSubmit} className="max-h-[70vh] space-y-6 overflow-y-auto pe-2">
+      {/* Quiz settings */}
       <Card>
         <CardHeader>
           <CardTitle>{t("quizSettings")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>{t("titleEn")}</Label>
+              <Label>{t("titleAr")}</Label>
               <Input
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
+                value={settings.titleAr}
+                onChange={(e) => set({ titleAr: e.target.value })}
+                dir="rtl"
                 placeholder={tq("titlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>{t("titleAr")}</Label>
+              <Label>{t("titleEn")}</Label>
               <Input
-                value={formData.titleAr}
-                onChange={(e) =>
-                  setFormData({ ...formData, titleAr: e.target.value })
-                }
-                dir="rtl"
+                value={settings.title}
+                onChange={(e) => set({ title: e.target.value })}
+                dir="ltr"
                 placeholder={tq("titlePlaceholder")}
               />
             </div>
@@ -303,27 +243,22 @@ export function QuizEditor({
           <div className="space-y-2">
             <Label>{t("description")}</Label>
             <Textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
+              value={settings.description}
+              onChange={(e) => set({ description: e.target.value })}
               placeholder={t("quizDescriptionPlaceholder")}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>{t("passingScore")}</Label>
               <Input
                 type="number"
                 min={0}
                 max={100}
-                value={formData.passingScore}
+                value={settings.passingScore}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    passingScore: parseInt(e.target.value) || 0,
-                  })
+                  set({ passingScore: Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) })
                 }
               />
             </div>
@@ -332,242 +267,153 @@ export function QuizEditor({
               <Input
                 type="number"
                 min={1}
-                value={formData.timeLimit}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    timeLimit: parseInt(e.target.value) || 30,
-                  })
-                }
+                value={settings.timeLimit}
+                onChange={(e) => set({ timeLimit: e.target.value })}
+                placeholder={te("editor.unlimited")}
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Switch
-              checked={formData.shuffleQuestions}
-              onCheckedChange={(v) =>
-                setFormData({ ...formData, shuffleQuestions: v })
-              }
-            />
-            <Label>{t("shuffleQuestions")}</Label>
+          <div className="flex flex-wrap gap-x-8 gap-y-3">
+            <label className="flex items-center gap-3">
+              <Switch checked={settings.shuffleQuestions} onCheckedChange={(v) => set({ shuffleQuestions: v })} />
+              <span className="text-sm font-medium">{t("shuffleQuestions")}</span>
+            </label>
+            <label className="flex items-center gap-3">
+              <Switch checked={settings.showResults} onCheckedChange={(v) => set({ showResults: v })} />
+              <span className="text-sm font-medium">{te("editor.showResults")}</span>
+            </label>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Exam settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5 text-primary" />
+            {te("editor.examSettings")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="exam-from">{te("editor.availableFrom")}</Label>
+              <Input
+                id="exam-from"
+                type="datetime-local"
+                value={settings.availableFrom}
+                onChange={(e) => set({ availableFrom: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-until">{te("editor.availableUntil")}</Label>
+              <Input
+                id="exam-until"
+                type="datetime-local"
+                value={settings.availableUntil}
+                onChange={(e) => set({ availableUntil: e.target.value })}
+              />
+            </div>
+          </div>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" />
+            {te("editor.cairoTimeHint")}
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{te("editor.maxAttempts")}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={settings.maxAttempts}
+                onChange={(e) => set({ maxAttempts: e.target.value })}
+                placeholder={te("editor.unlimited")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{te("editor.questionsPerAttempt")}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={questions.length || undefined}
+                value={settings.questionsPerAttempt}
+                onChange={(e) => set({ questionsPerAttempt: e.target.value })}
+                placeholder={te("editor.allQuestions", { count: questions.length })}
+              />
+              <p className="text-xs text-muted-foreground">{te("editor.questionsPerAttemptHint")}</p>
+            </div>
+          </div>
+
+          <label className="flex items-start gap-3">
+            <Switch
+              checked={settings.detectTabSwitch}
+              onCheckedChange={(v) => set({ detectTabSwitch: v })}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm font-medium">{te("editor.detectTabSwitch")}</span>
+              <span className="block text-xs text-muted-foreground">{te("editor.detectTabSwitchHint")}</span>
+            </span>
+          </label>
         </CardContent>
       </Card>
 
       {/* Questions */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{t("questions")}</CardTitle>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addQuestion}
-          >
-            <Plus className="h-4 w-4 me-2" />
-            {t("addQuestion")}
-          </Button>
+        <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle>
+            {t("questions")} <span className="text-sm font-normal text-muted-foreground">({questions.length})</span>
+          </CardTitle>
+          <div className="flex flex-wrap gap-2">
+            <GenerateQuestionsDialog
+              lessonId={lessonId}
+              courseId={courseId}
+              onInsert={insertGenerated}
+              trigger={
+                <Button type="button" variant="outline" size="sm">
+                  <Sparkles className="me-2 h-4 w-4" />
+                  {te("editor.generateWithAi")}
+                </Button>
+              }
+            />
+            <QuestionBankPicker onInsert={append} />
+            <Button type="button" variant="outline" size="sm" onClick={() => setQuestions((qs) => [...qs, blankQuestion()])}>
+              <Plus className="me-2 h-4 w-4" />
+              {t("addQuestion")}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {questions.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="py-8 text-center text-muted-foreground">
               <p>{t("noQuestions")}</p>
             </div>
           ) : (
             questions.map((question, qIndex) => (
-              <Card key={question.id} className="border">
-                <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-                    <span className="font-medium">
-                      {t("question")} {qIndex + 1}
-                    </span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeQuestion(qIndex)}
-                    aria-label={tQuiz("deleteQuestion")}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-0">
-                  {/* Question Type */}
-                  <div className="space-y-2">
-                    <Label>{t("questionType")}</Label>
-                    <Select
-                      value={question.type}
-                      onValueChange={(v: any) =>
-                        updateQuestion(qIndex, "type", v)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="MULTIPLE_CHOICE">
-                          {tQuiz("multipleChoice")}
-                        </SelectItem>
-                        <SelectItem value="TRUE_FALSE">
-                          {tQuiz("trueFalse")}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Question Text */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t("questionEn")}</Label>
-                      <Textarea
-                        value={question.question}
-                        onChange={(e) =>
-                          updateQuestion(qIndex, "question", e.target.value)
-                        }
-                        placeholder={tq("questionPlaceholder")}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t("questionAr")}</Label>
-                      <Textarea
-                        value={question.questionAr}
-                        onChange={(e) =>
-                          updateQuestion(qIndex, "questionAr", e.target.value)
-                        }
-                        dir="rtl"
-                        placeholder={tq("questionPlaceholder")}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Options for Multiple Choice */}
-                  {question.type === "MULTIPLE_CHOICE" && (
-                    <div className="space-y-3">
-                      <Label>{t("options")}</Label>
-                      {question.options.map((option, oIndex) => (
-                        <div
-                          key={option.id}
-                          className="flex items-center gap-2"
-                        >
-                          <button
-                            type="button"
-                            className={`p-2 rounded-full border-2 transition-colors ${
-                              option.isCorrect
-                                ? "border-green-500 bg-green-500 text-white"
-                                : "border-muted hover:border-green-500"
-                            }`}
-                            onClick={() =>
-                              updateOption(qIndex, oIndex, "isCorrect", true)
-                            }
-                            title={t("markAsCorrect")}
-                            aria-label={t("markAsCorrect")}
-                            aria-pressed={option.isCorrect}
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                          <Input
-                            value={option.text}
-                            onChange={(e) =>
-                              updateOption(
-                                qIndex,
-                                oIndex,
-                                "text",
-                                e.target.value
-                              )
-                            }
-                            placeholder={`${t("option")} ${
-                              oIndex + 1
-                            } (EN)`}
-                            className="flex-1"
-                          />
-                          <Input
-                            value={option.textAr || ""}
-                            onChange={(e) =>
-                              updateOption(
-                                qIndex,
-                                oIndex,
-                                "textAr",
-                                e.target.value
-                              )
-                            }
-                            placeholder={`${t("option")} ${
-                              oIndex + 1
-                            } (AR)`}
-                            dir="rtl"
-                            className="flex-1"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Options for True/False */}
-                  {question.type === "TRUE_FALSE" && (
-                    <div className="space-y-2">
-                      <Label>{t("correctAnswer")}</Label>
-                      <Select
-                        value={question.options
-                          .findIndex((o) => o.isCorrect)
-                          .toString()}
-                        onValueChange={(v) => {
-                          const updated = [...questions]
-                          const opts = updated[qIndex].options.map((o, i) => ({
-                            ...o,
-                            isCorrect: i === parseInt(v),
-                          }))
-                          updated[qIndex].options = opts
-                          setQuestions(updated)
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">
-                            {tQuiz("true")}
-                          </SelectItem>
-                          <SelectItem value="1">
-                            {tQuiz("false")}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {/* Points */}
-                  <div className="space-y-2 w-32">
-                    <Label>{t("points")}</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={question.points}
-                      onChange={(e) =>
-                        updateQuestion(
-                          qIndex,
-                          "points",
-                          parseInt(e.target.value) || 1
-                        )
-                      }
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              <QuestionFields
+                key={question.id}
+                question={question}
+                index={qIndex}
+                onChange={(next) => setQuestions((qs) => qs.map((q, i) => (i === qIndex ? next : q)))}
+                onRemove={() => setQuestions((qs) => qs.filter((_, i) => i !== qIndex))}
+                actions={<SaveToBankButton question={question} />}
+              />
             ))
           )}
         </CardContent>
       </Card>
 
       {/* Actions */}
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("cancel")}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-          {existingQuiz ? t("update") : t("create")}
+          {quizExists ? t("update") : t("create")}
         </Button>
       </div>
     </form>

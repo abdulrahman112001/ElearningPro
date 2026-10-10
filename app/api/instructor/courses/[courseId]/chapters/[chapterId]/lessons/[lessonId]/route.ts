@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
+import { logActivity } from "@/lib/activity"
+import { parseMaxViews } from "@/lib/video-protection"
 
 // Update lesson
 export async function PATCH(
@@ -50,6 +52,8 @@ export async function PATCH(
       isFree,
       isPublished,
     } = body
+    // Per-student view limit: integer 1-100, or null for unlimited.
+    const maxViews = parseMaxViews(body.maxViews)
 
     const updatedLesson = await db.lesson.update({
       where: { id: params.lessonId },
@@ -63,8 +67,21 @@ export async function PATCH(
         videoDuration: duration,
         isFree,
         isPublished,
+        ...(maxViews !== undefined && { maxViews }),
       },
     })
+
+    if (maxViews !== undefined && maxViews !== lesson.maxViews) {
+      await logActivity({
+        actorId: session.user.id,
+        actorRole: session.user.role,
+        action: "video.max_views_changed",
+        entityType: "lesson",
+        entityId: lesson.id,
+        summary: `Max views on "${updatedLesson.titleEn}" set to ${maxViews ?? "unlimited"}`,
+        metadata: { from: lesson.maxViews, to: maxViews },
+      })
+    }
 
     return NextResponse.json(updatedLesson)
   } catch (error) {

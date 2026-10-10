@@ -3,18 +3,44 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { logActivity } from "@/lib/activity"
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit"
-import { readJson, apiErrorResponse } from "@/lib/api-error"
+import { readJson, apiErrorResponse, ApiError } from "@/lib/api-error"
+import { onLessonCompleted, onQuizSubmitted } from "@/lib/gamification"
 import {
-  computeCertificateGrade,
-  generateCertificateNumber,
-  hasPassedAllQuizzes,
-} from "@/lib/certificates"
+  SUBMIT_GRACE_SECONDS,
+  attemptDeadline,
+  attemptQuestions,
+  attemptResultLink,
+  gradeObjective,
+  onQuizPassed,
+} from "@/lib/exams"
 
 interface AnswerInput {
   questionId: string
-  answer: string | string[]
+  answer: unknown
 }
 
+const MAX_ESSAY_LENGTH = 20_000
+
+/** Stored form of an objective answer: an option id or a list of them ("" = unanswered). */
+function normalizeAnswer(raw: unknown): string | string[] {
+  if (typeof raw === "string") return raw.slice(0, 200)
+  if (Array.isArray(raw)) {
+    return raw.filter((x): x is string => typeof x === "string").slice(0, 50).map((x) => x.slice(0, 200))
+  }
+  return ""
+}
+
+/**
+ * Submits an attempt. Only the questions served in the attempt may be
+ * answered. Objective questions are graded immediately; essay answers are
+ * stored for the teacher and the attempt stays "not passed" (needsGrading)
+ * until graded.
+ *
+ * Time limit: answers arriving later than the deadline (startedAt + time limit,
+ * or the exam closing time, whichever is first) plus a 60s grace period are
+ * REJECTED (400, code time_limit_exceeded): the attempt is closed with score 0,
+ * because the server cannot tell which answers were given in time.
+ */
 export async function POST(req: Request) {
   try {
     const session = await auth()
@@ -42,6 +68,7 @@ export async function POST(req: Request) {
       typeof attemptId !== "string" ||
       !attemptId ||
       !Array.isArray(answers) ||
+      answers.length > 1000 ||
       !answers.every((a) => a && typeof a.questionId === "string")
     ) {
       return NextResponse.json(
@@ -50,22 +77,13 @@ export async function POST(req: Request) {
       )
     }
 
-    // Get attempt
     const attempt = await db.quizAttempt.findUnique({
       where: { id: attemptId },
       include: {
         quiz: {
           include: {
             questions: true,
-            lesson: {
-              include: {
-                chapter: {
-                  include: {
-                    course: true,
-                  },
-                },
-              },
-            },
+            lesson: { include: { chapter: { include: { course: true } } } },
           },
         },
       },
@@ -81,213 +99,125 @@ export async function POST(req: Request) {
 
     if (attempt.completedAt) {
       return NextResponse.json(
-        { error: "This attempt has already been submitted" },
+        { error: "This attempt has already been submitted", code: "already_submitted" },
         { status: 400 }
       )
     }
 
-    // Enforce the time limit on the server; the client timer alone can be
-    // bypassed. A short grace period covers network latency on auto-submit.
-    if (attempt.quiz.timeLimit) {
-      const elapsedSeconds = (Date.now() - attempt.startedAt.getTime()) / 1000
-      const GRACE_SECONDS = 60
-      if (elapsedSeconds > attempt.quiz.timeLimit * 60 + GRACE_SECONDS) {
-        await db.quizAttempt.update({
-          where: { id: attempt.id },
-          data: {
-            completedAt: new Date(),
-            score: 0,
-            passed: false,
-            timeSpent: Math.floor(elapsedSeconds),
-          },
-        })
-        return NextResponse.json(
-          { error: "Time limit exceeded", errorAr: "انتهى الوقت المحدد للاختبار" },
-          { status: 400 }
-        )
-      }
+    const quiz = attempt.quiz
+    const course = quiz.lesson.chapter.course
+    const served = attemptQuestions(attempt.questionIds, quiz.questions)
+    const servedIds = new Set(served.map((q) => q.id))
+
+    // Only the questions of this attempt may be answered.
+    const foreign = answers.find((a) => !servedIds.has(a.questionId))
+    if (foreign) {
+      return NextResponse.json(
+        { error: "Answer for a question that is not part of this attempt", code: "question_not_in_attempt", questionId: foreign.questionId },
+        { status: 400 }
+      )
     }
 
-    // Calculate score
+    // Server-side deadline; the client timer alone can be bypassed.
+    const now = new Date()
+    const elapsedSeconds = Math.floor((now.getTime() - attempt.startedAt.getTime()) / 1000)
+    const deadline = attemptDeadline(attempt.startedAt, quiz)
+    if (deadline && now.getTime() > deadline.getTime() + SUBMIT_GRACE_SECONDS * 1000) {
+      await db.quizAttempt.updateMany({
+        where: { id: attempt.id, completedAt: null },
+        data: { completedAt: now, score: 0, passed: false, needsGrading: false, timeSpent: elapsedSeconds },
+      })
+      return NextResponse.json(
+        { error: "Time limit exceeded", errorAr: "انتهى الوقت المحدد للاختبار", code: "time_limit_exceeded" },
+        { status: 400 }
+      )
+    }
+
     let totalPoints = 0
     let earnedPoints = 0
-    const quizAnswers: {
+    let needsGrading = false
+    const rows: {
       questionId: string
-      answer: any
+      answer: string | string[]
       isCorrect: boolean
       points: number
+      textAnswer: string | null
+      gradedAt: Date | null
+      manualScore: number | null
     }[] = []
 
-    for (const question of attempt.quiz.questions) {
+    for (const question of served) {
       totalPoints += question.points
       const userAnswer = answers.find((a) => a.questionId === question.id)
-      const options = question.options as any[]
 
-      if (!userAnswer) {
-        quizAnswers.push({
+      if (question.type === "ESSAY") {
+        const raw = userAnswer?.answer
+        const text = (typeof raw === "string" ? raw : "").trim().slice(0, MAX_ESSAY_LENGTH)
+        if (text) needsGrading = true
+        rows.push({
           questionId: question.id,
-          answer: null,
+          answer: "",
           isCorrect: false,
           points: 0,
+          textAnswer: text || null,
+          // A blank essay is worth 0 and needs no teacher.
+          gradedAt: text ? null : now,
+          manualScore: text ? null : 0,
         })
         continue
       }
 
-      let isCorrect = false
-
-      if (question.type === "MULTIPLE_SELECT") {
-        // Multiple select: all correct options must be selected
-        const correctOptionIds = options
-          .filter((o) => o.isCorrect)
-          .map((o) => o.id)
-          .sort()
-        const selectedIds = (
-          Array.isArray(userAnswer.answer)
-            ? userAnswer.answer
-            : [userAnswer.answer]
-        ).sort()
-
-        isCorrect =
-          correctOptionIds.length === selectedIds.length &&
-          correctOptionIds.every((id, index) => id === selectedIds[index])
-      } else {
-        // Single choice or true/false
-        const selectedOptionId = Array.isArray(userAnswer.answer)
-          ? userAnswer.answer[0]
-          : userAnswer.answer
-        const selectedOption = options.find((o) => o.id === selectedOptionId)
-        isCorrect = selectedOption?.isCorrect === true
-      }
-
+      const isCorrect = userAnswer ? gradeObjective(question, userAnswer.answer) : false
       const points = isCorrect ? question.points : 0
       earnedPoints += points
-
-      quizAnswers.push({
+      rows.push({
         questionId: question.id,
-        answer: userAnswer.answer,
+        answer: normalizeAnswer(userAnswer?.answer),
         isCorrect,
         points,
+        textAnswer: null,
+        gradedAt: null,
+        manualScore: null,
       })
     }
 
-    const scorePercentage =
-      totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0
-    const passed = scorePercentage >= attempt.quiz.passingScore
+    const scorePercentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0
+    const passed = !needsGrading && scorePercentage >= quiz.passingScore
 
-    // Calculate time spent
-    const timeSpent = Math.floor(
-      (new Date().getTime() - attempt.startedAt.getTime()) / 1000
-    )
-
-    // Update attempt and create answers
-    await db.$transaction([
-      db.quizAttempt.update({
-        where: { id: attemptId },
+    await db.$transaction(async (tx) => {
+      // Guards against a concurrent double submit.
+      const closed = await tx.quizAttempt.updateMany({
+        where: { id: attemptId, completedAt: null },
         data: {
           score: scorePercentage,
           passed,
-          completedAt: new Date(),
-          timeSpent,
-        },
-      }),
-      ...quizAnswers.map((answer) =>
-        db.quizAnswer.create({
-          data: {
-            attemptId,
-            questionId: answer.questionId,
-            answer: answer.answer,
-            isCorrect: answer.isCorrect,
-            points: answer.points,
-          },
-        })
-      ),
-    ])
-
-    // Mark lesson as completed if passed
-    if (passed) {
-      await db.progress.upsert({
-        where: {
-          userId_lessonId: {
-            userId: session.user.id,
-            lessonId: attempt.quiz.lessonId,
-          },
-        },
-        update: {
-          isCompleted: true,
-          completedAt: new Date(),
-        },
-        create: {
-          userId: session.user.id,
-          lessonId: attempt.quiz.lessonId,
-          isCompleted: true,
-          completedAt: new Date(),
+          needsGrading,
+          completedAt: now,
+          timeSpent: elapsedSeconds,
         },
       })
-
-      // Update enrollment progress
-      const course = attempt.quiz.lesson.chapter.course
-      const allLessons = await db.lesson.findMany({
-        where: {
-          chapter: {
-            courseId: course.id,
-          },
-          isPublished: true,
-        },
-        select: { id: true },
-      })
-
-      const completedLessons = await db.progress.count({
-        where: {
-          userId: session.user.id,
-          lessonId: { in: allLessons.map((l) => l.id) },
-          isCompleted: true,
-        },
-      })
-
-      const progressPercentage = (completedLessons / allLessons.length) * 100
-
-      await db.enrollment.update({
-        where: {
-          userId_courseId: {
-            userId: session.user.id,
-            courseId: course.id,
-          },
-        },
-        data: {
-          progress: progressPercentage,
-          isCompleted: progressPercentage >= 100,
-          completedAt: progressPercentage >= 100 ? new Date() : null,
-        },
-      })
-
-      // Generate certificate if course completed
-      if (
-        progressPercentage >= 100 &&
-        (await hasPassedAllQuizzes(session.user.id, course.id))
-      ) {
-        const existingCertificate = await db.certificate.findUnique({
-          where: {
-            userId_courseId: {
-              userId: session.user.id,
-              courseId: course.id,
-            },
-          },
-        })
-
-        if (!existingCertificate) {
-          const certificateNo = generateCertificateNumber()
-
-          await db.certificate.create({
-            data: {
-              certificateNo,
-              userId: session.user.id,
-              courseId: course.id,
-              completedAt: new Date(),
-              grade: await computeCertificateGrade(session.user.id, course.id),
-            },
-          })
-        }
+      if (closed.count === 0) {
+        throw new ApiError(400, "This attempt has already been submitted", { code: "already_submitted" })
       }
+      await tx.quizAnswer.createMany({
+        data: rows.map((r) => ({ ...r, attemptId })),
+      })
+    })
+
+    if (passed) {
+      await onQuizPassed(session.user.id, quiz.lessonId, course.id)
+    }
+
+    if (needsGrading) {
+      await db.notification.create({
+        data: {
+          userId: course.instructorId,
+          type: "SYSTEM",
+          title: "إجابة مقالية تنتظر التصحيح",
+          message: `${session.user.name ?? "طالب"} سلّم "${quiz.titleAr || quiz.title}" وبه أسئلة مقالية تحتاج تصحيحك.`,
+          link: `/instructor/grading?attempt=${attemptId}`,
+        },
+      })
     }
 
     await logActivity({
@@ -296,22 +226,31 @@ export async function POST(req: Request) {
       action: "quiz.submitted",
       entityType: "quiz",
       entityId: attempt.quizId,
-      summary: `Scored ${Math.round(scorePercentage)}% (${passed ? "passed" : "failed"}) on "${attempt.quiz.title}"`,
-      metadata: { attemptId, score: scorePercentage, passed },
+      summary: needsGrading
+        ? `Submitted "${quiz.title}" (awaiting essay grading, provisional ${Math.round(scorePercentage)}%)`
+        : `Scored ${Math.round(scorePercentage)}% (${passed ? "passed" : "failed"}) on "${quiz.title}"`,
+      metadata: { attemptId, score: scorePercentage, passed, needsGrading, tabSwitches: attempt.tabSwitches },
     })
+
+    // Points / badges (idempotent, never throws). Essays award once graded.
+    let gamification = null
+    if (!needsGrading) {
+      gamification = await onQuizSubmitted(session.user.id, attemptId, scorePercentage, passed)
+      if (passed) await onLessonCompleted(session.user.id, quiz.lessonId)
+    }
 
     return NextResponse.json({
       attemptId,
       score: scorePercentage,
       passed,
+      needsGrading,
+      gamification,
+      resultUrl: attemptResultLink(course.slug, quiz.lessonId, attemptId),
     })
   } catch (error) {
     const handled = apiErrorResponse(error)
     if (handled) return handled
     console.error("[QUIZ_SUBMIT]", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

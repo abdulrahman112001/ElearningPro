@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
 import { resolveCourseAudience } from "@/lib/course-audience"
+import { logActivity } from "@/lib/activity"
 
 // Update course
 export async function PATCH(
@@ -61,6 +62,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Discount price cannot exceed the price" }, { status: 400 })
     }
 
+    // Moving name/phone watermark on lesson videos.
+    const { watermarkEnabled } = body
+    if (watermarkEnabled !== undefined && typeof watermarkEnabled !== "boolean") {
+      return NextResponse.json({ error: "watermarkEnabled must be a boolean" }, { status: 400 })
+    }
+
     const audience = await resolveCourseAudience(session.user.id, {
       gradeLevelId: body.gradeLevelId,
       classGroupId: body.classGroupId,
@@ -90,8 +97,21 @@ export async function PATCH(
         thumbnail,
         promoVideo: previewVideo,
         ...audience,
+        ...(watermarkEnabled !== undefined && { watermarkEnabled }),
       },
     })
+
+    if (watermarkEnabled !== undefined && watermarkEnabled !== course.watermarkEnabled) {
+      await logActivity({
+        actorId: session.user.id,
+        actorRole: session.user.role,
+        action: "video.watermark_changed",
+        entityType: "course",
+        entityId: course.id,
+        summary: `Video watermark ${watermarkEnabled ? "enabled" : "disabled"} on "${updatedCourse.titleEn}"`,
+        metadata: { watermarkEnabled },
+      })
+    }
 
     return NextResponse.json(updatedCourse)
   } catch (error) {

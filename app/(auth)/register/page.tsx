@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import toast from "react-hot-toast"
-import { BadgeCheck, Eye, EyeOff, Loader2 } from "lucide-react"
+import { BadgeCheck, Eye, EyeOff, HeartHandshake, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,12 +31,19 @@ export default function RegisterPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [userType, setUserType] = useState<"student" | "instructor">("student")
+  const tp = useTranslations("parent.register")
+  const [userType, setUserType] = useState<"student" | "instructor" | "parent">("student")
+
+  // Weekly-report links for guardians open /register?role=parent.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("role") === "parent") setUserType("parent")
+  }, [])
 
   const registerSchema = z
     .object({
       name: z.string().min(2, t("nameMinLength")),
       email: z.string().email(t("invalidEmail")),
+      phone: z.string().optional(),
       password: z.string().min(6, t("passwordMinLength")),
       confirmPassword: z.string(),
     })
@@ -44,6 +51,10 @@ export default function RegisterPage() {
       message: t("passwordMismatch"),
       path: ["confirmPassword"],
     })
+    .refine(
+      (data) => userType !== "parent" || /^\+?[\d\s-]{10,20}$/.test(data.phone?.trim() ?? ""),
+      { message: tp("phoneInvalid"), path: ["phone"] }
+    )
 
   type RegisterFormData = z.infer<typeof registerSchema>
 
@@ -63,7 +74,8 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          role: userType === "instructor" ? "INSTRUCTOR" : "STUDENT",
+          phone: userType === "parent" ? data.phone?.trim() : undefined,
+          role: userType === "instructor" ? "INSTRUCTOR" : userType === "parent" ? "PARENT" : "STUDENT",
         }),
       })
 
@@ -83,7 +95,15 @@ export default function RegisterPage() {
       })
 
       // New instructors continue straight to their application form.
-      router.push(userType === "instructor" ? "/instructor-application" : "/")
+      // Parents go to their dashboard to link a child.
+      // A same-site callbackUrl (e.g. an organization invite link) wins.
+      const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl")
+      const safeCallback =
+        callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : null
+      router.push(
+        safeCallback ??
+          (userType === "instructor" ? "/instructor-application" : userType === "parent" ? "/parent" : "/")
+      )
       router.refresh()
     } catch (error: any) {
       toast.error(error.message)
@@ -117,15 +137,27 @@ export default function RegisterPage() {
         {/* User Type Selection */}
         <Tabs
           value={userType}
-          onValueChange={(v) => setUserType(v as "student" | "instructor")}
+          onValueChange={(v) => setUserType(v as "student" | "instructor" | "parent")}
         >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="student">{t("registerAsStudent")}</TabsTrigger>
-            <TabsTrigger value="instructor">
+          <TabsList className="grid h-auto w-full grid-cols-3">
+            <TabsTrigger value="student" className="whitespace-normal px-1 text-xs sm:text-sm">
+              {t("registerAsStudent")}
+            </TabsTrigger>
+            <TabsTrigger value="instructor" className="whitespace-normal px-1 text-xs sm:text-sm">
               {t("registerAsInstructor")}
+            </TabsTrigger>
+            <TabsTrigger value="parent" className="whitespace-normal px-1 text-xs sm:text-sm">
+              {tp("tab")}
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        {userType === "parent" && (
+          <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+            <HeartHandshake className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+            <p className="leading-relaxed text-muted-foreground">{tp("note")}</p>
+          </div>
+        )}
 
         {userType === "instructor" && (
           <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
@@ -218,6 +250,23 @@ export default function RegisterPage() {
               disabled={isLoading}
             />
           </div>
+
+          {userType === "parent" && (
+            <div className="space-y-2">
+              <Label htmlFor="phone">{tp("phone")}</Label>
+              <Input
+                id="phone"
+                type="tel"
+                dir="ltr"
+                placeholder="01xxxxxxxxx"
+                className="h-11 rounded-lg"
+                {...register("phone")}
+                error={errors.phone?.message}
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">{tp("phoneHelp")}</p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="password">{t("password")}</Label>

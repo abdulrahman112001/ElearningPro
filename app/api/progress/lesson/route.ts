@@ -3,6 +3,12 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { getCourseAccess } from "@/lib/access"
 import { readJson, apiErrorResponse } from "@/lib/api-error"
+import {
+  onCourseCompleted,
+  onLearningActivity,
+  onLessonCompleted,
+  type GamificationResult,
+} from "@/lib/gamification"
 
 export async function POST(request: Request) {
   try {
@@ -78,6 +84,11 @@ export async function POST(request: Request) {
         ? Math.floor(watchedDuration)
         : 0
 
+    const before = await db.progress.findUnique({
+      where: { userId_lessonId: { userId: session.user.id, lessonId } },
+      select: { isCompleted: true },
+    })
+
     // Update or create lesson progress. Periodic watch-time saves do not send
     // `completed`, so they must never un-complete a finished lesson.
     const progress = await db.progress.upsert({
@@ -101,9 +112,23 @@ export async function POST(request: Request) {
     })
 
     // Update course progress
-    await updateCourseProgress(session.user.id, courseId)
+    const courseJustCompleted = await updateCourseProgress(session.user.id, courseId)
 
-    return NextResponse.json({ success: true, progress })
+    // Gamification (never throws): points once per lesson/course + daily streak
+    let gamification: GamificationResult =
+      progress.isCompleted && !before?.isCompleted
+        ? await onLessonCompleted(session.user.id, lessonId)
+        : await onLearningActivity(session.user.id)
+    if (courseJustCompleted) {
+      const course = await onCourseCompleted(session.user.id, courseId)
+      gamification = {
+        ...gamification,
+        points: gamification.points + course.points,
+        badges: [...gamification.badges, ...course.badges],
+      }
+    }
+
+    return NextResponse.json({ success: true, progress, gamification })
   } catch (error) {
     const handled = apiErrorResponse(error)
     if (handled) return handled
@@ -115,7 +140,8 @@ export async function POST(request: Request) {
   }
 }
 
-async function updateCourseProgress(userId: string, courseId: string) {
+/** Recomputes enrollment progress; true when this call completed the course. */
+async function updateCourseProgress(userId: string, courseId: string): Promise<boolean> {
   // Get all lessons in course
   const course = await db.course.findUnique({
     where: { id: courseId },
@@ -131,14 +157,14 @@ async function updateCourseProgress(userId: string, courseId: string) {
     },
   })
 
-  if (!course) return
+  if (!course) return false
 
   const allLessonIds = course.chapters.flatMap((ch) =>
     ch.lessons.map((l) => l.id)
   )
   const totalLessons = allLessonIds.length
 
-  if (totalLessons === 0) return
+  if (totalLessons === 0) return false
 
   // Count completed lessons
   const completedCount = await db.progress.count({
@@ -150,6 +176,12 @@ async function updateCourseProgress(userId: string, courseId: string) {
   })
 
   const progressPercentage = Math.round((completedCount / totalLessons) * 100)
+
+  const previous = await db.enrollment.findUnique({
+    where: { userId_courseId: { userId, courseId } },
+    select: { isCompleted: true },
+  })
+  if (!previous) return false
 
   // Update enrollment progress
   await db.enrollment.update({
@@ -165,4 +197,6 @@ async function updateCourseProgress(userId: string, courseId: string) {
       completedAt: progressPercentage === 100 ? new Date() : null,
     },
   })
+
+  return progressPercentage === 100 && !previous.isCompleted
 }

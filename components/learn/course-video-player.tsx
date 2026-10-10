@@ -15,8 +15,11 @@ import {
   SkipForward,
   CheckCircle,
   Loader2,
+  Eye,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { MovingWatermark } from "@/components/video-protection/moving-watermark"
+import { PlaybackBlocked } from "@/components/video-protection/playback-blocked"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,13 +29,27 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
 
+interface PlayData {
+  videoUrl: string
+  videoProvider?: string | null
+  viewsUsed: number
+  viewsAllowed: number | null
+  watermark: { enabled: boolean; text: string }
+}
+
+type PlaybackState =
+  | { status: "none" }
+  | { status: "loading" }
+  | { status: "ready"; data: PlayData }
+  | { status: "blocked"; code: string; details: Record<string, any> }
+
 interface VideoPlayerProps {
   lesson: {
     id: string
     titleEn: string
     titleAr?: string | null
-    videoUrl?: string | null
-    videoProvider?: string | null
+    /** The URL itself is fetched from /api/lessons/[id]/play. */
+    hasVideo: boolean
     videoDuration?: number
   }
   progress?: {
@@ -73,6 +90,39 @@ export function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isCompleted, setIsCompleted] = useState(progress?.isCompleted || false)
   const [isSavingProgress, setIsSavingProgress] = useState(false)
+  const tv = useTranslations("videoProtection")
+  const [playback, setPlayback] = useState<PlaybackState>(
+    lesson.hasVideo ? { status: "loading" } : { status: "none" }
+  )
+
+  // Video protection: the URL comes from the play API, which counts the view
+  // and checks the device limit.
+  const loadPlayback = async () => {
+    setPlayback({ status: "loading" })
+    try {
+      const res = await fetch(`/api/lessons/${lesson.id}/play`, { method: "POST" })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        setPlayback({ status: "ready", data })
+      } else {
+        setPlayback({ status: "blocked", code: data.code || "error", details: data })
+      }
+    } catch {
+      setPlayback({ status: "blocked", code: "error", details: {} })
+    }
+  }
+
+  useEffect(() => {
+    if (lesson.hasVideo) loadPlayback()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lesson.id, lesson.hasVideo])
+
+  // Keep the button state right when fullscreen is left with Esc.
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === containerRef.current)
+    document.addEventListener("fullscreenchange", onChange)
+    return () => document.removeEventListener("fullscreenchange", onChange)
+  }, [])
 
   // Auto-hide controls
   useEffect(() => {
@@ -196,7 +246,7 @@ export function VideoPlayer({
     return `${m}:${s.toString().padStart(2, "0")}`
   }
 
-  if (!lesson.videoUrl) {
+  if (playback.status === "none") {
     return (
       <div className="aspect-video bg-black flex items-center justify-center">
         <p className="text-white">{t("noVideo")}</p>
@@ -204,16 +254,40 @@ export function VideoPlayer({
     )
   }
 
+  if (playback.status === "loading") {
+    return (
+      <div className="aspect-video bg-black flex items-center justify-center" aria-busy="true">
+        <Loader2 className="h-8 w-8 animate-spin text-white/70" />
+        <span className="sr-only">{tv("loading")}</span>
+      </div>
+    )
+  }
+
+  if (playback.status === "blocked") {
+    return (
+      <PlaybackBlocked
+        code={playback.code}
+        details={playback.details}
+        onRetry={loadPlayback}
+      />
+    )
+  }
+
+  const { data: play } = playback
+  const viewsLeft =
+    play.viewsAllowed != null ? Math.max(0, play.viewsAllowed - play.viewsUsed) : null
+
   return (
     <div
       ref={containerRef}
       className="relative bg-black group"
       onMouseMove={() => setShowControls(true)}
       onMouseLeave={() => playing && setShowControls(false)}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <ReactPlayer
         ref={playerRef}
-        url={lesson.videoUrl}
+        url={play.videoUrl}
         width="100%"
         height="100%"
         className="aspect-video"
@@ -234,6 +308,9 @@ export function VideoPlayer({
             playerVars: {
               modestbranding: 1,
               rel: 0,
+              // Fullscreen goes through our wrapper so the watermark stays on top.
+              fs: 0,
+              disablekb: 1,
             },
           },
           vimeo: {
@@ -243,8 +320,32 @@ export function VideoPlayer({
               title: false,
             },
           },
+          file: {
+            attributes: {
+              controlsList: "nodownload noremoteplayback",
+              disablePictureInPicture: true,
+              onContextMenu: (e: Event) => e.preventDefault(),
+            },
+          },
         }}
       />
+
+      {/* Moving name/phone watermark (stays in fullscreen: it is inside the wrapper) */}
+      {play.watermark.enabled && <MovingWatermark text={play.watermark.text} />}
+
+      {/* Remaining views */}
+      {viewsLeft !== null && (
+        <div
+          className={cn(
+            "pointer-events-none absolute bottom-24 start-4 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs text-white transition-opacity duration-300",
+            showControls ? "opacity-100" : "opacity-0"
+          )}
+          data-testid="views-left"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          {tv("viewsLeft", { left: viewsLeft, total: play.viewsAllowed ?? 0 })}
+        </div>
+      )}
 
       {/* Controls Overlay */}
       <div

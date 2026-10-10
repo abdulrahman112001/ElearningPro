@@ -104,6 +104,8 @@ export function Navbar() {
         return "/admin"
       case "INSTRUCTOR":
         return "/instructor"
+      case "PARENT":
+        return "/parent"
       default:
         return "/student"
     }
@@ -258,12 +260,14 @@ export function Navbar() {
                       {t("student.dashboard")}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={`${getDashboardLink()}/courses`} className="cursor-pointer gap-2 py-2">
-                      <BookOpen className="h-4 w-4 text-muted-foreground" />
-                      {t("student.myCourses")}
-                    </Link>
-                  </DropdownMenuItem>
+                  {session.user.role !== "PARENT" && (
+                    <DropdownMenuItem asChild>
+                      <Link href={`${getDashboardLink()}/courses`} className="cursor-pointer gap-2 py-2">
+                        <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        {t("student.myCourses")}
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   {session.user.role === "STUDENT" && (
                     <DropdownMenuItem asChild>
                       <Link href="/student/wishlist" className="cursor-pointer gap-2 py-2">

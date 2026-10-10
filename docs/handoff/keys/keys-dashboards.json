@@ -1,0 +1,14 @@
+{
+  "ar": { "nav": { "dashboard": {
+    "streakDays": "أيام متتالية", "currencyEgp": "جنيه", "homeworkDue": "واجبات مطلوبة",
+    "levelShort": "المستوى {level}", "essaysToGrade": "مقالات للتصحيح", "todaySessions": "حصص النهارده",
+    "outstandingFees": "مصاريف متأخرة", "pendingTransfers": "تحويلات للمراجعة",
+    "pendingOrganizations": "مؤسسات للموافقة", "pendingApplications": "طلبات معلمين للمراجعة"
+  } } },
+  "en": { "nav": { "dashboard": {
+    "streakDays": "Day streak", "currencyEgp": "EGP", "homeworkDue": "Homework due",
+    "levelShort": "Level {level}", "essaysToGrade": "Essays to grade", "todaySessions": "Today's sessions",
+    "outstandingFees": "Outstanding fees", "pendingTransfers": "Transfers to review",
+    "pendingOrganizations": "Organizations to approve", "pendingApplications": "Teacher applications"
+  } } }
+}

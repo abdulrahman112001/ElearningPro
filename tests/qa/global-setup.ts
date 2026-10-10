@@ -24,6 +24,8 @@ export default async function globalSetup() {
     await db.course.deleteMany({ where: { instructor: { email: { endsWith: "@qa.test" } } } })
     await db.withdrawal.deleteMany({ where: { note: { contains: TAG } } })
     await db.user.deleteMany({ where: { email: { endsWith: "@qa.test" } } })
+    // Video protection limits devices per account; each test context is a new device.
+    await db.userDevice.deleteMany({ where: { user: { email: { endsWith: "@elearning.com" } } } })
     await db.user.update({ where: { id: student.id }, data: { isBlocked: false } })
 
     // ---- courses / lessons --------------------------------------------

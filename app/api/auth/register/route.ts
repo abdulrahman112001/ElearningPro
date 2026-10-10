@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { logActivity } from "@/lib/activity";
 import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit";
 import { readJson, apiErrorResponse } from "@/lib/api-error"
+import { normalizeEgyptianPhone } from "@/lib/whatsapp"
 
 export async function POST(request: Request) {
   try {
@@ -70,8 +71,18 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Determine role (default to STUDENT)
-    const userRole = role === "INSTRUCTOR" ? "INSTRUCTOR" : "STUDENT";
+    // Determine role (default to STUDENT). Admins are never self-registered.
+    const userRole =
+      role === "INSTRUCTOR" ? "INSTRUCTOR" : role === "PARENT" ? "PARENT" : "STUDENT";
+
+    // Optional phone; required for parents (weekly reports go to WhatsApp).
+    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
+    if ((userRole === "PARENT" || phone) && (phone.length > 30 || !normalizeEgyptianPhone(phone))) {
+      return NextResponse.json(
+        { error: "رقم الهاتف غير صالح", code: "invalid_phone", field: "phone" },
+        { status: 400 }
+      );
+    }
 
     // Create user
     const user = await db.user.create({
@@ -80,6 +91,7 @@ export async function POST(request: Request) {
         email,
         password: hashedPassword,
         role: userRole,
+        ...(phone && { phone }),
         // The adapter's createUser event (which creates the FREE plan) only
         // fires for OAuth sign-ups, so credentials sign-ups get it here.
         subscription: { create: { plan: "FREE", status: "ACTIVE" } },

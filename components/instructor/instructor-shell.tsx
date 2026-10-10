@@ -18,6 +18,17 @@ import {
   Wallet,
   BadgeDollarSign,
   Presentation,
+  Sparkles,
+  ClipboardList,
+  Library,
+  ClipboardCheck,
+  CalendarDays,
+  ShieldCheck,
+  CalendarCheck,
+  Sheet,
+  Medal,
+  Ticket,
+  Building2,
 } from "lucide-react"
 import { DashboardShell, type DashboardNavSection } from "@/components/layout/dashboard-shell"
 
@@ -32,6 +43,7 @@ export function InstructorShell({ children }: { children: React.ReactNode }) {
       items: [
         { href: "/instructor", label: t("overview"), icon: LayoutDashboard, exact: true },
         { href: "/instructor/analytics", label: t("analytics"), icon: BarChart3 },
+        { href: "/instructor/ai-insights", label: n("aiInsights"), icon: Sparkles },
       ],
     },
     {
@@ -41,6 +53,11 @@ export function InstructorShell({ children }: { children: React.ReactNode }) {
         { href: "/instructor/courses", label: t("myCourses"), icon: BookOpen },
         { href: "/instructor/courses/create", label: t("createCourse"), icon: PlusCircle },
         { href: "/instructor/live", label: t("liveClasses"), icon: Video },
+        { href: "/instructor/assignments", label: n("assignments"), icon: ClipboardList },
+        { href: "/instructor/question-bank", label: n("questionBank"), icon: Library },
+        { href: "/instructor/grading", label: n("grading"), icon: ClipboardCheck },
+        { href: "/instructor/timetable", label: n("timetable"), icon: CalendarDays },
+        { href: "/instructor/video-protection", label: n("videoProtection"), icon: ShieldCheck },
       ],
     },
     {
@@ -49,7 +66,10 @@ export function InstructorShell({ children }: { children: React.ReactNode }) {
       items: [
         { href: "/instructor/students", label: t("students"), icon: Users },
         { href: "/instructor/groups", label: n("groups"), icon: UsersRound },
+        { href: "/instructor/attendance", label: n("attendance"), icon: CalendarCheck },
         { href: "/instructor/results", label: n("results"), icon: Trophy },
+        { href: "/instructor/gradebook", label: n("gradebook"), icon: Sheet },
+        { href: "/instructor/leaderboard", label: n("leaderboard"), icon: Medal },
         { href: "/instructor/questions", label: n("questions"), icon: MessageCircleQuestion },
         { href: "/instructor/reviews", label: t("reviews"), icon: Star },
         { href: "/instructor/messages", label: t("messages"), icon: MessageSquare },
@@ -60,6 +80,7 @@ export function InstructorShell({ children }: { children: React.ReactNode }) {
       label: n("sections.money"),
       items: [
         { href: "/instructor/subscribers", label: n("subscribers"), icon: BadgeDollarSign },
+        { href: "/instructor/codes", label: n("codes"), icon: Ticket },
         { href: "/instructor/earnings", label: t("earnings"), icon: DollarSign },
         { href: "/instructor/withdrawals", label: t("withdrawals"), icon: Wallet },
       ],
@@ -67,7 +88,10 @@ export function InstructorShell({ children }: { children: React.ReactNode }) {
     {
       id: "account",
       label: n("sections.account"),
-      items: [{ href: "/instructor/settings", label: t("settings"), icon: Settings }],
+      items: [
+        { href: "/org", label: n("organizations"), icon: Building2 },
+        { href: "/instructor/settings", label: t("settings"), icon: Settings },
+      ],
     },
   ]
 

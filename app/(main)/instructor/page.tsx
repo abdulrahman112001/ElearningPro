@@ -19,6 +19,8 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react"
+import { ClipboardCheck, CalendarCheck, Wallet as WalletIcon } from "lucide-react"
+import { cairoDayBounds } from "@/lib/attendance"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
@@ -108,6 +110,23 @@ export default async function InstructorDashboard() {
   const isAr = locale === "ar"
   const pick = (ar?: string | null, en?: string | null) => (isAr ? ar || en || "" : en || ar || "")
   const nf = new Intl.NumberFormat(isAr ? "ar-EG" : "en-US", { maximumFractionDigits: 1 })
+  const tNav = await getTranslations("nav.dashboard")
+
+  // Platform features at a glance: grading queue, sessions today, unpaid fees
+  const today = cairoDayBounds()
+  const [essaysToGrade, todaySessions, outstandingFees] = await Promise.all([
+    db.quizAttempt.count({
+      where: { needsGrading: true, quiz: { lesson: { chapter: { course: { instructorId } } } } },
+    }),
+    db.groupSession.count({
+      where: {
+        group: { instructorId },
+        startsAt: { gte: today.start, lt: today.end },
+        NOT: { mode: "CANCELLED" },
+      },
+    }),
+    db.groupFee.count({ where: { status: "DUE", group: { instructorId } } }),
+  ])
   const money = (v: number) => (v === 0 ? nf.format(0) : formatPrice(v, "EGP", locale))
   const dateFmt = new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", { month: "short", day: "numeric" })
 
@@ -354,6 +373,18 @@ export default async function InstructorDashboard() {
           hint={unansweredCount > 0 ? t("statUnansweredHint") : t("statUnansweredNone")}
           className="col-span-2 lg:col-span-1"
         />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+        <Link href="/instructor/grading" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <StatCard label={tNav("essaysToGrade")} value={nf.format(essaysToGrade)} icon={ClipboardCheck} tone={essaysToGrade > 0 ? "warning" : "success"} />
+        </Link>
+        <Link href="/instructor/attendance" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <StatCard label={tNav("todaySessions")} value={nf.format(todaySessions)} icon={CalendarCheck} tone={"info"} />
+        </Link>
+        <Link href="/instructor/attendance" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <StatCard label={tNav("outstandingFees")} value={nf.format(outstandingFees)} icon={WalletIcon} tone={outstandingFees > 0 ? "danger" : "success"} />
+        </Link>
       </div>
 
       <section aria-labelledby="quick-actions" className="space-y-3">

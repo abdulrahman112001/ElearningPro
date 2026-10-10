@@ -14,9 +14,14 @@ import {
   PlayCircle,
   Sparkles,
   Video,
+  Flame,
+  Trophy,
+  Wallet,
+  ClipboardList,
 } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { levelFromPoints } from "@/lib/gamification"
 import { formatPrice } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -41,6 +46,30 @@ export default async function StudentDashboard() {
 
   const t = await getTranslations("studentDashboard")
   const tStudent = await getTranslations("student")
+  const tNav = await getTranslations("nav.dashboard")
+
+  // Platform features at a glance: points/level, streak, wallet, homework due
+  const [me, pendingHomework] = await Promise.all([
+    db.user.findUnique({
+      where: { id: userId },
+      select: { points: true, currentStreak: true, walletBalance: true },
+    }),
+    db.assignment.count({
+      where: {
+        AND: [
+          {
+            OR: [
+              { group: { members: { some: { studentId: userId } } } },
+              { course: { enrollments: { some: { userId } } } },
+            ],
+          },
+          { OR: [{ dueAt: null }, { dueAt: { gte: new Date() } }] },
+          { submissions: { none: { studentId: userId } } },
+        ],
+      },
+    }),
+  ])
+  const level = levelFromPoints(me?.points ?? 0)
   const locale = await getLocale()
   const isAr = locale === "ar"
   const pick = (ar?: string | null, en?: string | null) =>
@@ -268,6 +297,44 @@ export default async function StudentDashboard() {
           icon={Crown}
           tone="info"
         />
+      </div>
+
+      {/* Points, streak, wallet and homework */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <Link href="/student/achievements" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <StatCard
+            label={tNav("achievements")}
+            value={numFmt.format(me?.points ?? 0)}
+            hint={tNav("levelShort", { level: numFmt.format(level.level) })}
+            icon={Trophy}
+            tone="warning"
+          />
+        </Link>
+        <Link href="/student/achievements" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <StatCard
+            label={tNav("streakDays")}
+            value={numFmt.format(me?.currentStreak ?? 0)}
+            icon={Flame}
+            tone="danger"
+          />
+        </Link>
+        <Link href="/student/wallet" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <StatCard
+            label={tNav("wallet")}
+            value={numFmt.format(me?.walletBalance ?? 0)}
+            hint={tNav("currencyEgp")}
+            icon={Wallet}
+            tone="success"
+          />
+        </Link>
+        <Link href="/student/homework" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <StatCard
+            label={tNav("homeworkDue")}
+            value={numFmt.format(pendingHomework)}
+            icon={ClipboardList}
+            tone="info"
+          />
+        </Link>
       </div>
 
       {/* Continue learning */}

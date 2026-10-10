@@ -55,6 +55,7 @@ import {
   StatusBadge,
   TableSkeleton,
 } from "@/components/shared"
+import { GroupTabs } from "@/components/attendance/group-tabs"
 
 const NO_GRADE = "__none__"
 
@@ -70,6 +71,10 @@ interface GroupDetail {
   description: string | null
   gradeLevelId: string | null
   gradeLevel: GradeLevel | null
+  mode: string
+  location: string | null
+  monthlyFee: number
+  capacity: number | null
   members: {
     id: string
     joinedAt: string
@@ -83,6 +88,7 @@ export default function GroupDetailPage() {
   const groupId = params?.groupId
   const t = useTranslations("groups")
   const tc = useTranslations("common")
+  const ta = useTranslations("attendance.settings")
   const locale = useLocale()
   const router = useRouter()
 
@@ -94,6 +100,10 @@ export default function GroupDetailPage() {
   const [description, setDescription] = React.useState("")
   const [gradeLevelId, setGradeLevelId] = React.useState(NO_GRADE)
   const [saving, setSaving] = React.useState(false)
+  const [mode, setMode] = React.useState("ONLINE")
+  const [location, setLocation] = React.useState("")
+  const [monthlyFee, setMonthlyFee] = React.useState("0")
+  const [capacity, setCapacity] = React.useState("")
 
   const [email, setEmail] = React.useState("")
   const [adding, setAdding] = React.useState(false)
@@ -129,6 +139,10 @@ export default function GroupDetailPage() {
         setName(data.name)
         setDescription(data.description ?? "")
         setGradeLevelId(data.gradeLevelId ?? NO_GRADE)
+        setMode(data.mode ?? "ONLINE")
+        setLocation(data.location ?? "")
+        setMonthlyFee(String(data.monthlyFee ?? 0))
+        setCapacity(data.capacity ? String(data.capacity) : "")
       }
     }).catch(() => setNotFound(true))
     fetch("/api/grade-levels")
@@ -141,12 +155,26 @@ export default function GroupDetailPage() {
     !!group &&
     (name.trim() !== group.name ||
       (description.trim() || null) !== (group.description || null) ||
-      (gradeLevelId === NO_GRADE ? null : gradeLevelId) !== (group.gradeLevelId ?? null))
+      (gradeLevelId === NO_GRADE ? null : gradeLevelId) !== (group.gradeLevelId ?? null) ||
+      mode !== group.mode ||
+      (location.trim() || null) !== (group.location || null) ||
+      Number(monthlyFee) !== group.monthlyFee ||
+      (capacity.trim() ? Number(capacity) : null) !== (group.capacity ?? null))
+
+  const feeNumber = Number(monthlyFee)
+  const feeInvalid = monthlyFee.trim() === "" || !Number.isFinite(feeNumber) || feeNumber < 0 || feeNumber > 100000
+  const capacityNumber = capacity.trim() ? Number(capacity) : null
+  const capacityInvalid =
+    capacityNumber !== null && (!Number.isInteger(capacityNumber) || capacityNumber < 1 || capacityNumber > 10000)
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
       toast.error(t("nameRequired"))
+      return
+    }
+    if (feeInvalid || capacityInvalid) {
+      toast.error(ta("invalid"))
       return
     }
     setSaving(true)
@@ -158,6 +186,10 @@ export default function GroupDetailPage() {
           name: name.trim(),
           description: description.trim() || null,
           gradeLevelId: gradeLevelId === NO_GRADE ? null : gradeLevelId,
+          mode,
+          location: location.trim() || null,
+          monthlyFee: feeNumber,
+          capacity: capacityNumber,
         }),
       })
       if (!res.ok) throw new Error()
@@ -278,6 +310,8 @@ export default function GroupDetailPage() {
         }
       />
 
+      <GroupTabs groupId={group.id} />
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-1">
           <SectionCard icon={Pencil} title={t("detailsTitle")}>
@@ -324,6 +358,63 @@ export default function GroupDetailPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label>{ta("mode")}</Label>
+                <Select value={mode} onValueChange={setMode} disabled={saving}>
+                  <SelectTrigger aria-label={ta("mode")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ONLINE">{ta("modes.ONLINE")}</SelectItem>
+                    <SelectItem value="OFFLINE">{ta("modes.OFFLINE")}</SelectItem>
+                    <SelectItem value="HYBRID">{ta("modes.HYBRID")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {mode !== "ONLINE" && (
+                <div className="space-y-2">
+                  <Label htmlFor="group-location">{ta("location")}</Label>
+                  <Input
+                    id="group-location"
+                    value={location}
+                    maxLength={300}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder={ta("locationPlaceholder")}
+                    disabled={saving}
+                  />
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="group-fee">{ta("monthlyFee")}</Label>
+                  <Input
+                    id="group-fee"
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="any"
+                    value={monthlyFee}
+                    onChange={(e) => setMonthlyFee(e.target.value)}
+                    aria-invalid={feeInvalid}
+                    disabled={saving}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="group-capacity">{ta("capacity")}</Label>
+                  <Input
+                    id="group-capacity"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
+                    placeholder={ta("capacityPlaceholder")}
+                    aria-invalid={capacityInvalid}
+                    disabled={saving}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">{ta("feeHint")}</p>
               <Button type="submit" disabled={saving || !dirty} className="w-full gap-2">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 {tc("save")}
